@@ -4,14 +4,14 @@ import time
 
 
 print(dir(board))
-i2c = busio.I2C(board.SCL,board.SDA,100000)
+i2c = busio.I2C(board.SCL, board.SDA, 100000)
 # busio.I2C.configure(500000);
 
 i2c.scan()
 
 #time.sleep(1)
 
-teensy_address = 0x40 # edit this based off teensy address 
+teensy_address = 0x42 # edit this based off teensy address 
 
 def send_HEX(hexcode):
 	buff = bytearray(1)
