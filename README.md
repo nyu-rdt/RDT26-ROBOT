@@ -1,1 +1,4 @@
 # RDT25-ROBOT
+
+RUN THIS BEFORE RUNNING THE CAMTEST FILEL:
+export LD_LIBRARY_PATH=/usr/local/lib/python3.10/dist-packages:$LD_LIBRARY_PATH
