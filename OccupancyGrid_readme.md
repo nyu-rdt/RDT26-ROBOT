@@ -67,7 +67,9 @@ and change the default i2c address of the BNO085 on line 13 from 0x4A to 0x4B as
 For Raspberry pi 5, if using hardware i2c, channge the I2c bus being used (normally 1) in line 43: i2c = I2C(1)
 bus 3 is for software i2c.
 
-5) This should lead to the sensor publishing under the IMU_Data topic. 
+5) Also in the terminal running the python publisher, run chmod 666 /dev/i2c-3 to give the terminal permission to access the i2c bus.
+
+6) This should lead to the sensor publishing under the IMU_Data topic. 
 In some cases if the sensor does not connect, might need to reset the sensor. To do this, provide a quick high pulse on the RST/reset pin of the sensor. This can be done using a jumper wire to quickly connect and disconnect the pin to the 3.3v supply.
 
 **TBD: 
