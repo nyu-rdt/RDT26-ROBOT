@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>imu_to_odom</name>
+  <version>0.1.0</version>
+  <description>IMU to Odometry conversion package for ROS 2</description>
+
+  <maintainer email="ztaylor@ethz.ch">Zachary Taylor</maintainer>
+  <license>BSD</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  
+  <depend>rclcpp</depend>
+  <depend>nav_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>Eigen3</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
+

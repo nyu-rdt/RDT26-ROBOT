@@ -72,19 +72,22 @@ bus 3 is for software i2c.
 6) This should lead to the sensor publishing under the IMU_Data topic. 
 In some cases if the sensor does not connect, might need to reset the sensor. To do this, provide a quick high pulse on the RST/reset pin of the sensor. This can be done using a jumper wire to quickly connect and disconnect the pin to the 3.3v supply.
 
-**TBD: 
-1) Connect the raspberry pi ros topic to the NUC ros2 using HTTP
-   Guides: https://husarion.com/tutorials/ros2-tutorials/6-robot-network/
-   	   https://roboticsbackend.com/ros2-multiple-machines-including-raspberry-pi/
-2) Convert the IMU_Data to Odometry (albeit inaccurately due to IMu drift)
-   github repo: https://github.com/nadiawangberg/imu_to_odom/tree/master
-   
+7) To publish this topic to the GCS, connect both the Raspberry pi and the GCS to the same wifi network. This should share the topics automatically.
 
+Converting IMU_Data to Odometry (For testing only)
+
+1) Copy the imu_to_odom folder and odom_to_base_tf.py file to the /your-ros2-ws/src
+2) Open a terminal and source it. Install using colcon build --select-packages imu_to_odom
+3) Run using: 
+   ros2 run imu_to_odom imu_to_odom_node
+
+   Also run to get the transforms:
+   ros2 launch odom_to_base_tf.py
 ------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 Running Slam-Toolbox (Finally)
    
-Once the TBD items are complete, we can run all the above packages to start publishing the laserscan and odom and then we can run the following in separate terminals:
+Run the following commands each in their own terminal:
 
 ros2 launch nav2_bringup navigation_launch.py
 
