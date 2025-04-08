@@ -1,11 +1,9 @@
 '''
-Detects AprilTag boards created for the 2023-2024 season
+Detects AprilTag boards created for the 2024-2025 season
 Calculates the linear distances (x,y,z) between the tags and the cameras
 '''
 
-# from tag_information_new import TAG_OBJECT_POINTS
-
-from tag_information_new_new import TAG_OBJECT_POINTS
+from tag_information import TAG_OBJECT_POINTS
 from time import sleep
 import time
 
@@ -23,15 +21,33 @@ class AprilTagDetector:
         self.cap = cv2.VideoCapture("/dev/video0")
         print(self.cap)
 
+        # self.K = np.array([
+        #     [631.42, 0.0, 325.59],
+        #     [0.0, 631.408, 231.969],
+        #     [0.0, 0.0, 1.0]])
+
+        # NEW ARRAY CALIBRATED ON 4/5/25 BY MICHAEL
+        # CAMERA WITH PURPLE STICKER
         self.K = np.array([
-            [631.42, 0.0, 325.59],
-            [0.0, 631.408, 231.969],
+            [655.47, 0.0, 324.70],
+            [0.0, 657.41, 272.43],
             [0.0, 0.0, 1.0]])
+        
+        # CALBRIATED 4/6/25 BY MICHAEL
+        # CAMERA WITH WHITE BASE
+        # self.K = np.array([
+        #     [723.816315, 0.000000, 272.337177],
+        #     [0.000000, 723.940470, 208.623707],
+        #     [0.000000, 0.000000, 1.000000]])
+        
+        # CAMERA WITH PURPLE STICKER DISTORTION COEFFS
+        self.dist_coeffs = np.array([-0.050, -0.0024, -0.0022, -0.0005, 0])
+
+        # CAMERA WITH WHITE BASE
+        # self.dist_coeffs = np.array([-0.055869, -0.057321, 0.005996, 0.000533, 0.000000])
 
         self.options = apriltag.DetectorOptions(families='tag36h11')
         self.detector = apriltag.Detector(self.options)
-
-    # main april tag detection function for tags 7-12, 18-21
 
     def draw_results(self, results, image):
         for r in results:
@@ -68,74 +84,34 @@ class AprilTagDetector:
         
         if not results:
             return False, None, None
-
-        # points and corners for board with 6 tags
         
         berm_position_one_obj_points = []
         berm_position_one_all_corners = []
-
-        # points and corners for board with 4 tags
-        berm_position_three_obj_points = []
-        berm_position_three_all_corners = []
     
         # filling up each respective array with points
         for tag in results:
             tag_points = TAG_OBJECT_POINTS[tag.tag_id]
             corners = np.array(tag.corners).astype(np.float32)
-            
-            if (tag.tag_id >= 7 and tag.tag_id <= 12): 
-                berm_position_one_obj_points.extend(tag_points)
-                berm_position_one_all_corners.extend(corners)
-            else: 
-                berm_position_three_obj_points.extend(tag_points)
-                berm_position_three_all_corners.extend(corners)
+
+            # specify which board is received
+            berm_position_one_obj_points.extend(tag_points)
+            berm_position_one_all_corners.extend(corners)
 
             print(tag.tag_id)
 
 
         # convert to numpy array
-        # board with  tags: #7-12 (coolerest board)
         berm_position_one_obj_points = np.asarray(berm_position_one_obj_points)
         berm_position_one_all_corners = np.asarray(berm_position_one_all_corners)
-
-        # board with tags #18-21 (uncoolestest board)
-        berm_position_three_obj_points = np.asarray(berm_position_three_obj_points)
-        berm_position_three_all_corners = np.asarray(berm_position_three_all_corners)
-
-        #ret, rvec, tvec = cv2.solvePnP(berm_position_three_obj_points, berm_position_three_all_corners, self.K, None)
-
-        # grab the rotation and translation vectors
-        if berm_position_one_all_corners.size > 0:
-            ret, rvec, tvec = cv2.solvePnP(berm_position_one_obj_points, berm_position_one_all_corners, self.K, None)
-
-        elif berm_position_three_all_corners.size > 0:
-            ret, rvec, tvec = cv2.solvePnP(berm_position_three_obj_points, berm_position_three_all_corners, self.K, None)
+        
+        ret, rvec, tvec = cv2.solvePnP(berm_position_one_obj_points, berm_position_one_all_corners, self.K, self.dist_coeffs)
 
         rmat, _ = cv2.Rodrigues(rvec)
         euler = R.from_matrix(rmat).as_euler('xyz', degrees=True)
-
-
-        # if array is not empty, get the rotation and translation vector for each respective board
-        # take the average of two boards if both in view
-        if berm_position_one_obj_points.size != 0 and berm_position_three_obj_points.size != 0:
-            tvec = tvec.flatten()  
-            a_ret, a_rvec, a_tvec = cv2.solvePnP(berm_position_one_obj_points, berm_position_one_all_corners, self.K, None)
-            m_ret, m_rvec, m_tvec = cv2.solvePnP(berm_position_three_obj_points, berm_position_three_all_corners, self.K, None)
-            tvec[0] = (a_tvec.flatten()[0] + m_tvec.flatten()[0]) / 2.0
-            tvec[1] = (a_tvec.flatten()[1] + m_tvec.flatten()[1]) / 2.0
-            tvec[2] = (a_tvec.flatten()[2] + m_tvec.flatten()[2]) / 2.0
-
-        elif berm_position_one_obj_points.size != 0:
-            a_ret, a_rvec, a_tvec = cv2.solvePnP(berm_position_one_obj_points, berm_position_one_all_corners, self.K, None)
-            tvec.flatten()[0] = a_tvec.flatten()[0]
-            tvec.flatten()[1] = a_tvec.flatten()[1]
-            tvec.flatten()[2] = a_tvec.flatten()[2]
-
-        elif berm_position_three_obj_points.size != 0:
-            m_ret, m_rvec, m_tvec = cv2.solvePnP(berm_position_three_obj_points, berm_position_three_all_corners, self.K, None)
-            tvec.flatten()[0] = m_tvec.flatten()[0]
-            tvec.flatten()[1] = m_tvec.flatten()[1]
-            tvec.flatten()[2] = m_tvec.flatten()[2]
+        
+        imgpts, _ = cv2.projectPoints(berm_position_one_obj_points, rvec, tvec, self.K, self.dist_coeffs)
+        for pt in imgpts:
+            cv2.circle(image, tuple(pt.ravel().astype(int)), 5, (0, 0, 255), -1)
 
         self.draw_results(results, image)
         # have cv2 draw out the borders for the april tags
