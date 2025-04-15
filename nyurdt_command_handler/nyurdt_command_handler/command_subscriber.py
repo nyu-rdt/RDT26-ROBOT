@@ -27,8 +27,8 @@ class CommandSubscriber(Node):
         )
 
         # Services for beginning autonomies
-        self.excavation_srv = self.create_service(Empty, 'excavation_autonomy', self.excavation_auto)
-        self.construction_srv = self.create_service(Empty, 'construction_autonomy', self.construction_auto)
+        self.locomotion_srv = self.create_service(Empty, 'locmotion_autonomy', self.locomotion_auto)
+        self.dig_and_dump_srv = self.create_service(Empty, 'dig_and_dump_autonomy', self.dig_and_dump_auto)
 
 
     def manual_callback(self, data: Byte) -> None:
@@ -58,19 +58,19 @@ class CommandSubscriber(Node):
         pass
     
 
-    def excavation_auto(self, request: Empty, response: Empty) -> Empty:
+    def locomotion_auto(self, request: Empty, response: Empty) -> Empty:
         """
         Begin excacation autonomy
         """
-        subprocess.Popen(['ros2', 'run', 'nyurdt_autonomy', 'excavation'])
+        subprocess.Popen(['ros2', 'run', 'nyurdt_autonomy', 'locomotion'])
         return response
     
 
-    def construction_auto(self, request: Empty, response: Empty) -> Empty:
+    def dig_and_dump_auto(self, request: Empty, response: Empty) -> Empty:
         """
         Begin construction autonomy
         """
-        subprocess.Popen(['ros2', 'run', 'nyurdt_autonomy', 'construction'])
+        subprocess.Popen(['ros2', 'run', 'nyurdt_autonomy', 'dig_and_dump'])
         return response
         
         
