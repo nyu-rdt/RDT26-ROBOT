@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'command_subscriber=nyurdt_command_handler.command_subscriber:main',
+            'GCS_command_subscriber=nyurdt_command_handler.GCS_command_subscriber:main',
         ],
     },
 )

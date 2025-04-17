@@ -27,8 +27,8 @@ class CommandSubscriber(Node):
         )
 
         # Services for beginning autonomies
+        self.locomotion_srv = self.create_service(Empty, 'locmotion_autonomy', self.locomotion_auto)
         self.excavation_srv = self.create_service(Empty, 'excavation_autonomy', self.excavation_auto)
-        self.construction_srv = self.create_service(Empty, 'construction_autonomy', self.construction_auto)
 
 
     def manual_callback(self, data: Byte) -> None:
@@ -49,28 +49,44 @@ class CommandSubscriber(Node):
 
     def autonomy_callback(self, data: Int16) -> None:
         """
-        Handle incoming autonomy commands
+        Handle incoming autonomy commands (via /robotCmds/autonomy topic)
 
-        :param data: Int16 message to be parsed & sent to the Teensy
+        :param data: Int16 message representing which autonomy mode to start (1 = locomotion, 2 = excavation)
         :return: None
         """
-        self.get_logger().info("Incoming autonomy command: %s" % str(data.data))
-        pass
-    
+        self.get_logger().info(f"Incoming autonomy command: {data.data}")
+
+        if data.data == 1:
+            self.get_logger().info("Launching Locomotion Autonomy...")
+            self.locomotion_auto(None, None)
+
+        elif data.data == 2:
+            self.get_logger().info("Launching Excavation Autonomy...")
+            self.excavation_auto(None, None)
+
+        else:
+            self.get_logger().warn(f"Unknown autonomy command received: {data.data}")
+
+    def locomotion_auto(self, request: Empty, response: Empty) -> Empty:
+        """
+        Begin locomotion autonomy
+
+        :param request: Empty service request (not used)
+        :param response: Empty service response to be returned
+        :return: Empty service response
+        """
+        subprocess.Popen(['ros2', 'run', 'nyurdt_autonomy', 'locomotion'])
+        return response
 
     def excavation_auto(self, request: Empty, response: Empty) -> Empty:
         """
-        Begin excacation autonomy
+        Begin dig and dump autonomy
+
+        :param request: Empty service request (not used)
+        :param response: Empty service response to be returned
+        :return: Empty service response
         """
         subprocess.Popen(['ros2', 'run', 'nyurdt_autonomy', 'excavation'])
-        return response
-    
-
-    def construction_auto(self, request: Empty, response: Empty) -> Empty:
-        """
-        Begin construction autonomy
-        """
-        subprocess.Popen(['ros2', 'run', 'nyurdt_autonomy', 'construction'])
         return response
         
         
