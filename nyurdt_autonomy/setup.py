@@ -21,7 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'sensor_service=nyurdt_autonomy.sensor_service:main',
-            'construction=nyurdt_autonomy.construction:main',
+            'locomotion=nyurdt_autonomy.locomotion:main',
             'excavation=nyurdt_autonomy.excavation:main',
             'autonomy_destroyer=nyurdt_autonomy.autonomy_destroyer:main',
 	    'camera_subscriber=nyurdt_autonomy.webcam_subscriber:main'

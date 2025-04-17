@@ -15,13 +15,13 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 import apriltag
 
-class DigDumpNode(Node):
+class ExcavationNode(Node):
     """
     Node combining Digging and Dumping stages
     """
 
     def __init__(self):
-        super().__init__('DigDumpNode')
+        super().__init__('ExcavationNode')
 
         # Client to receive sensor data
         # self.cli = self.create_client(SensorData, "get_sensor_data")
@@ -319,7 +319,7 @@ class DigDumpNode(Node):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = DigDumpNode()
+    node = ExcavationNode()
     node.execute_machine()
     rclpy.shutdown()
 
