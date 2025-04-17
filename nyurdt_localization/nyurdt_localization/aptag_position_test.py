@@ -109,9 +109,9 @@ class AprilTagDetector:
         rmat, _ = cv2.Rodrigues(rvec)
         euler = R.from_matrix(rmat).as_euler('xyz', degrees=True)
         
-        imgpts, _ = cv2.projectPoints(berm_position_one_obj_points, rvec, tvec, self.K, self.dist_coeffs)
-        for pt in imgpts:
-            cv2.circle(image, tuple(pt.ravel().astype(int)), 5, (0, 0, 255), -1)
+        # imgpts, _ = cv2.projectPoints(berm_position_one_obj_points, rvec, tvec, self.K, self.dist_coeffs)
+        # for pt in imgpts:
+        #     cv2.circle(image, tuple(pt.ravel().astype(int)), 5, (0, 0, 255), -1)
 
         self.draw_results(results, image)
         # have cv2 draw out the borders for the april tags

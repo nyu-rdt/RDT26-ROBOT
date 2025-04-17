@@ -1,168 +1,178 @@
 import numpy as np
 
-SMALL_TAG_SIZE_R = 70.52 * 0.1
-MID_TAG_SIZE_R = 200 * 0.1
-BIG_TAG_SIZE_R = 250 * 0.1
-
-TAG_0_POINTS = np.array([
+TAG_ZERO_POINTS = np.array([
     [12*0.1, 266*0.1, 0],
     [262*0.1, 266*0.1, 0],
     [262*0.1, 16*0.1, 0],
     [12*0.1, 16*0.1, 0]
 ])
 
-TAG_1_POINTS = np.array([
+TAG_ONE_POINTS = np.array([
     [282*0.1, 266*0.1, 0],
     [382*0.1, 266*0.1, 0],
     [382*0.1, 166*0.1, 0],
     [282*0.1, 166*0.1, 0]
 ])
 
-TAG_2_POINTS = np.array([
+TAG_TWO_POINTS = np.array([
     [282*0.1, 117*0.1, 0],
     [382*0.1, 117*0.1, 0],
     [382*0.1, 17*0.1, 0],
     [282*0.1, 17*0.1, 0]
 ])
 
-TAG_3_POINTS = np.array([
+TAG_THREE_POINTS = np.array([
     [402*0.1, 241*0.1, 0],
     [600*0.1, 241*0.1, 0],
     [600*0.1, 42.5*0.1, 0],
     [402*0.1, 42.5*0.1, 0]
 ])
 
-TAG_4_POINTS = np.array([
+TAG_FOUR_POINTS = np.array([
     [620*0.1, 265*0.1, 0],
     [718.5*0.1, 265*0.1, 0],
     [718.5*0.1, 166.5*0.1, 0],
     [620*0.1, 166.5*0.1, 0]
 ])
 
-TAG_5_POINTS = np.array([
+TAG_FIVE_POINTS = np.array([
     [620*0.1, 117*0.1, 0],
     [719*0.1, 117*0.1, 0],
     [719*0.1, 18*0.1, 0],
     [620*0.1, 18*0.1, 0]
 ])
 
-TAG_6_POINTS = np.array([
+TAG_SIX_POINTS = np.array([
     [739*0.1, 269*0.1, 0],
     [990*0.1, 269*0.1, 0],
     [990*0.1, 18*0.1, 0],
     [739*0.1, 18*0.1, 0]
 ])
 
-
-TAG6_HORI_SPACING_1 = 17.36
-TAG6_HORI_SPACING_2 = 18.91
-TAG6_HORI_SPACING_3 = 18.76
-TAG6_HORI_SPACING_4 = 17.01
-TAG6_VERT_SPACING = 0.051
-TAG6_HORI_SPACING2 = 0.038
-
 TAG_SEVEN_POINTS = np.array([
-    [17.36*0.1, 264.98*0.1, 0],
-    [85.4*0.1, 264.98*0.1, 0],
-    [85.4*0.1, 196.94*0.1, 0],
-    [17.36*0.1, 196.94*0.1, 0]
+    [18.08*0.1, 267.3*0.1, 0],
+    [88.48*0.1, 267.3*0.1, 0],
+    [88.48*0.1, 196.9*0.1, 0],
+    [18.08*0.1, 196.9*0.1, 0]
 ])
 
 TAG_EIGHT_POINTS = np.array([
-    [17.36*0.1, 178.05*0.1, 0],
-    [85.4*0.1, 178.05*0.1, 0],
-    [85.4*0.1, 110.01*0.1, 0],
-    [17.36*0.1, 110.01*0.1, 0]
+    [18.08*0.1, 177*0.1, 0],
+    [88.48*0.1, 177*0.1, 0],
+    [88.48*0.1, 106.6*0.1, 0],
+    [18.08*0.1, 106.6*0.1, 0]
 ])
 
 TAG_NINE_POINTS = np.array([
-    [17.36*0.1, 91.12*0.1, 0],
-    [85.4*0.1, 91.12*0.1, 0],
-    [85.4*0.1, 23.08*0.1, 0],
-    [17.36*0.1, 23.08*0.1, 0]
+    [18.08*0.1, 86.7*0.1, 0],
+    [88.48*0.1, 86.7*0.1, 0],
+    [88.48*0.1, 16.3*0.1, 0],
+    [18.08*0.1, 16.3*0.1, 0]
 ])
 
 TAG_TEN_POINTS = np.array([
-    [104.31 * 0.1, 248.68 * 0.1, 0],
-    [200.95 * 0.1, 248.68 * 0.1, 0],
-    [200.95 * 0.1, 152.04 * 0.1, 0],
-    [104.31 * 0.1, 152.04 * 0.1, 0]
+    [108.58*0.1, 250.18*0.1, 0],
+    [208.48*0.1, 250.18*0.1, 0],
+    [208.48*0.1, 150.28*0.1, 0],
+    [108.58*0.1, 150.28*0.1, 0]
 ])
 
 TAG_ELEVEN_POINTS = np.array([
-    [104.31 * 0.1, 132.88 * 0.1, 0],
-    [200.95 * 0.1, 132.88 * 0.1, 0],
-    [200.95 * 0.1, 36.24 * 0.1, 0],
-    [104.31 * 0.1, 36.24 * 0.1, 0]
+    [108.58*0.1, 130.68*0.1, 0],
+    [208.48*0.1, 130.68*0.1, 0],
+    [208.48*0.1, 30.78*0.1, 0],
+    [108.58*0.1, 30.78*0.1, 0]
 ])
 
 TAG_TWELVE_POINTS = np.array([
-    [219.71 * 0.1, 264.41 * 0.1, 0],
-    [461.21 * 0.1, 264.41 * 0.1, 0],
-    [461.21 * 0.1, 22.91 * 0.1, 0],
-    [219.71 * 0.1, 22.91 * 0.1, 0]
+    [227.98*0.1, 266.3*0.1, 0],
+    [477.98*0.1, 266.3*0.1, 0],
+    [477.98*0.1, 16.3*0.1, 0],
+    [227.98*0.1, 16.3*0.1, 0]
 ])
 
-HORI_SPACING_1_R = 19.02 * 0.1
-HORI_SPACING_2_R = 20.14 * 0.1
-HORI_SPACING_3_R = 20.14 * 0.1
-HORI_SPACING_4_R = 18.34 * 0.1
-HORI_SPACING_5_R = 103.38 * 0.1
-HORI_SPACING_6_R = 108.70 * 0.1
-HORI_SPACING_7_R = 83.59 * 0.1
-HORI_SPACING_8_R = 84.31 * 0.1
+TAG_THIRTEEN_POINTS = np.array([
+    [16.5*0.1, 247.5*0.1, 0],
+    [216.5*0.1, 247.5*0.1, 0],
+    [216.5*0.1, 47.5*0.1, 0],
+    [16.5*0.1, 47.5*0.1, 0]
+])
 
-VERT_SPACING_1_R = 20.14 * 0.1
-VERT_SPACING_2_R = 20.14 * 0.1
-VERT_SPACING_3_R = 21.15 * 0.1
+TAG_FOURTEEN_POINTS = np.array([
+    [236.5*0.1, 134*0.1, 0],
+    [306.5*0.1, 134*0.1, 0],
+    [306.5*0.1, 114*0.1, 0],
+    [236.5*0.1, 114*0.1, 0]
+])
+
+TAG_FIFTEEN_POINTS = np.array([
+    [326.5*0.1, 274.5*0.1, 0],
+    [576.5*0.1, 274.5*0.1, 0],
+    [576.5*0.1, 24.5*0.1, 0],
+    [326.5*0.1, 24.5*0.1, 0]
+])
+
+TAG_SIXTEEN_POINTS = np.array([
+    [596.5*0.1, 135*0.1, 0],
+    [666.5*0.1, 135*0.1, 0],
+    [666.5*0.1, 115*0.1, 0],
+    [596.5*0.1, 115*0.1, 0]
+])
+
+TAG_SEVENTEEN_POINTS = np.array([
+    [686.5*0.1, 251*0.1, 0],
+    [886.5*0.1, 251*0.1, 0],
+    [886.5*0.1, 51*0.1, 0],
+    [686.5*0.1, 51*0.1, 0]
+])
 
 TAG_EIGHTEEN_POINTS = np.array([
-    [HORI_SPACING_1_R, VERT_SPACING_1_R + SMALL_TAG_SIZE_R, 0],
-    [HORI_SPACING_1_R + SMALL_TAG_SIZE_R, VERT_SPACING_1_R + SMALL_TAG_SIZE_R, 0],
-    [HORI_SPACING_1_R + SMALL_TAG_SIZE_R, VERT_SPACING_1_R, 0],
-    [HORI_SPACING_1_R, VERT_SPACING_1_R, 0]
+    [18*0.1, 96.7*0.1, 0],
+    [85.9*0.1, 96.7*0.1, 0],
+    [85.9*0.1, 28.8*0.1, 0],
+    [18*0.1, 28.8*0.1, 0]
 ])
 
 TAG_NINETEEN_POINTS = np.array([
-    [HORI_SPACING_7_R, VERT_SPACING_1_R + MID_TAG_SIZE_R + VERT_SPACING_2_R + BIG_TAG_SIZE_R, 0],
-    [HORI_SPACING_7_R + BIG_TAG_SIZE_R, VERT_SPACING_1_R + MID_TAG_SIZE_R + VERT_SPACING_2_R + BIG_TAG_SIZE_R, 0],
-    [HORI_SPACING_7_R + BIG_TAG_SIZE_R, VERT_SPACING_1_R + MID_TAG_SIZE_R + VERT_SPACING_2_R, 0],
-    [HORI_SPACING_7_R, VERT_SPACING_1_R + MID_TAG_SIZE_R + VERT_SPACING_2_R, 0]
+    [82.5*0.1, 488.2*0.1, 0],
+    [327*0.1, 488.2*0.1, 0],
+    [327*0.1, 243.7*0.1, 0],
+    [82.5*0.1, 243.7*0.1, 0]
 ])
 
 TAG_TWENTY_POINTS = np.array([
-    [HORI_SPACING_5_R, VERT_SPACING_1_R + MID_TAG_SIZE_R, 0],
-    [HORI_SPACING_5_R + MID_TAG_SIZE_R, VERT_SPACING_1_R + MID_TAG_SIZE_R, 0],
-    [HORI_SPACING_5_R + MID_TAG_SIZE_R, VERT_SPACING_1_R, 0],
-    [HORI_SPACING_5_R, VERT_SPACING_1_R, 0]
+    [105.6*0.1, 224*0.1, 0],
+    [300.8*0.1, 222.6*0.1, 0],
+    [300.8*0.1, 27.4*0.1, 0],
+    [105.6*0.1, 28.8*0.1, 0]
 ])
 
 TAG_TWENTYONE_POINTS = np.array([
-    [HORI_SPACING_1_R + SMALL_TAG_SIZE_R + HORI_SPACING_2_R + MID_TAG_SIZE_R + HORI_SPACING_3_R
-                , VERT_SPACING_1_R + SMALL_TAG_SIZE_R, 0],
-    [HORI_SPACING_1_R + 2*SMALL_TAG_SIZE_R + HORI_SPACING_2_R + MID_TAG_SIZE_R + HORI_SPACING_3_R
-                , VERT_SPACING_1_R + SMALL_TAG_SIZE_R, 0],
-    [HORI_SPACING_1_R + 2*SMALL_TAG_SIZE_R + HORI_SPACING_2_R + MID_TAG_SIZE_R + HORI_SPACING_3_R
-                , VERT_SPACING_1_R, 0],
-    [HORI_SPACING_1_R + SMALL_TAG_SIZE_R + HORI_SPACING_2_R + MID_TAG_SIZE_R + HORI_SPACING_3_R
-                , VERT_SPACING_1_R, 0]
+    [319.9*0.1, 94.5*0.1, 0],
+    [388.2*0.1, 94.5*0.1, 0],
+    [388.2*0.1, 26.2*0.1, 0],
+    [319.9*0.1, 26.2*0.1, 0]
 ])
 
-
 TAG_OBJECT_POINTS = {
-    0: TAG_0_POINTS,
-    1: TAG_1_POINTS,
-    2: TAG_2_POINTS,
-    3: TAG_3_POINTS,
-    4: TAG_4_POINTS,
-    5: TAG_5_POINTS,
-    6: TAG_6_POINTS,
+    0: TAG_ZERO_POINTS,
+    1: TAG_ONE_POINTS,
+    2: TAG_TWO_POINTS,
+    3: TAG_THREE_POINTS,
+    4: TAG_FOUR_POINTS,
+    5: TAG_FIVE_POINTS,
+    6: TAG_SIX_POINTS,
     7: TAG_SEVEN_POINTS,
     8: TAG_EIGHT_POINTS,
     9: TAG_NINE_POINTS,
     10: TAG_TEN_POINTS,
     11: TAG_ELEVEN_POINTS,
     12: TAG_TWELVE_POINTS,
+    13: TAG_THIRTEEN_POINTS,
+    14: TAG_FOURTEEN_POINTS,
+    15: TAG_FIFTEEN_POINTS,
+    16: TAG_SIXTEEN_POINTS,
+    17: TAG_SEVENTEEN_POINTS,
     18: TAG_EIGHTEEN_POINTS,
     19: TAG_NINETEEN_POINTS,
     20: TAG_TWENTY_POINTS,
