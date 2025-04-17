@@ -3,9 +3,7 @@ Detects AprilTag boards created for the 2024-2025 season
 Calculates the linear distances (x,y,z) between the tags and the cameras
 '''
 
-# from tag_information_new import TAG_OBJECT_POINTS
-
-from tag_information_new_new import TAG_OBJECT_POINTS
+from tag_information import TAG_OBJECT_POINTS
 from time import sleep
 import time
 
@@ -29,12 +27,24 @@ class AprilTagDetector:
         #     [0.0, 0.0, 1.0]])
 
         # NEW ARRAY CALIBRATED ON 4/5/25 BY MICHAEL
+        # CAMERA WITH PURPLE STICKER
         self.K = np.array([
             [655.47, 0.0, 324.70],
             [0.0, 657.41, 272.43],
             [0.0, 0.0, 1.0]])
         
+        # CALBRIATED 4/6/25 BY MICHAEL
+        # CAMERA WITH WHITE BASE
+        # self.K = np.array([
+        #     [723.816315, 0.000000, 272.337177],
+        #     [0.000000, 723.940470, 208.623707],
+        #     [0.000000, 0.000000, 1.000000]])
+        
+        # CAMERA WITH PURPLE STICKER DISTORTION COEFFS
         self.dist_coeffs = np.array([-0.050, -0.0024, -0.0022, -0.0005, 0])
+
+        # CAMERA WITH WHITE BASE
+        # self.dist_coeffs = np.array([-0.055869, -0.057321, 0.005996, 0.000533, 0.000000])
 
         self.options = apriltag.DetectorOptions(families='tag36h11')
         self.detector = apriltag.Detector(self.options)
