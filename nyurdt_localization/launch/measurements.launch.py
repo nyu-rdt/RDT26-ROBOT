@@ -1,5 +1,6 @@
 from launch import LaunchDescription 
 from launch_ros.actions import Node 
+# Gad26. 'Constants for last year it seems this
 
 # ROS always look for this function when launch starts
 def generate_launch_description():
@@ -51,7 +52,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         realsense_tf, 
-        lidar_tf, 
+        # lidar_tf, 
         webcam_front_tf, 
         webcam_back_tf
     ])

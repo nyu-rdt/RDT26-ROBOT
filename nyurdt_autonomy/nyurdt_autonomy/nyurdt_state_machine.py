@@ -1,4 +1,6 @@
 """
+gad26 this works and I think this is a great implementation of state machines
+
 nyurdt_state_machine.py
 Author: Justin Rivera
 NYU RDT's implementation of a state machine.

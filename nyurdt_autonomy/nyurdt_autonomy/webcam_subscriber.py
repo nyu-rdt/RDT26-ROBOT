@@ -4,6 +4,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
 import numpy as np
+#gad26 this works
 
 "This Node takes in the camera feed then publishes it to the apriltag topic."
 class CameraNode(Node):

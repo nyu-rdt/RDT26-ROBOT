@@ -7,13 +7,12 @@ from time import sleep
 from std_msgs.msg import Byte
 
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
-from nyurdt_localization.pid_controller import PID
-from nyurdt_localization.apriltag_detector import AprilTagDetector
+from .pid_controller import PID
+from nyurdt_localization import AprilTagDetector
 
 import cv2
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-import apriltag
 
 class ExcavationNode(Node):
     """

@@ -1,4 +1,6 @@
 # TEST FILE FOR GAZEBO STATE MACHINE
+#gad26 Needs some work with the scipy.spatial.transform
+
 import rclpy
 from rclpy.node import Node
 import sys
