@@ -24,6 +24,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            "apriltag_subscriber=apriltag.apriltag_pose:main",
         ],
     },
 )
