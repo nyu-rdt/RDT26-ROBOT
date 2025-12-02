@@ -25,7 +25,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "april_subscriber=april.apriltag_pose:main",
+            "april_tf=april.apriltag_tf:main",
         ],
     },
 )
