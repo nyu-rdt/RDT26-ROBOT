@@ -1,15 +1,16 @@
 from setuptools import find_packages, setup
 
-package_name = 'apriltag'
+package_name = 'april'
 
 setup(
     name=package_name,
     version='0.0.0',
     packages=find_packages(exclude=['test']),
+    include_package_data=True,
     data_files=[
-        ('share/ament_index/resource_index/packages',
-            ['resource/' + package_name]),
+        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        ('share/' + package_name, ['launch/camera_apriltag.launch.yml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -24,7 +25,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "apriltag_subscriber=apriltag.apriltag_pose:main",
+            "april_subscriber=april.apriltag_pose:main",
         ],
     },
 )
