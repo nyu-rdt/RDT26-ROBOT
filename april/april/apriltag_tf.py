@@ -1,7 +1,8 @@
 import rclpy
 from rclpy.node import Node
+from geometry_msgs.msg import TransformStamped
 from tf2_msgs.msg import TFMessage
-from tf2_ros import Buffer
+from tf2_ros import Buffer, StaticTransformBroadcaster
 from apriltag_msgs.msg import AprilTagDetectionArray  
 
 class AprilTagTF(Node):
@@ -12,9 +13,10 @@ class AprilTagTF(Node):
         #     '/detections',
         #     self.listener_callback,
         #     10)
+        self.world_tag_static_tf = StaticTransformBroadcaster(self)
+        self.get_world_tag_transforms()
         self.buffer = Buffer()
 
-        
 
         #camera to tag
         self.subscription = self.create_subscription(
@@ -22,7 +24,23 @@ class AprilTagTF(Node):
             '/tf',
             self.tag_tf_listener,
             10)
-        
+    
+    def get_world_tag_transforms(self):
+        tf = TransformStamped()
+        tf.header.stamp = self.get_clock().now().to_msg()
+        tf.header.frame_id = 'arena'
+        tf.child_frame_id = 'tag_19'
+        #temporary numbers
+        tf.transform.translation.x = 0.0
+        tf.transform.translation.y = 0.0
+        tf.transform.translation.z = 0.0
+        tf.transform.rotation.x = 0.0
+        tf.transform.rotation.y = 0.0
+        tf.transform.rotation.z = 0.0
+        tf.transform.rotation.w = 0.0
+
+        self.world_tag_static_tf.sendTransform(tf)
+
 
     def tag_tf_listener(self, msg):
         # for detection in msg.detections:

@@ -20,6 +20,10 @@
 
         # optional list of tags
         tag:
-            ids: [18, 19, 20, 21]            # tag ID
-            frames: [tag_18, tag_19, tag_20, tag_21]  # optional frame name
-            sizes: [0.069, .245, .196, .069]   # optional tag-specific edge size
+            #one tag for now for testing purposes
+            ids: [19]
+            frames: [tag_19]
+            sizes: [.245]
+            # ids: [18, 19, 20, 21]            # tag ID
+            # frames: [tag_18, tag_19, tag_20, tag_21]  # optional frame name
+            # sizes: [0.069, .245, .196, .069]   # optional tag-specific edge size
