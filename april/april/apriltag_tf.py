@@ -1,59 +1,78 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import TransformStamped
-from tf2_msgs.msg import TFMessage
-from tf2_ros import Buffer, StaticTransformBroadcaster
-from apriltag_msgs.msg import AprilTagDetectionArray  
+from tf2_ros import Buffer, TransformListener, StaticTransformBroadcaster, TransformBroadcaster, LookupException, ConnectivityException, ExtrapolationException
+import tf_transformations as ts
 
 class AprilTagTF(Node):
     def __init__(self):
         super().__init__('april_tf')
-        # self.subscription = self.create_subscription(
-        #     AprilTagDetectionArray,
-        #     '/detections',
-        #     self.listener_callback,
-        #     10)
-        self.world_tag_static_tf = StaticTransformBroadcaster(self)
-        self.get_world_tag_transforms()
-        self.buffer = Buffer()
+        
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer,self)
+        self.tag_camera_broadcaster = TransformBroadcaster(self)
+        self.timer = self.create_timer(0.1, self.tag_camera_tf)
 
+        self.arena_tag_tf = TransformBroadcaster(self)
+        self.arena_timer = self.create_timer(0.1, self.get_arena_tag_tf)
 
-        #camera to tag
-        self.subscription = self.create_subscription(
-            TFMessage,
-            '/tf',
-            self.tag_tf_listener,
-            10)
-    
-    def get_world_tag_transforms(self):
+    def get_arena_tag_tf(self):
         tf = TransformStamped()
         tf.header.stamp = self.get_clock().now().to_msg()
         tf.header.frame_id = 'arena'
         tf.child_frame_id = 'tag_19'
         #temporary numbers
-        tf.transform.translation.x = 0.0
-        tf.transform.translation.y = 0.0
+        tf.transform.translation.x = 1.0
+        tf.transform.translation.y = 1.0
         tf.transform.translation.z = 0.0
         tf.transform.rotation.x = 0.0
         tf.transform.rotation.y = 0.0
         tf.transform.rotation.z = 0.0
-        tf.transform.rotation.w = 0.0
+        tf.transform.rotation.w = 1.0
 
-        self.world_tag_static_tf.sendTransform(tf)
+        self.arena_tag_tf.sendTransform(tf)
 
 
-    def tag_tf_listener(self, msg):
-        # for detection in msg.detections:
-        #     tag_id = detection.id[0]
-        #     detected_pose = detection.pose.pose.pose
-        #     self.get_logger().info(f'AprilTag ID: {tag_id}')
-        #     self.get_logger().info(f'Pose: {detected_pose}')
-        self.get_logger().info('Receiving TFMessage...')
-        for transform in msg.transforms:
-            tag_to_camera = self.buffer.lookup_transform(transform.header.frame_id, 
-                                         transform.child_frame_id, 
-                                         rclpy.time.Time())
-            self.get_logger().info(f'Transform from {transform.header.frame_id} to {transform.child_frame_id}: \n {tag_to_camera.transform}')
+    def tag_camera_tf(self):
+        try: 
+            camera_tag = self.tf_buffer.lookup_transform('camera',
+                                                        'tag_19',
+                                                        rclpy.time.Time()
+                                                        )
+        except (LookupException, ConnectivityException, ExtrapolationException):
+            return
+        translation = [camera_tag.transform.translation.x, 
+                        camera_tag.transform.translation.y, 
+                        camera_tag.transform.translation.z]
+        
+        rotation = [camera_tag.transform.rotation.x,
+                    camera_tag.transform.rotation.y,
+                    camera_tag.transform.rotation.z,
+                    camera_tag.transform.rotation.w]
+        
+        camera_tag_tf = ts.concatenate_matrices(ts.translation_matrix(translation), 
+                                                ts.quaternion_matrix(rotation))
+        tag_camera_tf = ts.inverse_matrix(camera_tag_tf)
+
+        inverted_translation = ts.translation_from_matrix(tag_camera_tf)
+        inverted_rotation = ts.quaternion_from_matrix(tag_camera_tf)
+
+        tf = TransformStamped()
+        tf.header.stamp = self.get_clock().now().to_msg()
+        tf.header.frame_id = 'tag_19'
+        tf.child_frame_id = 'camera'
+        tf.transform.translation.x = inverted_translation[0]
+        tf.transform.translation.y = inverted_translation[1]
+        tf.transform.translation.z = inverted_translation[2]
+        tf.transform.rotation.x = inverted_rotation[0]
+        tf.transform.rotation.y = inverted_rotation[1]
+        tf.transform.rotation.z = inverted_rotation[2]
+        tf.transform.rotation.w = inverted_rotation[3]
+    
+        self.tag_camera_broadcaster.sendTransform(tf)
+
+
+            
 
 
 def main(args=None):
