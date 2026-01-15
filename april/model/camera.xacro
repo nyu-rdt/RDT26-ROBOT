@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!-- Author: Mandy Wang-->
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <xacro:macro name="logitech_C615" params="parent *origin">
+    <!-- Pi constant -->
+    <xacro:property name="pi_cam" value="3.14159265"/>
+
+        <link name="camera_link">
+            <visual>
+                <geometry>
+                    <!-- logitech C615 -->
+                    <box size="0.017 0.07 0.04"/>
+                </geometry>
+                <material name="black"> 
+                    <color rgba="0 0 0 1"/>
+                </material>
+            </visual>
+        </link>
+
+        <joint name="camera_joint" type="fixed">
+            <parent link="${parent}"/>
+            <child link="camera_link"/>
+            <xacro:insert_block name="origin"/>
+        </joint>
+        <!--vision frame used by image and tf topics-->
+        <link name="camera_optical_frame_link"></link>
+
+        <joint name="camera_optical_frame_joint" type="fixed">
+            <parent link="camera_link"/>
+            <child link="camera_optical_frame_link"/>
+            <origin xyz="0 0 0" rpy="${-pi_cam/2} 0 ${-pi_cam/2}"/>
+        </joint>
+    </xacro:macro>
+
+</robot>
