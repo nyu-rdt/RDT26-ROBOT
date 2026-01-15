@@ -6,7 +6,7 @@ from std_msgs.msg import Header
 import numpy as np
 
 "This Node takes in the camera feed then publishes it to the apriltag topic."
-class CameraNode(Node):
+class WebcamNode(Node):
     def __init__(self):
         super().__init__('camera_node')
         self.vid = cv2.VideoCapture(2)
@@ -56,12 +56,12 @@ def main(args=None):
     rclpy.init(args=args)
     node = None
     try:
-        node = CameraNode()
+        node = WebcamNode()
         rclpy.spin(node)
     except KeyboardInterrupt:
-        print("CameraNode interrupted by user.")
+        print("WebCamNode interrupted by user.")
     except Exception as e:
-        print(f"CameraNode failed to start or crashed: {e}")
+        print(f"WebcamNode failed to start or crashed: {e}")
     finally:
         if node and hasattr(node, 'vid'):
             node.vid.release()
