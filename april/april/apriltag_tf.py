@@ -1,13 +1,14 @@
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import TransformStamped
-from tf2_ros import Buffer, TransformListener, StaticTransformBroadcaster, TransformBroadcaster, LookupException, ConnectivityException, ExtrapolationException
+from tf2_ros import Buffer, TransformListener, TransformBroadcaster, LookupException, ConnectivityException, ExtrapolationException
 import tf_transformations as ts
 
 class AprilTagTF(Node):
     def __init__(self):
         super().__init__('april_tf')
-        
+        #create instance of transform broadcasters to publish tf from arena to tag and tag to camera
+        #as well as a buffer and listener to subscribe to /tf topic and store transforms
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer,self)
         self.tag_camera_broadcaster = TransformBroadcaster(self)
@@ -52,6 +53,7 @@ class AprilTagTF(Node):
         
         camera_tag_tf = ts.concatenate_matrices(ts.translation_matrix(translation), 
                                                 ts.quaternion_matrix(rotation))
+        #invert matrix so that tf works around stationary tag to moving camera instead of static camera to moving tag
         tag_camera_tf = ts.inverse_matrix(camera_tag_tf)
 
         inverted_translation = ts.translation_from_matrix(tag_camera_tf)
@@ -81,5 +83,3 @@ def main(args=None):
     rclpy.spin(april_sub)
     april_sub.destroy_node()
     rclpy.shutdown()
-   
-

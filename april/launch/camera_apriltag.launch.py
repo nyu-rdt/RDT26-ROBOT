@@ -27,7 +27,7 @@ def generate_launch_description():
                 parameters=[
                     {'camera': device},
                     {'format': 'MJPEG'},
-                    #adjust path if needed
+                    #adjust path if needed, this is the path from the NUC
                     {'camera_info_url': 'file:///home/nyu-rdt/april_test/src/RDT26-ROBOT/april/config/LogitechC615.yaml'}
                 ],
                 extra_arguments=[{'use_intra_process_comms': True}],
