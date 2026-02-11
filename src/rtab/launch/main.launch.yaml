@@ -1,0 +1,13 @@
+launch:
+  - include:
+      file: "$(find-pkg-share realsense2_camera)/launch/rs_launch.py"
+      arg:
+        - name: "align_depth.enable"
+          value: "true"
+        - name: "pointcloud.enable"
+          value: "true"
+
+# Opens rtabmap
+  - include:
+      file: "$(find-pkg-share rtabmap_launch)/launch/rtabmap.launch.yaml"
+    
