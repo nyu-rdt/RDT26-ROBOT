@@ -73,7 +73,7 @@
 
 <!-- Body link of the robot-->
 <!-- allows us to render the box in gazebo -->
-<link name="body_link">
+<link name="base_link">
     <visual>
         <geometry>
             <box size="${a} ${c} ${b}"/>
@@ -95,7 +95,7 @@
 
 <!-- Back right wheel of the robot and the joint-->
  <joint name="wheel1_joint" type="continuous">
-    <parent link="body_link"/>
+    <parent link="base_link"/>
     <child link="wheel1_link"/>
     <!-- defined with respect to the coordinate frame of the parent link -->
     <origin xyz="${-s2} ${-s4} ${r}" rpy="0.0 0.0 0.0" />
@@ -125,7 +125,7 @@
 
 <!-- Back left wheel of the robot and the joint-->
  <joint name="wheel2_joint" type="continuous">
-    <parent link="body_link"/>
+    <parent link="base_link"/>
     <child link="wheel2_link"/>
     <!-- defined with respect to the coordinate frame of the parent link -->
     <origin xyz="${-s2} ${s4} ${r}" rpy="0.0 0.0 0.0" />
@@ -156,7 +156,7 @@
 
 <!-- Front left wheel of the robot and the joint-->
  <joint name="wheel3_joint" type="continuous">
-    <parent link="body_link"/>
+    <parent link="base_link"/>
     <child link="wheel3_link"/>
     <!-- defined with respect to the coordinate frame of the parent link -->
     <origin xyz="${s3} ${s4} ${r}" rpy="0.0 0.0 0.0" />
@@ -186,7 +186,7 @@
 
 <!-- Front right wheel of the robot and the joint-->
  <joint name="wheel4_joint" type="continuous">
-    <parent link="body_link"/>
+    <parent link="base_link"/>
     <child link="wheel4_link"/>
     <!-- defined with respect to the coordinate frame of the parent link -->
     <origin xyz="${s3} ${-s4} ${r}" rpy="0.0 0.0 0.0" />
@@ -217,7 +217,7 @@
 <!-- camera file -->
 <xacro:include filename="camera.xacro" />
 
-<xacro:logitech_C615 parent="body_link">
+<xacro:logitech_C615 parent="base_link">
     <origin xyz="${a/2} 0 ${c}" rpy="0 0 0"/>
 </xacro:logitech_C615>
 

@@ -7,7 +7,7 @@
     <!-- Pi constant -->
     <xacro:property name="pi_cam" value="3.14159265"/>
 
-        <link name="camera_link">
+        <link name="camera">
             <visual>
                 <geometry>
                     <!-- logitech C615 -->
@@ -21,14 +21,14 @@
 
         <joint name="camera_joint" type="fixed">
             <parent link="${parent}"/>
-            <child link="camera_link"/>
+            <child link="camera"/>
             <xacro:insert_block name="origin"/>
         </joint>
         <!--vision frame used by image and tf topics-->
         <link name="camera_optical_frame_link"></link>
 
         <joint name="camera_optical_frame_joint" type="fixed">
-            <parent link="camera_link"/>
+            <parent link="camera"/>
             <child link="camera_optical_frame_link"/>
             <origin xyz="0 0 0" rpy="${-pi_cam/2} 0 ${-pi_cam/2}"/>
         </joint>
