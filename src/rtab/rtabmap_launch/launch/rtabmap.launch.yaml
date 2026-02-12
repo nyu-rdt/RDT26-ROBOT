@@ -1,0 +1,20 @@
+launch:
+  - include:
+      file: "$(find-pkg-share rtabmap_launch)/launch/rtabmap.launch.py"
+      arg:
+        - name: "args"
+          value: "--delete_db_on_start"
+        - name: "depth_topic"
+          value: "/camera/camera/aligned_depth_to_color/image_raw"
+        - name: "rgb_topic"
+          value: "/camera/camera/color/image_raw"
+        - name: "camera_info_topic"
+          value: "/camera/camera/color/camera_info"
+        - name: "approx_sync"
+          value: "true"
+        - name: "frame_id"
+          value: "camera_link"
+        - name: "queue_size"
+          value: "100"
+        - name: "topic_queue_size"
+          value: "100"
