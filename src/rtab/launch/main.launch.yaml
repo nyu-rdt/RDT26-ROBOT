@@ -2,14 +2,83 @@ launch:
   - include:
       file: "$(find-pkg-share realsense2_camera)/launch/rs_launch.py"
       arg:
-        - name: "align_depth.enable"
-          value: "true"
-        - name: "pointcloud.enable"
-          value: "true"
-        - name: "enable_infra1"
-          value: "true"
-        - name: "enable_infra2"
-          value: "true"
+      - name: "align_depth.enable"
+        value: "true"
+
+      - name: "pointcloud.enable"
+        value: "true"
+
+      - name: "enable_infra1"
+        value: "true"
+
+      - name: "enable_infra2"
+        value: "true"
+
+      - name: "depth_module.depth_profile"
+        value: "480x270x15"
+
+      - name: "depth_module.infra_profile"
+        value: "480x270x15"
+
+      - name: "rgb_camera.color_profile"
+        value: "480x270x15"
+
+      - name: "rgb_camera.depth_profile"
+        value: "480x270x15"
+
+      - name: "rgb_camera.infra_profile"
+        value: "480x270x15"
+
+      - name: "decimation_filter.enable"
+        value: "true"
+
+      - name: "decimation_filter.filter_magnitude"
+        value: "2"
+
+      - name: "colorizer.enable"
+        value: "false"
+
+      - name: "rgb_transport"
+        value: "raw"
+
+      - name: "depth_transport"
+        value: "raw"
+
+      # Reduce latency
+      - name: "depth_module.frames_queue_size"
+        value: "2"
+
+      - name: "rgb_camera.frames_queue_size"
+        value: "2"
+
+      # Reduce internal filter buffering
+      - name: "spatial_filter.frames_queue_size"
+        value: "1"
+
+      - name: "temporal_filter.frames_queue_size"
+        value: "1"
+
+      # Disable filters you are not explicitly using
+      - name: "spatial_filter.enable"
+        value: "false"
+
+      - name: "temporal_filter.enable"
+        value: "false"
+
+      - name: "hole_filling_filter.enable"
+        value: "false"
+
+      - name: "disparity_filter.enable"
+        value: "false"
+
+      - name: "hdr_merge.enable"
+        value: "false"
+
+      # Slight clip distance for stability (optional but helpful indoors)
+      - name: "clip_distance"
+        value: "5.0"
+
+
 
 # Opens rtabmap
   - include:
@@ -37,3 +106,5 @@ launch:
          value: "1"
        - name: "OdomF2M/MaxSize"
          value: "600"
+
+         

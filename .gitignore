@@ -1,3 +1,5 @@
 build/
 install/
 log/
+src/rtabmap
+src/rtabmap_ros
