@@ -24,12 +24,12 @@ class ExcavationNode(Node):
         super().__init__('ExcavationNode')
 
         # Client to receive sensor data
-        # self.cli = self.create_client(SensorData, "get_sensor_data")
+        self.cli = self.create_client(SensorData, "get_sensor_data")
 
         # Making sure service is available
-        # while not self.cli.wait_for_service(timeout_sec=1.0):
-        #     self.get_logger().info("Service not available, waiting again...")
-        # self.req = SensorData.Request()
+        while not self.cli.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info("Service not available, waiting again...")
+        self.req = SensorData.Request()
 
         # Publisher for autonomy commands
         self.publisher = self.create_publisher(Byte, "/robotCmds/manual", 10)
@@ -44,6 +44,14 @@ class ExcavationNode(Node):
         self.dig_start_time = 0
         # NEED TO CHANGE VALUE -----------------------------------------------
         self.dig_time = 120  # Digging duration in seconds
+
+        # Using encoders we will get the distance travelled
+        self.dig_length = 0.5 # meters
+        self.dist_traveled = self.get_sensor_data()
+
+        # Using 4 load cells we can know how much regolith has been collected
+        self.bin_mass = self.get_sensor_data()
+        self.goal_mass = 0.14 #kg
 
         ## Locomotion variables ##
         self.localization_timer = time.time()
@@ -60,12 +68,6 @@ class ExcavationNode(Node):
         # Apriltag variables
         self.STOP_TIME = 1  # Robot stop time after losing Apriltag detection
         self.apriltag_detector = AprilTagDetector()
-        
-        ## Deposition variables ##
-        # timestamp to keep track of deposition time
-        self.depo_start_time = 0
-        # NEED TO CHANGE VALUE -----------------------------------------------
-        self.depo_time = 30
 
         # Variable used to avoid repeated logging of state
         self.current_state = None
@@ -84,8 +86,7 @@ class ExcavationNode(Node):
         self.machine.add_state('stage_4', self.stage_4)
         self.machine.add_state('stage_5', self.stage_5)
         self.machine.add_state('stage_6', self.stage_6)
-        self.machine.add_state('stage_7', self.stage_7)
-        self.machine.add_state('stage_8', self.stage_8)
+
 
     def publish_msg(self, data: bytes):
         """
@@ -96,12 +97,6 @@ class ExcavationNode(Node):
         msg.data = data.to_bytes(1, 'little')
         self.publisher.publish(msg)
         self.get_logger().info(f"Publishing: {msg.data}")
-
-    def clamp(self, value, low, high):
-        """
-        Clamp a value between low and high
-        """
-        return min(max(value, low), high)
 
     def manual_callback(self, msg):
         """
@@ -120,200 +115,98 @@ class ExcavationNode(Node):
 
     def stage_1(self):
         """
-        Stage 1: Move acme system to excavation position
+        Stage 1: Start rotating conveyor belt
         """
         if self.current_state != self.stage_1:
-            self.get_logger().info("Stage 1: Move to excavation position")
+            self.get_logger().info("Stage 1: Start rotating conveyor belt")
             self.current_state = self.stage_1
 
-        # Send command
-        self.publish_msg(0x62)  # Move conveyor to excavation position
-        
-        sleep(5)
+        self.publish_msg(0x00) # rotate conveyor belt
 
-        # THIS SEEMS IMPORTANT WE MAY NEED TO IMPLEMENT THIS
-        # # Check if pivot is at excavation position, repeat state if not
-        # sensor_data = self.get_sensor_data()
-        # if not sensor_data.at_excavation_position:    
-        #     return "stage_1"
+        sleep(5)
 
         return 'stage_2'
 
     def stage_2(self):
         """
-        Stage 2: Start spinning the conveyor belt to dig
+        Stage 2: Move conveyor system to excavation position
         """
         if self.current_state != self.stage_2:
-            self.get_logger().info("Stage 2: Start spinning the conveyor belt")
+            self.get_logger().info("Stage 2: Move to excavation position")
             self.current_state = self.stage_2
+
+        # Send command
+        self.publish_msg(0x00)  # Move conveyor to excavation position
         
-        # changed to manual control equiv
-        self.publish_msg(0x65)  # Belt inward (digging)
+        sleep(5)
+
+
+        # Check if pivot is at excavation position, repeat state if not
+        sensor_data = self.get_sensor_data()
+        if not sensor_data.at_excavation_position:    
+            return "stage_2"
+
+        return 'stage_3'
+
+    def stage_3(self):
+        """
+        Stage 3: Dig
+        """
+        if self.current_state != self.stage_3:
+            self.get_logger().info("Stage 3: Dig")
+            self.current_state = self.stage_3
 
         if self.dig_start_time == 0:
             self.dig_start_time = time.time()
 
+        # have we digged for x seconds?
         if time.time() - self.dig_start_time > self.dig_time:
+            return 'stage_4'
+        # have we moved forward more than x meters?
+        elif self.dist_traveled > self.dig_length:
+            return 'stage_4'
+        # have we collected more than x kg of regolith?
+        elif self.bin_mass > self.goal_mass:
+            return 'stage_4'
+        # have we collected less than x kg of regolith?
+        elif self.bin_mass < self.goal_mass:
+            self.publish_msg(0x00) #move forward 1 meters
             return 'stage_3'
-        else:
-            sleep(1)
-            return 'stage_2'
-
-    def stage_3(self):
-        """
-        Stage 3: Stop the motion of the conveyor belt
-        """
-        if self.current_state != self.stage_3:
-            self.get_logger().info("Stage 3: Stop spinning the conveyor belt")
-            self.current_state = self.stage_2
-
-        # Stop the belt
-        self.publish_msg(0x63)
-
-        return 'stage_4'
+        
+        sleep(1)
+        return 'stage_3'
 
     def stage_4(self):
         """
-        Stage 4: Move pivot system to locomotion position
+        Stage 4: Stop the motion of the conveyor belt
         """
         if self.current_state != self.stage_4:
-            self.get_logger().info("Stage 4: Move to locomotion position")
+            self.get_logger().info("Stage 4: Stop spinning the conveyor belt")
             self.current_state = self.stage_4
 
-        # Move conveyor belt to locomotion position
-        self.publish_msg(0x61)
-        sleep(7)
-
-        # Check if pivot at starting position
-        # sensor_data = self.get_sensor_data()
-        # if not sensor_data.at_locomotion_position:
-        #     return 'stage_4'
+        # Stop the belt
+        self.publish_msg(0x00)
 
         return 'stage_5'
-
-    # ------------------ CONSTRUCTION STAGES ------------------
 
     def stage_5(self):
         """
-        Stage 5: Turn towards Apriltag
+        Stage 5: Move conveyor belt to locomotion position
         """
-        self.get_logger().info("Stage 5: Turn towards Apriltag")
+        if self.current_state != self.stage_5:
+            self.get_logger().info("Stage 5: Move to locomotion position")
+            self.current_state = self.stage_5
 
-        # Kill autonomy after timeout triggers
-        if time.time() - self.localization_timer >= self.LOCALIZATION_TIMEOUT:
-            sys.exit()
-        elif time.time() - self.localization_timer > self.STOP_TIME:
-            self.publish_msg(0x10)  # Locomotion stop
+        # Move conveyor belt to locomotion position
+        self.publish_msg(0x00)
+        sleep(7)
 
-        # Get an image capture
-        ret, frame = self.apriltag_detector.get_frame()
-        if not ret:
+        # Check if pivot at starting position
+        sensor_data = self.get_sensor_data()
+        if not sensor_data.at_locomotion_position:
             return 'stage_5'
 
-        # Check for apriltag detections
-        detections = self.apriltag_detector.get_detections(frame)
-        self.apriltag_detector.draw_results(detections, frame)
-        ret, _, rotation = self.apriltag_detector.get_pose(detections)
-        if not ret:
-            return 'stage_5'
-
-        # Reset timer
-        self.localization_timer = time.time()
-
-        # Get current yaw
-        angle = rotation[1]
-
-        # Target angle
-        TARGET_ANGLE = 0
-        ANGLE_THRESHOLD = 5
-
-        # Check if we are facing the target
-        error = TARGET_ANGLE - angle
-        if abs(error) <= ANGLE_THRESHOLD:
-            self.publish_msg(0x10)
-            return 'stage_6'
-
-        # Get needed motor powers
-        output = self.turn_controller.update(error)
-        motor_power = int(abs(output))
-        motor_power = self.clamp(motor_power, self.MIN_POWER, self.MAX_POWER)
-
-        # Check if we need to turn left or right
-        if output > 0:
-            command = 0x40  # Turn left
-        else:
-            command = 0x50  # Turn right
-        
-        self.publish_msg(command)
-        sleep(0.1)
-        return 'stage_5'
-
-    def stage_6(self):
-        """
-        Stage 6: Move robot towards Apriltag
-        """
-        self.get_logger().info("Stage 6: Move robot towards apriltag")
-
-        if time.time() - self.localization_timer >= self.LOCALIZATION_TIMEOUT:
-            sys.exit()
-        elif time.time() - self.localization_timer > 5:
-            self.publish_msg(0x10)  # Locomotion stop
-        
-        # Get an image capture
-        ret, frame = self.apriltag_detector.get_frame()
-        if not ret:
-            return 'stage_6'
-
-        # Check for apriltag detections
-        detections = self.apriltag_detector.get_detections(frame)
-        self.apriltag_detector.draw_results(detections, frame)
-        ret, translation, _ = self.apriltag_detector.get_pose(detections)
-        if not ret:
-            return 'stage_6'
-
-        # Reset timer
-        self.localization_timer = time.time()
-
-        # Get current distance from tags
-        distance = translation[-1]
-        TARGET_DISTANCE = 70
-
-        # Check if we are close enough to the tags
-        if distance <= TARGET_DISTANCE:
-            self.publish_msg(0x10)
-            return 'stage_7'
-
-        # Calculate needed motor power
-        error = TARGET_DISTANCE - distance
-        output = self.move_controller.update(error)
-        motor_power = int(abs(output))
-        motor_power = self.clamp(motor_power, self.MIN_POWER, self.MAX_POWER)
-
-        # Move the robot forward
-        self.publish_msg(0x20)
         return 'stage_6'
-
-    def stage_7(self):
-        """
-        Stage 7: Reverse Conveyor Belt
-        """
-        self.get_logger().info('Stage 7: Reverse Conveyor Belt')
-
-        # Reverse conveyor to dump material
-        self.publish_msg(0x62)  # Belt outward
-        sleep(10)
-        
-        return 'stage_8'
-
-    def stage_8(self):
-        """
-        Stage 8: Stop Conveyor Belt
-        """
-        self.get_logger().info('Stage 8: Stop Conveyor Belt')
-
-        # Stop the belt
-        self.publish_msg(0x63)
-        return None
 
 # ---------------- MAIN ----------------
 
