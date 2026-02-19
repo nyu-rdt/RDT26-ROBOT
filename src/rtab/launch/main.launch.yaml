@@ -15,19 +15,19 @@ launch:
         value: "true"
 
       - name: "depth_module.depth_profile"
-        value: "480x270x15"
+        value: "424x240x5"
 
       - name: "depth_module.infra_profile"
-        value: "480x270x15"
+        value: "424x240x5"
 
       - name: "rgb_camera.color_profile"
-        value: "480x270x15"
+        value: "424x240x5"
 
       - name: "rgb_camera.depth_profile"
-        value: "480x270x15"
+        value: "424x240x5"
 
       - name: "rgb_camera.infra_profile"
-        value: "480x270x15"
+        value: "424x240x5"
 
       - name: "decimation_filter.enable"
         value: "true"
@@ -97,14 +97,82 @@ launch:
        - name: "frame_id"
          value: "camera_link"
        - name: "queue_size"
-         value: "100"
+         value: "10   "
        - name: "topic_queue_size"
-         value: "100"
+         value: "10"
        - name: "Odom/Strategy"
          value: "1"
        - name: "Vis/CorType"
          value: "1"
+
+       - name: "Odom/ImageDecimation"
+         value: "2"
+
+       - name: "Odom/VisKeyFrameThr"
+         value: "200"
+
        - name: "OdomF2M/MaxSize"
-         value: "600"
+         value: "800"
+
+       - name: "OdomF2M/BundleAdjustment"
+         value: "0"
+
+       - name: "Vis/MaxFeatures"
+         value: "400"
+
+       - name: "Vis/MinInliers"
+         value: "15"
+
+       - name: "Vis/Iterations"
+         value: "100"
+
+       - name: "FAST/Threshold"
+         value: "25"
+
+       - name: "Rtabmap/DetectionRate"
+         value: "2"
+
+       - name: "Rtabmap/TimeThr"
+         value: "700"
+
+       - name: "RGBD/LinearUpdate"
+         value: "0.2"
+
+       - name: "RGBD/AngularUpdate"
+         value: "0.2"
+
+       - name: "Kp/MaxFeatures"
+         value: "300"
+
+       - name: "Mem/STMSize"
+         value: "5"
+
+       - name: "Mem/RecentWmRatio"
+         value: "0.1"
+
+       - name: "Grid/DepthDecimation"
+         value: "8"
+
+       - name: "Grid/CellSize"
+         value: "0.07"
+
+       - name: "Optimizer/Iterations"
+         value: "10"
+
+       - name: "RGBD/CreateOccupancyGrid"
+         value: "false"
+
+       - name: "Grid/3D"
+         value: "false"
+
+       - name: "PyDetector/Cuda"
+         value: "false"
+
+       - name: "PyMatcher/Cuda"
+         value: "false"
+
+       - name: "SuperPoint/Cuda"
+         value: "false"
+
 
          
