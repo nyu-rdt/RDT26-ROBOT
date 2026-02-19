@@ -15,10 +15,10 @@ launch:
         value: "true"
 
       - name: "depth_module.depth_profile"
-        value: "424x240x5"
+        value: "480x270x5"
 
       - name: "depth_module.infra_profile"
-        value: "424x240x5"
+        value: "480x270x5"
 
       - name: "rgb_camera.color_profile"
         value: "424x240x5"
@@ -163,7 +163,7 @@ launch:
          value: "false"
 
        - name: "Grid/3D"
-         value: "false"
+         value: "true"
 
        - name: "PyDetector/Cuda"
          value: "false"
@@ -174,5 +174,17 @@ launch:
        - name: "SuperPoint/Cuda"
          value: "false"
 
+       - name: "Grid/RayTracing"
+         value: "true"
 
+       - name: "Grid/GroundIsObstacle"
+         value: "true"
+
+       - name: "Grid/FlatObstacleDetected"
+         value: "true"
+
+       - name: "Grid/MaxObstacleHeight"
+         value: "1.2"
          
+       - name: "Grid/MaxGroundHeight"
+         value: "50"
