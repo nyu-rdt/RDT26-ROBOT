@@ -12,6 +12,8 @@ def generate_launch_description():
     device = LaunchConfiguration('device')
 
     apriltag_cfg = os.path.join(get_package_share_directory('april'), 'config', 'tags_36h11.yaml')
+    camera_cfg = os.path.join(get_package_share_directory('april'), 'config', 'LogitechC615.yaml')
+
 
     container = ComposableNodeContainer(
         name='apriltag_cam_nodes',
@@ -26,9 +28,10 @@ def generate_launch_description():
                 namespace='camera',
                 parameters=[
                     {'camera': device},
+                    {'width': 1920},
+                    {'height': 1080},
                     {'format': 'MJPEG'},
-                    #adjust path if needed, this is the path from the NUC
-                    {'camera_info_url': 'file:///home/nyu-rdt/april_test/src/RDT26-ROBOT/april/config/LogitechC615.yaml'},
+                    {'camera_info_url': 'file://' + camera_cfg},
                     {'frame_id': 'camera_optical_frame_link'}
                 ],
                 extra_arguments=[{'use_intra_process_comms': True}],
