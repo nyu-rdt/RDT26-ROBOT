@@ -12,37 +12,44 @@ def generate_launch_description():
 
     # Arguments
     params_file = LaunchConfiguration('params_file')
+    use_sim_time = LaunchConfiguration('use_sim_time')
     
     declare_params_file = DeclareLaunchArgument(
         'params_file',
         default_value=os.path.join(pkg_rdt, 'config', 'nav2_params.yaml'),
         description='Full path to the ROS2 parameters file to use')
 
+    declare_use_sim_time = DeclareLaunchArgument(
+        'use_sim_time',
+        default_value='False', # Change to 'True' ONLY if running Gazebo
+        description='Use simulation (Gazebo) clock if true')
+
     # Include the standard Nav2 bringup
-    # This brings up the map_server, amcl, planner, controller, behavior trees, etc.
     nav2_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(pkg_nav2, 'launch', 'bringup_launch.py')),
         launch_arguments={
             'params_file': params_file,
-            'map': '/home/nyu-rdt/RDT26-ROBOT/src/rdt_nav2_bringup/config/nav2_params.yaml', # Or pass as argument
-            'use_sim_time': 'True', # Set to True if using Gazebo
+            # POINT THIS TO A REAL MAP FILE (.yaml), NOT nav2_params.yaml
+            # 'map': os.path.join(pkg_rdt, 'maps', 'your_map.yaml'), 
+            'use_sim_time': use_sim_time,
             'autostart': 'True'
         }.items()
     )
 
     # RViz Node
     rviz_config = os.path.join(pkg_rdt, 'rviz', 'nav2_view.rviz') 
-    # Note: You need to save an RViz config to this path later
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
         name='rviz2',
         arguments=['-d', rviz_config],
-        output='screen'
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time}]
     )
 
     return LaunchDescription([
         declare_params_file,
+        declare_use_sim_time,
         nav2_launch,
         rviz_node
     ])
