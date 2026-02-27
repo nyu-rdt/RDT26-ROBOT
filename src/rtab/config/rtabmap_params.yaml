@@ -1,0 +1,59 @@
+rtabmap:
+  ros__parameters:
+    approx_sync: true
+    sync_queue_size: 10
+    topic_queue_size: 10
+
+    # Mapping behavior
+    Rtabmap/DetectionRate: 2
+    Rtabmap/TimeThr: 700
+
+    # RGBD update thresholds
+    RGBD/LinearUpdate: 0.2
+    RGBD/AngularUpdate: 0.2
+    RGBD/CreateOccupancyGrid: false
+
+    # Memory tuning
+    Mem/STMSize: 5
+    Mem/RecentWmRatio: 0.1
+
+    # Grid settings (these belong to rtabmap, not rgbd_odometry)
+    Grid/DepthDecimation: 8
+    Grid/CellSize: 0.07
+    Grid/3D: true
+    Grid/RayTracing: true
+    Grid/GroundIsObstacle: true
+    Grid/FlatObstacleDetected: true
+    Grid/MaxObstacleHeight: 1.2
+    Grid/MaxGroundHeight: 50.0
+
+    # Optimizer
+    Optimizer/Iterations: 10
+
+    # GPU toggles (mapping node)
+    PyDetector/Cuda: false
+    PyMatcher/Cuda: false
+    SuperPoint/Cuda: false
+
+
+rgbd_odometry:
+  ros__parameters:
+    frame_id: "camera_link"
+
+    # Odometry core
+    Odom/Strategy: 1
+    Odom/ImageDecimation: 2
+    Odom/VisKeyFrameThr: 200
+
+    # Frame to map tuning
+    OdomF2M/MaxSize: 800
+    OdomF2M/BundleAdjustment: 0
+
+    # Feature tuning (odometry node owns these)
+    Vis/CorType: 1
+    Vis/MaxFeatures: 400
+    Vis/MinInliers: 15
+    Vis/Iterations: 100
+
+    FAST/Threshold: 25
+    Kp/MaxFeatures: 300

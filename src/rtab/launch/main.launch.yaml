@@ -86,6 +86,8 @@ launch:
      arg:
        - name: "args"
          value: "--delete_db_on_start"
+      #  - name: "config_path"
+      #    value: "config/rtabmap_params.yaml"
        - name: "depth_topic"
          value: "/camera/camera/aligned_depth_to_color/image_raw"
        - name: "rgb_topic"
@@ -96,95 +98,93 @@ launch:
          value: "true"
        - name: "frame_id"
          value: "camera_link"
-       - name: "queue_size"
-         value: "10   "
+       - name: "sync_queue_size"
+         value: "10"
        - name: "topic_queue_size"
          value: "10"
-       - name: "Odom/Strategy"
+      #  - name: "Odom/Strategy" # TODO: BAD PARAMETER SETTING, DO MORE TESTING
+      #    value: "1"
+       - name: "Vis/CorType" 
          value: "1"
-       - name: "Vis/CorType"
-         value: "1"
-
-       - name: "Odom/ImageDecimation"
-         value: "2"
-
-       - name: "Odom/VisKeyFrameThr"
+      #  - name: "Odom/ImageDecimation" # TODO: BAD PARAMETER SETTING, DO MORE TESTING
+      #    value: "2"
+       - name: "Odom/VisKeyFrameThr" # ~ GOOD PARAM, DO MORE TESTING
          value: "200"
+      #  - name: "OdomF2M/MaxSize" # TODO: BAD PARAMETER SETTING, DO MORE TESTING
+      #    value: "1000"
 
-       - name: "OdomF2M/MaxSize"
-         value: "800"
+      #  - name: "OdomF2M/BundleAdjustment" # ! HORRIBLE PARAMETER SETTING, DO NOT USE, USE DEFAULT INSTEAD (1)
+      #    value: "0"
 
-       - name: "OdomF2M/BundleAdjustment"
-         value: "0"
-
-       - name: "Vis/MaxFeatures"
+       - name: "Vis/MaxFeatures" # ~ GOOD PARAM, DO MORE TESTING
          value: "400"
 
-       - name: "Vis/MinInliers"
+       - name: "Vis/MinInliers" # ~ GOOD PARAM, DO MORE TESTING, LOWER INCREASES RISK OF LOST TRACKING, BUT RUNS FASTER
          value: "15"
 
-       - name: "Vis/Iterations"
-         value: "100"
+       - name: "Vis/Iterations" # ~ GOOD PARAM, DO MORE TESTING, LOWER INCREASES RISK OF LOST TRACKING
+         value: "200"
 
-       - name: "FAST/Threshold"
-         value: "25"
+      #  - name: "FAST/Threshold" # * GOOD PARAM, DO NOT TOUCH, USING DEFAULT IS BEST (20)
+      #    value: "20"
 
-       - name: "Rtabmap/DetectionRate"
+       - name: "Rtabmap/DetectionRate" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
          value: "2"
 
-       - name: "Rtabmap/TimeThr"
-         value: "700"
+      #  - name: "Rtabmap/TimeThr" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
+      #    value: "50"
 
-       - name: "RGBD/LinearUpdate"
-         value: "0.2"
+      #  - name: "RGBD/LinearUpdate" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
+      #    value: "0.75"
 
-       - name: "RGBD/AngularUpdate"
-         value: "0.2"
+      #  - name: "RGBD/AngularUpdate" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
+      #    value: "0.2"
 
-       - name: "Kp/MaxFeatures"
-         value: "300"
+      # ^ Use default for now (500)
+      #  - name: "Kp/MaxFeatures" # ~ GOOD PARAM, DO MORE TESTING, LOWER MEANS LESS POINTS TO REF, MORE MEANS MORE POINTS TO REF. MORE POINTS MEANS MORE COMPUTATION, BUT ALSO MORE ACCURATE
+      #    value: "500"
 
-       - name: "Mem/STMSize"
-         value: "5"
+      #  - name: "Mem/STMSize" # TODO: DO MORE TESTING, DID NOT SEE MUCH DIFFERENCE IN TESTING
+      #    value: "5"
 
-       - name: "Mem/RecentWmRatio"
-         value: "0.1"
+      #  - name: "Mem/RecentWmRatio"
+      #    value: "0.1"
 
-       - name: "Grid/DepthDecimation"
-         value: "8"
+      #  - name: "Grid/DepthDecimation"
+      #    value: "8"
 
-       - name: "Grid/CellSize"
-         value: "0.07"
+      #  - name: "Grid/CellSize"
+      #    value: "0.07"
 
-       - name: "Optimizer/Iterations"
-         value: "10"
+      #  - name: "Optimizer/Iterations"
+      #    value: "10"
 
-       - name: "RGBD/CreateOccupancyGrid"
+      #  - name: "RGBD/CreateOccupancyGrid" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!! USE DEFAULT
+      #    value: "true"
+
+       - name: "Grid/3D" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
          value: "false"
 
-       - name: "Grid/3D"
-         value: "true"
-
-       - name: "PyDetector/Cuda"
+       - name: "PyDetector/Cuda" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
          value: "false"
 
-       - name: "PyMatcher/Cuda"
+       - name: "PyMatcher/Cuda" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
          value: "false"
 
-       - name: "SuperPoint/Cuda"
+       - name: "SuperPoint/Cuda" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
          value: "false"
 
-       - name: "Grid/RayTracing"
-         value: "true"
+       - name: "Grid/RayTracing" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
+         value: "false" # ! NEVER SET TO TRUE
 
-       - name: "Grid/GroundIsObstacle"
-         value: "true"
+      #  - name: "Grid/GroundIsObstacle"
+      #    value: "true"
 
-       - name: "Grid/FlatObstacleDetected"
-         value: "true"
+      #  - name: "Grid/FlatObstacleDetected"
+      #    value: "true"
 
-       - name: "Grid/MaxObstacleHeight"
-         value: "1.2"
+      #  - name: "Grid/MaxObstacleHeight"
+      #    value: "1.2"
          
-       - name: "Grid/MaxGroundHeight"
-         value: "50"
+      #  - name: "Grid/MaxGroundHeight"
+      #    value: "50"
