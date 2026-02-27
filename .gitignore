@@ -2,5 +2,5 @@ build/
 install/
 log/
 src/rtabmap
-src/rtabmap_ros/*
-!src/rtabmap_ros/rtabmap_launch
+# src/rtabmap_ros/*
+# !src/rtabmap_ros/rtabmap_launch
