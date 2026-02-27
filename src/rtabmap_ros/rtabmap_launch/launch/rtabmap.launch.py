@@ -213,10 +213,8 @@ def launch_setup(context, *args, **kwargs):
                 "Vis/MinInliers": LaunchConfiguration('Vis/MinInliers').perform(context),
                 "Vis/Iterations": LaunchConfiguration('Vis/Iterations').perform(context),
                 "FAST/Threshold": LaunchConfiguration('FAST/Threshold').perform(context),
+                "Optimizer/Iterations": LaunchConfiguration('Optimizer/Iterations').perform(context),
                 
-                
-
-
                 }],
             remappings=[
                 ("rgb/image", LaunchConfiguration('rgb_topic_relay')),
@@ -354,7 +352,6 @@ def launch_setup(context, *args, **kwargs):
                 "Mem/RecentWmRatio": LaunchConfiguration('Mem/RecentWmRatio').perform(context),
                 "Grid/DepthDecimation": LaunchConfiguration('Grid/DepthDecimation').perform(context),
                 "Grid/CellSize": LaunchConfiguration('Grid/CellSize').perform(context),
-                "Optimizer/Iterations": LaunchConfiguration('Optimizer/Iterations').perform(context),
                 "RGBD/CreateOccupancyGrid": LaunchConfiguration('RGBD/CreateOccupancyGrid').perform(context),
                 "Grid/3D": LaunchConfiguration('Grid/3D').perform(context),
                 "PyDetector/Cuda": LaunchConfiguration('PyDetector/Cuda').perform(context),
@@ -365,13 +362,19 @@ def launch_setup(context, *args, **kwargs):
                 "Grid/FlatObstacleDetected": LaunchConfiguration('Grid/FlatObstacleDetected').perform(context),
                 "Grid/MaxObstacleHeight": LaunchConfiguration('Grid/MaxObstacleHeight').perform(context),
                 "Grid/MaxGroundHeight": LaunchConfiguration('Grid/MaxGroundHeight').perform(context),
-                
+                "Grid/PreVoxelFiltering": LaunchConfiguration('Grid/PreVoxelFiltering').perform(context),
+                "Grid/NoiseFilteringRadius": LaunchConfiguration('Grid/NoiseFilteringRadius').perform(context),
+                "Grid/NoiseFilteringMinNeighbors": LaunchConfiguration('Grid/NoiseFilteringMinNeighbors').perform(context),
+                "Grid/NormalsSegmentation": LaunchConfiguration('Grid/NormalsSegmentation').perform(context),
+                "Grid/MaxGroundAngle": LaunchConfiguration('Grid/MaxGroundAngle').perform(context),
+
                 # & Paramters both in rgbd_odometry and rtabmap
                 "Vis/CorType": LaunchConfiguration('Vis/CorType').perform(context),
                 "Vis/MaxFeatures": LaunchConfiguration('Vis/MaxFeatures').perform(context),
                 "Vis/MinInliers": LaunchConfiguration('Vis/MinInliers').perform(context),
                 "Vis/Iterations": LaunchConfiguration('Vis/Iterations').perform(context),
                 "FAST/Threshold": LaunchConfiguration('FAST/Threshold').perform(context),
+                "Optimizer/Iterations": LaunchConfiguration('Optimizer/Iterations').perform(context),
 
             }],
             remappings=[
@@ -592,6 +595,7 @@ def generate_launch_description():
         DeclareLaunchArgument('Vis/MinInliers', default_value='20', description='TBD'),
         DeclareLaunchArgument('Vis/Iterations', default_value='300', description='TBD'),
         DeclareLaunchArgument('FAST/Threshold', default_value='20', description='TBD'),
+        DeclareLaunchArgument('Optimizer/Iterations', default_value='20', description='Optimization iterations.'),
         
         # & Parameters only in rgbd_odometry
         DeclareLaunchArgument('Odom/Strategy', default_value='0', description='TBD'),
@@ -607,10 +611,9 @@ def generate_launch_description():
         DeclareLaunchArgument('RGBD/AngularUpdate', default_value='0.1', description='Minimum angular displacement to update the map. Rehearsal is done prior to this, so weights are still updated.'),
         DeclareLaunchArgument('Kp/MaxFeatures', default_value='500', description='0 no limits.'),
         DeclareLaunchArgument('Mem/STMSize', default_value='10', description='Short-term memory size.'),
-        DeclareLaunchArgument('Mem/RecentWmRatio', default_value='0.2', description='TBD'),
-        DeclareLaunchArgument('Grid/DepthDecimation', default_value='4', description='TBD'),
-        DeclareLaunchArgument('Grid/CellSize', default_value='0.05', description='TBD'),
-        DeclareLaunchArgument('Optimizer/Iterations', default_value='20', description='TBD'),
+        DeclareLaunchArgument('Mem/RecentWmRatio', default_value='0.2', description='Ratio of locations after the last loop closure in WM that cannot be transferred'),
+        DeclareLaunchArgument('Grid/DepthDecimation', default_value='4', description='Decimation of the depth image before creating cloud'),
+        DeclareLaunchArgument('Grid/CellSize', default_value='0.05', description='Resolution of the occupancy grid'),
         DeclareLaunchArgument('RGBD/CreateOccupancyGrid', default_value='true', description='TBD'),
         DeclareLaunchArgument('Grid/3D', default_value='true', description='TBD'),
         DeclareLaunchArgument('PyDetector/Cuda', default_value='true', description='Use cuda'),
@@ -621,6 +624,12 @@ def generate_launch_description():
         DeclareLaunchArgument('Grid/FlatObstacleDetected', default_value='true', description='TBD'),
         DeclareLaunchArgument('Grid/MaxObstacleHeight', default_value='0.0', description='TBD'),
         DeclareLaunchArgument('Grid/MaxGroundHeight', default_value='0.0', description='TBD'),
+        DeclareLaunchArgument('Grid/PreVoxelFiltering', default_value='true', description='TBD'),
+        DeclareLaunchArgument('Grid/NoiseFilteringRadius', default_value='0.0', description='TBD'),
+        DeclareLaunchArgument('Grid/NoiseFilteringMinNeighbors', default_value='5', description='TBD'),
+        DeclareLaunchArgument('Grid/NormalsSegmentation', default_value='true', description='TBD'),
+        DeclareLaunchArgument('Grid/MaxGroundAngle', default_value='45', description='TBD'),
+        
 
 
         OpaqueFunction(function=launch_setup)

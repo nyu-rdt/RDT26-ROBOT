@@ -147,14 +147,26 @@ launch:
       #  - name: "Mem/STMSize" # TODO: DO MORE TESTING, DID NOT SEE MUCH DIFFERENCE IN TESTING
       #    value: "5"
 
-      #  - name: "Mem/RecentWmRatio"
+      #  - name: "Mem/RecentWmRatio" # TODO: DO MORE TESTING, DID NOT SEE MUCH DIFFERENCE IN TESTING
       #    value: "0.1"
 
-      #  - name: "Grid/DepthDecimation"
-      #    value: "8"
+       - name: "Grid/DepthDecimation" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
+         value: "18"
 
-      #  - name: "Grid/CellSize"
-      #    value: "0.07"
+       - name: "Grid/CellSize" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
+         value: "0.07"
+
+      #  - name: "Grid/NoiseFilteringRadius" # ! HORRIBLE PARAMETER SETTING, DO NOT USE, USE DEFAULT INSTEAD (1)
+      #    value: "0.05"
+
+      #  - name: "Grid/NoiseFilteringMinNeighbors" # TODO: DO MORE TESTING,
+      #    value: "5"
+
+      #  - name: "Grid/NormalsSegmentation" # * GOOD PARAM, DO NOT TOUCH, USING DEFAULT IS BEST (true)
+      #    value: "true"
+
+      #  - name: "Grid/MaxGroundAngle" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
+      #    value: "30"
 
       #  - name: "Optimizer/Iterations"
       #    value: "10"
@@ -177,10 +189,10 @@ launch:
        - name: "Grid/RayTracing" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
          value: "false" # ! NEVER SET TO TRUE
 
-      #  - name: "Grid/GroundIsObstacle"
+      #  - name: "Grid/GroundIsObstacle" # TODO: DO MORE TESTING, DO NOT MAKE TRUE (TAKES WALLS OUT OF EVERYTHING)
       #    value: "true"
 
-      #  - name: "Grid/FlatObstacleDetected"
+      #  - name: "Grid/FlatObstacleDetected" # * GOOD PARAM, DO NOT TOUCH, USING DEFAULT IS BEST (true)
       #    value: "true"
 
       #  - name: "Grid/MaxObstacleHeight"
