@@ -5,29 +5,42 @@ launch:
       - name: "align_depth.enable"
         value: "true"
 
+      # - name: "initial_reset"
+      #   value: "true"
+
       - name: "pointcloud.enable"
         value: "true"
 
+      # - name: "clip_distance"
+      #   value: "10"
+      - name: "spatial_filter.enable"
+        value: "true"        # smooth depth data
+      - name: "temporal_filter.enable"
+        value: "true"        # reduce flickering in depth
+        
       - name: "enable_infra1"
         value: "true"
 
       - name: "enable_infra2"
         value: "true"
 
+      - name: "enable_sync"
+        value: "true"
+
       - name: "depth_module.depth_profile"
-        value: "480x270x5"
+        value: "480x270x15"
 
       - name: "depth_module.infra_profile"
-        value: "480x270x5"
+        value: "480x270x15"
 
       - name: "rgb_camera.color_profile"
-        value: "424x240x5"
+        value: "424x240x15"
 
-      - name: "rgb_camera.depth_profile"
-        value: "424x240x5"
+      # - name: "rgb_camera.depth_profile"
+      #   value: "424x240x5"
 
-      - name: "rgb_camera.infra_profile"
-        value: "424x240x5"
+      # - name: "rgb_camera.infra_profile"
+      #   value: "424x240x5"
 
       - name: "decimation_filter.enable"
         value: "true"
@@ -102,22 +115,27 @@ launch:
          value: "10"
        - name: "topic_queue_size"
          value: "10"
-      #  - name: "Odom/Strategy" # TODO: BAD PARAMETER SETTING, DO MORE TESTING
+
+      #  - name: "Odom/Strategy" # ! HORRIBLE PARAMETER SETTING, DO MORE TESTING
       #    value: "1"
-       - name: "Vis/CorType" 
+
+       - name: "Vis/CorType" # * GOOD PARAM, DO NOT TOUCH!
          value: "1"
-      #  - name: "Odom/ImageDecimation" # TODO: BAD PARAMETER SETTING, DO MORE TESTING
+
+      #  - name: "Odom/ImageDecimation" # ! HORRIBLE PARAMETER SETTING, DO NOT USE
       #    value: "2"
-       - name: "Odom/VisKeyFrameThr" # ~ GOOD PARAM, DO MORE TESTING
-         value: "200"
-      #  - name: "OdomF2M/MaxSize" # TODO: BAD PARAMETER SETTING, DO MORE TESTING
-      #    value: "1000"
+
+       - name: "Odom/VisKeyFrameThr" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
+         value: "500"
+
+       - name: "OdomF2M/MaxSize" # ~ GOOD PARAM, DO MORE TESTING
+         value: "1000"
 
       #  - name: "OdomF2M/BundleAdjustment" # ! HORRIBLE PARAMETER SETTING, DO NOT USE, USE DEFAULT INSTEAD (1)
       #    value: "0"
 
        - name: "Vis/MaxFeatures" # ~ GOOD PARAM, DO MORE TESTING
-         value: "400"
+         value: "500"
 
        - name: "Vis/MinInliers" # ~ GOOD PARAM, DO MORE TESTING, LOWER INCREASES RISK OF LOST TRACKING, BUT RUNS FASTER
          value: "15"
@@ -134,15 +152,19 @@ launch:
       #  - name: "Rtabmap/TimeThr" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
       #    value: "50"
 
-      #  - name: "RGBD/LinearUpdate" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
-      #    value: "0.75"
+       - name: "RGBD/LinearUpdate" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
+         value: ".2"
+
+       - name: "RGBD/AngularUpdate" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
+         value: ".1"
+
 
       #  - name: "RGBD/AngularUpdate" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
       #    value: "0.2"
 
       # ^ Use default for now (500)
-      #  - name: "Kp/MaxFeatures" # ~ GOOD PARAM, DO MORE TESTING, LOWER MEANS LESS POINTS TO REF, MORE MEANS MORE POINTS TO REF. MORE POINTS MEANS MORE COMPUTATION, BUT ALSO MORE ACCURATE
-      #    value: "500"
+       - name: "Kp/MaxFeatures" # ~ GOOD PARAM, DO MORE TESTING, LOWER MEANS LESS POINTS TO REF, MORE MEANS MORE POINTS TO REF. MORE POINTS MEANS MORE COMPUTATION, BUT ALSO MORE ACCURATE
+         value: "500"
 
       #  - name: "Mem/STMSize" # TODO: DO MORE TESTING, DID NOT SEE MUCH DIFFERENCE IN TESTING
       #    value: "5"
@@ -151,7 +173,7 @@ launch:
       #    value: "0.1"
 
        - name: "Grid/DepthDecimation" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
-         value: "18"
+         value: "8"
 
        - name: "Grid/CellSize" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
          value: "0.07"
@@ -168,10 +190,10 @@ launch:
       #  - name: "Grid/MaxGroundAngle" # ~ GOOD PARAM, DO MORE TESTING, UNSURE HOW MUCH IT HELPS
       #    value: "30"
 
-      #  - name: "Optimizer/Iterations"
-      #    value: "10"
+       - name: "Optimizer/Iterations" # * GOOD PARAM, DO NOT TOUCH,
+         value: "100"
 
-      #  - name: "RGBD/CreateOccupancyGrid" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!! USE DEFAULT
+      #  - name: "RGBD/CreateOccupancyGrid" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!! USE DEFAULT (true)
       #    value: "true"
 
        - name: "Grid/3D" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
@@ -189,14 +211,29 @@ launch:
        - name: "Grid/RayTracing" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
          value: "false" # ! NEVER SET TO TRUE
 
-      #  - name: "Grid/GroundIsObstacle" # TODO: DO MORE TESTING, DO NOT MAKE TRUE (TAKES WALLS OUT OF EVERYTHING)
+      #  - name: "Grid/GroundIsObstacle" # !HORRIBLE PARAMETER SETTING, DO NOT MAKE TRUE (TAKES WALLS OUT OF EVERYTHING)
       #    value: "true"
 
       #  - name: "Grid/FlatObstacleDetected" # * GOOD PARAM, DO NOT TOUCH, USING DEFAULT IS BEST (true)
       #    value: "true"
 
-      #  - name: "Grid/MaxObstacleHeight"
-      #    value: "1.2"
-         
-      #  - name: "Grid/MaxGroundHeight"
-      #    value: "50"
+       - name: "Grid/MapFrameProjection"
+         value: "true"
+
+       - name: "Grid/MaxObstacleHeight"
+         value: "2.5"
+
+      #  - name: "Grid/MinGroundHeight"
+      #    value: "-0.25"
+
+       - name: "Grid/MaxGroundHeight"
+         value: "0.25"
+
+       - name: "Mem/ImagePreDecimation"
+         value: "2"
+
+       - name: "Odom/ScanKeyFrameThr" # # * BEST PARAM, DO NOT TOUCH, PREVENTS SWAP MEMORY FROM GROWING TOO MUCH
+         value: ".6"
+
+      #  - name: "always_process_most_recent_frame"
+      #    value: "false"

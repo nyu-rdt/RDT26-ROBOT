@@ -76,7 +76,7 @@ def launch_setup(context, *args, **kwargs):
     
         SetParameter(name='use_sim_time', value=LaunchConfiguration('use_sim_time')),
         # 'use_sim_time' will be set on all nodes following the line above
-    
+        
         # Relays RGB-Depth
         Node(
             package='image_transport', executable='republish', name='republish_rgb',
@@ -206,6 +206,7 @@ def launch_setup(context, *args, **kwargs):
                 "Odom/VisKeyFrameThr": LaunchConfiguration('Odom/VisKeyFrameThr').perform(context),
                 "OdomF2M/MaxSize": LaunchConfiguration('OdomF2M/MaxSize').perform(context),
                 "OdomF2M/BundleAdjustment": LaunchConfiguration('OdomF2M/BundleAdjustment').perform(context),
+                "Odom/ScanKeyFrameThr": LaunchConfiguration('Odom/ScanKeyFrameThr').perform(context),
                 
                 # & Paramters both in rgbd_odometry and rtabmap
                 "Vis/CorType": LaunchConfiguration('Vis/CorType').perform(context),
@@ -362,11 +363,14 @@ def launch_setup(context, *args, **kwargs):
                 "Grid/FlatObstacleDetected": LaunchConfiguration('Grid/FlatObstacleDetected').perform(context),
                 "Grid/MaxObstacleHeight": LaunchConfiguration('Grid/MaxObstacleHeight').perform(context),
                 "Grid/MaxGroundHeight": LaunchConfiguration('Grid/MaxGroundHeight').perform(context),
+                "Grid/MinGroundHeight": LaunchConfiguration('Grid/MinGroundHeight').perform(context),
                 "Grid/PreVoxelFiltering": LaunchConfiguration('Grid/PreVoxelFiltering').perform(context),
                 "Grid/NoiseFilteringRadius": LaunchConfiguration('Grid/NoiseFilteringRadius').perform(context),
                 "Grid/NoiseFilteringMinNeighbors": LaunchConfiguration('Grid/NoiseFilteringMinNeighbors').perform(context),
                 "Grid/NormalsSegmentation": LaunchConfiguration('Grid/NormalsSegmentation').perform(context),
                 "Grid/MaxGroundAngle": LaunchConfiguration('Grid/MaxGroundAngle').perform(context),
+                "Mem/ImagePreDecimation": LaunchConfiguration('Mem/ImagePreDecimation').perform(context),
+                "Grid/MapFrameProjection": LaunchConfiguration('Grid/MapFrameProjection').perform(context),
 
                 # & Paramters both in rgbd_odometry and rtabmap
                 "Vis/CorType": LaunchConfiguration('Vis/CorType').perform(context),
@@ -600,9 +604,10 @@ def generate_launch_description():
         # & Parameters only in rgbd_odometry
         DeclareLaunchArgument('Odom/Strategy', default_value='0', description='TBD'),
         DeclareLaunchArgument('Odom/ImageDecimation', default_value='1', description='TBD'),
-        DeclareLaunchArgument('Odom/VisKeyFrameThr', default_value='150', description='TBD'),
-        DeclareLaunchArgument('OdomF2M/MaxSize', default_value='2000', description='TBD'),
+        DeclareLaunchArgument('Odom/VisKeyFrameThr', default_value='150', description='Create a new keyframe when the number of inliers drops under this threshold. Setting the value to 0 means that a keyframe is created for each processed frame'),
+        DeclareLaunchArgument('OdomF2M/MaxSize', default_value='2000', description='Local map size: If > 0 (example 5000), the odometry will maintain a local map of X maximum words'),
         DeclareLaunchArgument('OdomF2M/BundleAdjustment', default_value='1', description='TBD'),
+        DeclareLaunchArgument('Odom/ScanKeyFrameThr', default_value='.9', description='TBD'),
 
         # & Parameters only in rtabmap
         DeclareLaunchArgument('Rtabmap/DetectionRate', default_value='1', description='Detection rate. RTAB-Map will filter input images to satisfy this rate.'),
@@ -619,16 +624,19 @@ def generate_launch_description():
         DeclareLaunchArgument('PyDetector/Cuda', default_value='true', description='Use cuda'),
         DeclareLaunchArgument('PyMatcher/Cuda', default_value='true', description='Used by SuperGlue'),
         DeclareLaunchArgument('SuperPoint/Cuda', default_value='true', description='TBD'),
+        DeclareLaunchArgument('Grid/MapFrameProjection', default_value='false', description='Projection in map frame. On a 3D terrain and a fixed local camera transform (the cloud is created relative to ground), you may want to disable this to do the projection in robot frame instead'),
         DeclareLaunchArgument('Grid/RayTracing', default_value='false', description='TBD'),
         DeclareLaunchArgument('Grid/GroundIsObstacle', default_value='false', description='TBD'),
         DeclareLaunchArgument('Grid/FlatObstacleDetected', default_value='true', description='TBD'),
-        DeclareLaunchArgument('Grid/MaxObstacleHeight', default_value='0.0', description='TBD'),
-        DeclareLaunchArgument('Grid/MaxGroundHeight', default_value='0.0', description='TBD'),
+        DeclareLaunchArgument('Grid/MaxObstacleHeight', default_value='0.0', description='Maximum obstacles height (0=disabled).'),
+        DeclareLaunchArgument('Grid/MinGroundHeight', default_value='0.0', description='Minimum ground height (0=disabled).'),
+        DeclareLaunchArgument('Grid/MaxGroundHeight', default_value='0.0', description='Maximum ground height (0=disabled).'),
         DeclareLaunchArgument('Grid/PreVoxelFiltering', default_value='true', description='TBD'),
         DeclareLaunchArgument('Grid/NoiseFilteringRadius', default_value='0.0', description='TBD'),
         DeclareLaunchArgument('Grid/NoiseFilteringMinNeighbors', default_value='5', description='TBD'),
         DeclareLaunchArgument('Grid/NormalsSegmentation', default_value='true', description='TBD'),
         DeclareLaunchArgument('Grid/MaxGroundAngle', default_value='45', description='TBD'),
+        DeclareLaunchArgument('Mem/ImagePreDecimation', default_value='1', description='Decimation of the RGB image before visual feature detection'),
         
 
 
