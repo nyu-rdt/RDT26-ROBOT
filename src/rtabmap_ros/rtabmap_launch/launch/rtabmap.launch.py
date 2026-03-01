@@ -635,7 +635,7 @@ def generate_launch_description():
         DeclareLaunchArgument('Grid/NoiseFilteringRadius', default_value='0.0', description='TBD'),
         DeclareLaunchArgument('Grid/NoiseFilteringMinNeighbors', default_value='5', description='TBD'),
         DeclareLaunchArgument('Grid/NormalsSegmentation', default_value='true', description='TBD'),
-        # DeclareLaunchArgument('Grid/MaxGroundAngle', default_value='45', description='TBD'),
+        DeclareLaunchArgument('Grid/MaxGroundAngle', default_value='45', description='TBD'),
         DeclareLaunchArgument('Mem/ImagePreDecimation', default_value='1', description='Decimation of the RGB image before visual feature detection'),
         
 
