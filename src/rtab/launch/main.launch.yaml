@@ -27,6 +27,12 @@ launch:
       - name: "enable_sync"
         value: "true"
 
+      - name: "enable_gyro"
+        value: "true"
+
+      - name: "enable_accel"
+        value: "true"
+
       - name: "depth_module.depth_profile"
         value: "480x270x15"
 
@@ -59,24 +65,17 @@ launch:
 
       # Reduce latency
       - name: "depth_module.frames_queue_size"
-        value: "2"
+        value: "5"
 
       - name: "rgb_camera.frames_queue_size"
-        value: "2"
+        value: "5"
 
       # Reduce internal filter buffering
       - name: "spatial_filter.frames_queue_size"
-        value: "1"
+        value: "5"
 
       - name: "temporal_filter.frames_queue_size"
-        value: "1"
-
-      # Disable filters you are not explicitly using
-      - name: "spatial_filter.enable"
-        value: "false"
-
-      - name: "temporal_filter.enable"
-        value: "false"
+        value: "5"
 
       - name: "hole_filling_filter.enable"
         value: "false"
@@ -91,6 +90,11 @@ launch:
       - name: "clip_distance"
         value: "5.0"
 
+  # - node:
+  #     pkg: "tf2_ros"
+  #     exec: "static_transform_publisher"
+  #     name: "base_to_camera"
+  #     args: "0 0 -.25 0 0 0 base_link camera_link"
 
 
 # Opens rtabmap
@@ -164,7 +168,7 @@ launch:
 
       # ^ Use default for now (500)
        - name: "Kp/MaxFeatures" # ~ GOOD PARAM, DO MORE TESTING, LOWER MEANS LESS POINTS TO REF, MORE MEANS MORE POINTS TO REF. MORE POINTS MEANS MORE COMPUTATION, BUT ALSO MORE ACCURATE
-         value: "500"
+         value: "1500"
 
       #  - name: "Mem/STMSize" # TODO: DO MORE TESTING, DID NOT SEE MUCH DIFFERENCE IN TESTING
       #    value: "5"

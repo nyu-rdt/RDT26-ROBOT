@@ -368,7 +368,7 @@ def launch_setup(context, *args, **kwargs):
                 "Grid/NoiseFilteringRadius": LaunchConfiguration('Grid/NoiseFilteringRadius').perform(context),
                 "Grid/NoiseFilteringMinNeighbors": LaunchConfiguration('Grid/NoiseFilteringMinNeighbors').perform(context),
                 "Grid/NormalsSegmentation": LaunchConfiguration('Grid/NormalsSegmentation').perform(context),
-                "Grid/MaxGroundAngle": LaunchConfiguration('Grid/MaxGroundAngle').perform(context),
+                # "Grid/MaxGroundAngle": LaunchConfiguration('Grid/MaxGroundAngle').perform(context),
                 "Mem/ImagePreDecimation": LaunchConfiguration('Mem/ImagePreDecimation').perform(context),
                 "Grid/MapFrameProjection": LaunchConfiguration('Grid/MapFrameProjection').perform(context),
 
@@ -635,7 +635,7 @@ def generate_launch_description():
         DeclareLaunchArgument('Grid/NoiseFilteringRadius', default_value='0.0', description='TBD'),
         DeclareLaunchArgument('Grid/NoiseFilteringMinNeighbors', default_value='5', description='TBD'),
         DeclareLaunchArgument('Grid/NormalsSegmentation', default_value='true', description='TBD'),
-        DeclareLaunchArgument('Grid/MaxGroundAngle', default_value='45', description='TBD'),
+        # DeclareLaunchArgument('Grid/MaxGroundAngle', default_value='45', description='TBD'),
         DeclareLaunchArgument('Mem/ImagePreDecimation', default_value='1', description='Decimation of the RGB image before visual feature detection'),
         
 
