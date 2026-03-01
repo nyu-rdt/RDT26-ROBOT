@@ -17,13 +17,17 @@ class AprilTagTF(Node):
 
 
     def tag_camera_tf(self):
+        frames = ['tag_18', 'tag_19', 'tag_20', 'tag_21']
         try: 
-            camera_tag = self.tf_buffer.lookup_transform('camera_optical_frame_link',
-                                                        'tag_19',
-                                                        rclpy.time.Time()
-                                                        )
+            for frame in frames: 
+                camera_tag = self.tf_buffer.lookup_transform('camera_optical_frame_link',
+                                                            frame,
+                                                            rclpy.time.Time()
+                                                            )
         except (LookupException, ConnectivityException, ExtrapolationException):
             return
+        self.get_logger().info(f"Horizontal Distance: {camera_tag.transform.translation.z}", throttle_duration_sec=.5)
+        
 
 #CODE BELOW IS ONLY NECESSARY WHEN TRYING TO MODIFY TRANSFORMS
 

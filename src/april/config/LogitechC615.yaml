@@ -1,6 +1,8 @@
+#camera w/ broken wire
 image_width: 1920
 image_height: 1080
-camera_name: HDWebcamC615___SB__PCI0_XHC__RHUB_HS02_2_1_2_046d_082c_1920x1080
+# camera_name: HDWebcamC615___SB__PCI0_XHC__RHUB_HS02_2_1_2_046d_082c_1920x1080
+camera_name: Logitech_1
 camera_matrix:
   rows: 3
   cols: 3
