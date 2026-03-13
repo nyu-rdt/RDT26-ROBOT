@@ -9,7 +9,6 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch.conditions import IfCondition
 from launch_ros.actions import Node
 
-
 def generate_launch_description():
     pkg_rdt = get_package_share_directory("rdt_nav2_bringup")
     pkg_nav2 = get_package_share_directory("nav2_bringup")
@@ -39,14 +38,14 @@ def generate_launch_description():
     )
 
     declare_world = DeclareLaunchArgument(
-        "world",
-        default_value="empty.sdf",
-        description="Gazebo world file (name like empty.sdf, or absolute path).",
+            "world",
+            default_value=os.path.join(pkg_rdt, "worlds", "my_world.sdf"),
+            description="Gazebo world file",
     )
 
     declare_map = DeclareLaunchArgument(
         "map",
-        default_value="",
+        default_value=os.path.join(pkg_rdt, "config", "my_map.yaml"),
         description="Full path to map.yaml. Leave empty if using SLAM.",
     )
 
