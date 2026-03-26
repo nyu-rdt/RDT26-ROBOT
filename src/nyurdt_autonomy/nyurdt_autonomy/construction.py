@@ -4,7 +4,7 @@ import sys
 import time
 from time import sleep
 
-from std_msgs.msg import Byte
+from std_msgs.msg import Byte, String
 
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
 from nyurdt_localization.pid_controller import PID
@@ -15,32 +15,19 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 import apriltag
 
-class ExcavationNode(Node):
+class ConstructionNode(Node):
     """
     Node combining Digging and Dumping stages
     """
 
     def __init__(self):
-        super().__init__('ExcavationNode')
-
-        # Client to receive sensor data
-        self.cli = self.create_client(SensorData, "get_sensor_data")
-
-        # Making sure service is available
-        while not self.cli.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("Service not available, waiting again...")
-        self.req = SensorData.Request()
+        super().__init__('ConstructionNode')
 
         # Publisher for autonomy commands
         self.publisher = self.create_publisher(Byte, "/robotCmds/manual", 10)
 
-        # Manual control interrupt subscribers
-        # self.manual_subscription = self.create_subscription(Byte,
-        #                                                     "/robotCmds/manual",
-        #                                                     self.manual_callback,
-        #                                                     10)
-
-
+        self.mode_sub = self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
+        
         ## Locomotion variables ##
         self.localization_timer = time.time()
         self.LOCALIZATION_TIMEOUT = 30  # Timeout for Apriltag localization
@@ -48,15 +35,8 @@ class ExcavationNode(Node):
         # Use the realsense IMU to determine orientation for a 180 turn
         self.current_pose = self.get_sensor_data()
         self.start_pose = self.get_sensor_data()
-        
-        # PID controllers
-        self.turn_controller = PID(P=1, I=0, D=0.1)
-        self.move_controller = PID(P=0.4, I=0, D=0)
-
-        # Locomotion speed limits
-        self.MAX_POWER = 50
-        self.MIN_POWER = 20
-
+  
+  
         # Apriltag variables
         self.STOP_TIME = 1  # Robot stop time after losing Apriltag detection
         self.apriltag_detector = AprilTagDetector()
@@ -66,15 +46,9 @@ class ExcavationNode(Node):
         self.depo_start_time = 0
         # NEED TO CHANGE VALUE -----------------------------------------------
         self.depo_time = 30
-        
-         # Using 4 load cells we can know how much regolith has been deposited
-        self.bin_mass = self.get_sensor_data()
-        self.goal_mass = 0.14 #kg
 
         # Variable used to avoid repeated logging of state
         self.current_state = None
-
-
 
     def create_machine(self):
         """
@@ -106,6 +80,15 @@ class ExcavationNode(Node):
         """
         sys.exit()
 
+    def mode_callback(self, msg):
+        """
+        Mode callback to stop the node if the mode changes from excavation to something else
+        """
+        if msg.data != "DUMPING":
+            return
+        
+        self.execute_machine()
+
     def execute_machine(self):
         """
         Begin execution of the machine
@@ -136,7 +119,6 @@ class ExcavationNode(Node):
         self.get_logger().info('Stage 2: Open depo bin hatch')
 
         self.publish_msg(0x00)  # open depo bin hatch
-        sleep(2)
         
         return 'stage_3'
     
@@ -167,7 +149,6 @@ class ExcavationNode(Node):
 
         self.publish_msg(0x00) # stop vibrating depo motor
 
-        sleep(2)
         return 'stage_5'
     
     def stage_5(self):
@@ -178,14 +159,13 @@ class ExcavationNode(Node):
 
         self.publish_msg(0x00) # close depo bin hatch
 
-        sleep(5)
         return None
 
 # ---------------- MAIN ----------------
 
 def main(args=None):
     rclpy.init(args=args)
-    node = ExcavationNode()
+    node = ConstructionNode()
     node.execute_machine()
     rclpy.shutdown()
 

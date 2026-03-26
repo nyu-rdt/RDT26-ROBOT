@@ -4,7 +4,7 @@ import sys
 import time
 from time import sleep
 
-from std_msgs.msg import Byte
+from std_msgs.msg import Byte, Bool, String
 
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
 from nyurdt_localization.pid_controller import PID
@@ -34,6 +34,8 @@ class ExcavationNode(Node):
             self.position_callback,
             10)
         
+        self.mode_sub = self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
+
         ## Excavation variables ##
         self.dig_start_time = 0
         # NEED TO CHANGE VALUE -----------------------------------------------
@@ -42,10 +44,6 @@ class ExcavationNode(Node):
         # Using encoders we will get the distance travelled
         self.dig_length = 0.5 # meters
         self.dist_traveled = self.get_sensor_data()
-
-        # Using 4 load cells we can know how much regolith has been collected
-        self.bin_mass = self.get_sensor_data()
-        self.goal_mass = 0.14 #kg
 
         ## Locomotion variables ##
         self.localization_timer = time.time()
@@ -104,12 +102,36 @@ class ExcavationNode(Node):
         """
         self.is_at_excavation_position = msg.data
 
+    def mode_callback(self, msg):
+        """
+        Callback to update the current mode of the robot
+        """
+        self.current_mode = msg.data
+
+    def excavation_loop(self):
+        if self.current_mode != "DIGGING":
+            return
+        
+        self.execute_machine()
+
     def execute_machine(self):
         """
         Begin execution of the machine
         """
         self.create_machine()
         self.machine.execute()
+
+    def check_ladder_health(self, telemetry):
+        # Measured current / Nominal current
+        nominal_current = 5
+        current_draw = telemetry.motor_currents[5]
+
+        proxy_ratio = current_draw / nominal_current
+
+        if proxy_ratio > 2.5:
+            self.get_logger().error("LADDER JAM RISK - Triggering Anti-Jam")
+            self.send_mcu_cmd(0x00)  # Anti-jam command
+
 
     # ------------------ DIGGING STAGES ------------------
 

@@ -4,8 +4,10 @@ from rclpy.node import Node
 import sys
 import time
 from time import sleep
+import math
 
-from std_msgs.msg import Byte
+from std_msgs.msg import Byte, String
+from geometry_msgs.msg import Twist
 
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
 
@@ -13,6 +15,61 @@ import cv2
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import apriltag
+
+
+class TractionLogic:
+    def __init__(self):
+        self.w1 = 0.4
+        self.w2 = 0.3
+        self.w3 = 0.3
+
+        self.nominal_current = 5
+        self.wheel_radius = 0.1
+
+        self.last_left_tick = 0
+        self.last_right_tick = 0
+        self.last_time = time.time()
+
+    def calculate_slip_score(self, msg, cmd_vel_x):
+        now = time.time()
+        dt = now -self
+        if dt <= 0: return 0.0, 0x00
+
+        # 1. Calculate measured speed from encoders
+        d_left = (msg.left_encoder - self.last_left_tick) * self.wheel_radius /dt
+        d_right = (msg.right_encoder - self.last_right_tick) * self.wheel_radius /dt
+
+        # Distance 
+        v_left = (d_left / 255) * (2 * math.pi * self.wheel_radius) / dt
+        v_right = (d_right / 255) * (2 * math.pi * self.wheel_radius) / dt
+        v_measured = (v_left + v_right) / 2
+
+        # 2. Compoments for slip score
+        speed_error = abs(cmd_vel_x - v_measured)
+        speed_asymmetry = abs(v_left - v_right)
+
+        # Current Ratio 
+        avg_drive_current = (msg.motor_currents[0] + msg.motor_currents[1]) / 2
+        current_ratio = avg_drive_current / self.nominal_current
+
+        # 3. Calculate slip score
+        slip_score = (self.w1 * speed_error) + (self.w2 * speed_asymmetry) + (self.w3 * current_ratio)
+
+        # 4. Send command to EE
+        mcu_fix_cmd = 0x00 # no fix needed
+
+        if v_measured > 0.1 and avg_drive_current > 1.0:
+            mcu_fix_cmd = 0x00 # slip severe fix
+
+        elif abs(v_measured) < 0.01 and avg_drive_current > 12:
+            mcu_fix_cmd = 0x00 # rocking macro fix
+
+        self.last_left_tick = msg.left_encoder
+        self.last_right_tick = msg.right_encoder
+        self.last_time = now
+
+        return slip_score, mcu_fix_cmd
+
 
 class LocomotionNode(Node):
     """
@@ -22,22 +79,18 @@ class LocomotionNode(Node):
     def __init__(self):
         super().__init__('LocomotionNode')
 
-        # Client to receive sensor data
-        self.cli = self.create_client(SensorData, "get_sensor_data")
-
-        # Making sure service is available
-        while not self.cli.wait_for_service(timeout_sec=1.0):
-             self.get_logger().info("Service not available, waiting again...")
-        self.req = SensorData.Request()
-
         # Publisher for autonomy commands
-        self.publisher = self.create_publisher(Byte, "/robotCmds/manual", 10)
+        self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
+        
+        self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
 
-        # Manual control interrupt subscribers
-        # self.manual_subscription = self.create_subscription(Byte,
-        #                                                     "/robotCmds/manual",
-        #                                                     self.manual_callback,
-        #                                                     10)
+        self.create_subscription(Twist, '/robot/cmd_vel', self.cmd_vel_callback, 10)
+
+        self.traction = TractionLogic()
+
+        self.target_v_x = 0.0
+
+
 
         ## Excavation variables ##
         self.spin_start_time = 0
@@ -103,6 +156,30 @@ class LocomotionNode(Node):
         """
         sys.exit()
 
+    def mode_callback(self, msg):
+        """
+        Callback to update which zone we are in
+        """
+        if msg.data != "NAVIGATION":
+            return
+        
+        self.execute_machine()
+
+    def cmd_vel_callback(self, msg):
+        self.target_v_x = msg.linear.x
+
+    def telemetry_callback(self, msg):
+        score, fix_byte = self.traction.calculate_slip_score(msg, self.target_v_x)
+
+        if score > 1:
+            self.get_logger().warn(f"High slip score detected: {score:.2f}")
+        
+        if fix_byte != 0x00:
+            cmd = Byte()
+            cmd.data = fix_byte
+            self.publisher.publish(cmd)
+            self.get_logger().info(f"Published traction fix command: {fix_byte} to MCU")
+
     def execute_machine(self):
         """
         Begin execution of the machine
@@ -131,10 +208,8 @@ class LocomotionNode(Node):
             self.spin_start_time = time.time()
 
         if time.time() - self.spin_start_time < self.spin_time:
-            sleep(0.1)
             return 'stage_1'
         else:
-            sleep(1)
             return 'stage_2'
 
     
@@ -147,7 +222,7 @@ class LocomotionNode(Node):
             self.current_state = self.stage_2
 
         # Send command
-        self.publish_msg(0x23)  # drive forward 100
+        self.publish_msg(0x00)  # drive forward 100
 
         if self.drive_start_time == 0:
             self.drive_start_time = time.time()
