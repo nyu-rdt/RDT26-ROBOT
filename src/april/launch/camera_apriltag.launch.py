@@ -8,20 +8,18 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
-    device_arg1 = DeclareLaunchArgument('device', default_value='0')
-    device_arg2 = DeclareLaunchArgument('device', default_value='1')
-    device_arg3 = DeclareLaunchArgument('device', default_value='2')
+    device_arg1 = DeclareLaunchArgument('device1', default_value='0')
+    device_arg2 = DeclareLaunchArgument('device2', default_value='2')
+    device_arg3 = DeclareLaunchArgument('device3', default_value='4')
 
-    device1 = LaunchConfiguration('device')
-    device2 = LaunchConfiguration('device')
-    device3 = LaunchConfiguration('device')
+    device1 = LaunchConfiguration('device1')
+    device2 = LaunchConfiguration('device2')
+    device3 = LaunchConfiguration('device3')
 
     apriltag_cfg = os.path.join(get_package_share_directory('april'), 'config', 'tags_36h11.yaml')
     camera_cfg_a = os.path.join(get_package_share_directory('april'), 'config', 'LogitechC615.yaml')
     camera_cfg_b = os.path.join(get_package_share_directory('april'), 'config', 'LogitechC615b.yaml')
     camera_cfg_c = os.path.join(get_package_share_directory('april'), 'config', 'LogitechC615c.yaml')
-
-
 
     container1 = ComposableNodeContainer(
             name='apriltag_cam_nodes',
@@ -36,8 +34,9 @@ def generate_launch_description():
                 namespace='camera1',
                 parameters=[
                     {'camera': device1},
-                    {'width': 1920},
-                    {'height': 1080},
+                    {'width': 640},
+                    {'height': 480},
+                    {'fps': 15},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_a},
                     {'frame_id': 'camera_optical_frame_link'}
@@ -50,8 +49,8 @@ def generate_launch_description():
                 name='apriltag1',
                 namespace='apriltag',
                 remappings=[
-                    ('image_rect', '/camera1/camera/image_raw'),
-                    ('camera_info', '/camera1/camera/camera_info'),
+                    ('image_rect', '/camera1/camera1/image_raw'),
+                    ('camera_info', '/camera1/camera1/camera_info'),
                 ],
                 parameters=[apriltag_cfg],
                 extra_arguments=[{'use_intra_process_comms': True}],
@@ -71,8 +70,9 @@ def generate_launch_description():
                 namespace='camera2',
                 parameters=[
                     {'camera': device2},
-                    {'width': 1920},
-                    {'height': 1080},
+                    {'width': 640},
+                    {'height': 480},
+                    {'fps': 15},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_b},
                     {'frame_id': 'camera_optical_frame_link'}
@@ -85,8 +85,8 @@ def generate_launch_description():
                 name='apriltag2',
                 namespace='apriltag2',
                 remappings=[
-                    ('image_rect', '/camera2/camera/image_raw'),
-                    ('camera_info', '/camera2/camera/camera_info'),
+                    ('image_rect', '/camera2/camera2/image_raw'),
+                    ('camera_info', '/camera2/camera2/camera_info'),
                 ],
                 parameters=[apriltag_cfg],
                 extra_arguments=[{'use_intra_process_comms': True}],
@@ -106,8 +106,9 @@ def generate_launch_description():
                 namespace='camera3',
                 parameters=[
                     {'camera': device3},
-                    {'width': 1920},
-                    {'height': 1080},
+                    {'width': 640},
+                    {'height': 480},
+                    {'fps': 15},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_c},
                     {'frame_id': 'camera_optical_frame_link'}
@@ -120,8 +121,8 @@ def generate_launch_description():
                 name='apriltag3',
                 namespace='apriltag3',
                 remappings=[
-                    ('image_rect', '/camera3/camera/image_raw'),
-                    ('camera_info', '/camera3/camera/camera_info'),
+                    ('image_rect', '/camera3/camera3/image_raw'),
+                    ('camera_info', '/camera3/camera3/camera_info'),
                 ],
                 parameters=[apriltag_cfg],
                 extra_arguments=[{'use_intra_process_comms': True}],
