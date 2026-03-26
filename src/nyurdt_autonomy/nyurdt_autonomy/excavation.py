@@ -23,23 +23,17 @@ class ExcavationNode(Node):
     def __init__(self):
         super().__init__('ExcavationNode')
 
-        # Client to receive sensor data
-        self.cli = self.create_client(SensorData, "get_sensor_data")
-
-        # Making sure service is available
-        while not self.cli.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info("Service not available, waiting again...")
-        self.req = SensorData.Request()
-
         # Publisher for autonomy commands
         self.publisher = self.create_publisher(Byte, "/robotCmds/manual", 10)
 
-        # Manual control interrupt subscribers
-        # self.manual_subscription = self.create_subscription(Byte,
-        #                                                     "/robotCmds/manual",
-        #                                                     self.manual_callback,
-        #                                                     10)
+        self.is_at_excavation_position = False
 
+        self.pos_subscriber = self.create_subscription(
+            Bool,
+            "/sensor/at_limit",
+            self.position_callback,
+            10)
+        
         ## Excavation variables ##
         self.dig_start_time = 0
         # NEED TO CHANGE VALUE -----------------------------------------------
@@ -104,6 +98,12 @@ class ExcavationNode(Node):
         """
         sys.exit()
 
+    def position_callback(self, msg):
+        """
+        Callback to update whether we are at the excavation position or not
+        """
+        self.is_at_excavation_position = msg.data
+
     def execute_machine(self):
         """
         Begin execution of the machine
@@ -123,8 +123,6 @@ class ExcavationNode(Node):
 
         self.publish_msg(0x00) # rotate conveyor belt
 
-        sleep(5)
-
         return 'stage_2'
 
     def stage_2(self):
@@ -137,17 +135,14 @@ class ExcavationNode(Node):
 
         # Send command
         self.publish_msg(0x00)  # Move conveyor to excavation position
-        
-        sleep(5)
-
 
         # Check if pivot is at excavation position, repeat state if not
-        sensor_data = self.get_sensor_data()
-        if not sensor_data.at_excavation_position:    
-            return "stage_2"
-
-        return 'stage_3'
-
+        if self.is_at_excavation_position:
+            self.get_logger().info("Reached excavation position")
+            return 'stage_3'
+        else:
+            return 'stage_2'
+        
     def stage_3(self):
         """
         Stage 3: Dig
@@ -166,14 +161,15 @@ class ExcavationNode(Node):
         elif self.dist_traveled > self.dig_length:
             return 'stage_4'
         # have we collected more than x kg of regolith?
-        elif self.bin_mass > self.goal_mass:
+        elif self.telemetry.bin_mass > self.goal_mass:
             return 'stage_4'
         # have we collected less than x kg of regolith?
-        elif self.bin_mass < self.goal_mass:
+        elif self.telemetry.bin_mass < self.goal_mass:
             self.publish_msg(0x00) #move forward 1 meters
             return 'stage_3'
+        elif self.telemtry.motor_stall_flag:
+            return 'stage_error_recovery'
         
-        sleep(1)
         return 'stage_3'
 
     def stage_4(self):
