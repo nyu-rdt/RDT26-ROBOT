@@ -7,13 +7,6 @@ from time import sleep
 from std_msgs.msg import Byte, Bool, String
 
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
-from nyurdt_localization.pid_controller import PID
-from nyurdt_localization.apriltag_detector import AprilTagDetector
-
-import cv2
-import numpy as np
-from scipy.spatial.transform import Rotation as R
-import apriltag
 
 class ExcavationNode(Node):
     """
@@ -24,15 +17,9 @@ class ExcavationNode(Node):
         super().__init__('ExcavationNode')
 
         # Publisher for autonomy commands
-        self.publisher = self.create_publisher(Byte, "/robotCmds/manual", 10)
+        self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
 
-        self.is_at_excavation_position = False
-
-        self.pos_subscriber = self.create_subscription(
-            Bool,
-            "/sensor/at_limit",
-            self.position_callback,
-            10)
+        self.send_mcu_command = self.create_publisher(Byte, 'robot/mcu_cmd', 10)
         
         self.mode_sub = self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
 
@@ -40,26 +27,6 @@ class ExcavationNode(Node):
         self.dig_start_time = 0
         # NEED TO CHANGE VALUE -----------------------------------------------
         self.dig_time = 120  # Digging duration in seconds
-
-        # Using encoders we will get the distance travelled
-        self.dig_length = 0.5 # meters
-        self.dist_traveled = self.get_sensor_data()
-
-        ## Locomotion variables ##
-        self.localization_timer = time.time()
-        self.LOCALIZATION_TIMEOUT = 30  # Timeout for Apriltag localization
-        
-        # PID controllers
-        self.turn_controller = PID(P=1, I=0, D=0.1)
-        self.move_controller = PID(P=0.4, I=0, D=0)
-
-        # Locomotion speed limits
-        self.MAX_POWER = 50
-        self.MIN_POWER = 20
-
-        # Apriltag variables
-        self.STOP_TIME = 1  # Robot stop time after losing Apriltag detection
-        self.apriltag_detector = AprilTagDetector()
 
         # Variable used to avoid repeated logging of state
         self.current_state = None
@@ -94,6 +61,7 @@ class ExcavationNode(Node):
         """
         Manual callback to stop the node if a manual control command is sent
         """
+
         sys.exit()
 
     def position_callback(self, msg):

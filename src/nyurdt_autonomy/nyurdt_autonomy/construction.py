@@ -2,18 +2,10 @@ import rclpy
 from rclpy.node import Node
 import sys
 import time
-from time import sleep
 
 from std_msgs.msg import Byte, String
 
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
-from nyurdt_localization.pid_controller import PID
-from nyurdt_localization.apriltag_detector import AprilTagDetector
-
-import cv2
-import numpy as np
-from scipy.spatial.transform import Rotation as R
-import apriltag
 
 class ConstructionNode(Node):
     """
@@ -27,20 +19,10 @@ class ConstructionNode(Node):
         self.publisher = self.create_publisher(Byte, "/robotCmds/manual", 10)
 
         self.mode_sub = self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
-        
-        ## Locomotion variables ##
-        self.localization_timer = time.time()
-        self.LOCALIZATION_TIMEOUT = 30  # Timeout for Apriltag localization
 
-        # Use the realsense IMU to determine orientation for a 180 turn
-        self.current_pose = self.get_sensor_data()
-        self.start_pose = self.get_sensor_data()
+        self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
   
-  
-        # Apriltag variables
-        self.STOP_TIME = 1  # Robot stop time after losing Apriltag detection
-        self.apriltag_detector = AprilTagDetector()
-        
+
         ## Deposition variables ##
         # timestamp to keep track of deposition time
         self.depo_start_time = 0

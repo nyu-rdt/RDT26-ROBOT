@@ -11,10 +11,6 @@ from geometry_msgs.msg import Twist
 
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
 
-import cv2
-import numpy as np
-from scipy.spatial.transform import Rotation as R
-import apriltag
 
 
 class TractionLogic:
@@ -80,52 +76,21 @@ class LocomotionNode(Node):
         super().__init__('LocomotionNode')
 
         # Publisher for autonomy commands
-        self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
+        self.send_mcu_command = self.create_publisher(Byte, 'robot/mcu_cmd', 10)
         
         self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
 
         self.create_subscription(Twist, '/robot/cmd_vel', self.cmd_vel_callback, 10)
 
+        self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
+
         self.traction = TractionLogic()
 
         self.target_v_x = 0.0
 
-
-
-        ## Excavation variables ##
-        self.spin_start_time = 0
-        self.drive_start_time = 0
-        # NEED TO CHANGE VALUE -----------------------------------------------
-        self.spin_time = 5  # Digging duration in seconds
-        self.drive_time = 5
-
-        ## Locomotion variables ##
-        self.localization_timer = time.time()
-        self.LOCALIZATION_TIMEOUT = 30  # Timeout for Apriltag localization
-        
-        # PID controllers
-        # self.turn_controller = PID(P=1, I=0, D=0.1)
-        # self.move_controller = PID(P=0.4, I=0, D=0)
-
-        # Locomotion speed limits
-        self.MAX_POWER = 50
-        self.MIN_POWER = 20
-
-        # Apriltag variables
-        self.STOP_TIME = 1  # Robot stop time after losing Apriltag detection
-        # self.apriltag_detector = AprilTagDetector()
-        
-        ## Deposition variables ##
-        # timestamp to keep track of deposition time
-        self.depo_start_time = 0
-        # NEED TO CHANGE VALUE -----------------------------------------------
-        self.depo_time = 30
-
         # Variable used to avoid repeated logging of state
         self.current_state = None
 
-        # determine which zone we are in
-        self.current_zone = None
 
     def create_machine(self):
         """
@@ -147,13 +112,14 @@ class LocomotionNode(Node):
         """
         msg = Byte()
         msg.data = data.to_bytes(1, 'little')
-        self.publisher.publish(msg)
+        self.send_mcu_command.publish(msg)
         self.get_logger().info("Publishing: %s" % str(msg.data))
 
     def manual_callback(self, msg):
         """
         Manual callback to stop the node if a manual control command is sent
         """
+      
         sys.exit()
 
     def mode_callback(self, msg):
@@ -177,7 +143,7 @@ class LocomotionNode(Node):
         if fix_byte != 0x00:
             cmd = Byte()
             cmd.data = fix_byte
-            self.publisher.publish(cmd)
+            self.send_mcu_command.publish(cmd)
             self.get_logger().info(f"Published traction fix command: {fix_byte} to MCU")
 
     def execute_machine(self):
@@ -188,21 +154,16 @@ class LocomotionNode(Node):
         self.machine.execute()
 
     # ------------------ DIGGING STAGES ------------------
-
     def stage_1(self):
         """
-        Stage 1: Determine current zone
-        """
-    def stage_1(self):
-        """
-        Stage 1: Spin in a circle 
+        Stage 1: Spin in a circle to find AprilTag
         """
         if self.current_state != self.stage_1:
             self.get_logger().info("Stage 1: Spin in a circle")
             self.current_state = self.stage_1
 
         # Send command
-        self.publish_msg(0x00)  # make a 180
+        self.send_mcu_command(0x00) # make a 180
 
         if self.spin_start_time == 0:
             self.spin_start_time = time.time()
@@ -222,7 +183,7 @@ class LocomotionNode(Node):
             self.current_state = self.stage_2
 
         # Send command
-        self.publish_msg(0x00)  # drive forward 100
+        self.send_mcu_command(0x00) # drive forward 100
 
         if self.drive_start_time == 0:
             self.drive_start_time = time.time()
