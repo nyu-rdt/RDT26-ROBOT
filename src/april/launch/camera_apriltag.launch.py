@@ -9,7 +9,7 @@ import os
 
 def generate_launch_description():
     device_arg1 = DeclareLaunchArgument('device1', default_value='0')
-    device_arg2 = DeclareLaunchArgument('device2', default_value='2')
+    device_arg2 = DeclareLaunchArgument('device2', default_value='3')
     device_arg3 = DeclareLaunchArgument('device3', default_value='4')
 
     device1 = LaunchConfiguration('device1')
