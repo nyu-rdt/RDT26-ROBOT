@@ -31,20 +31,28 @@ class CommandSubscriber(Node):
         self.construction_srv = self.create_service(Empty, 'construction_autonomy', self.construction_auto)
 
 
-    def manual_callback(self, data: Byte) -> None:
+    def manual_callback(self, msg: Byte) -> None:
         """
         Handle incoming manual control commands
-
-        :param data: Byte message to be parsed & sent to Teensy
-        :return: None
         """
-        self.get_logger().info("Incoming manual control command: %s" % str(data.data))
+        # msg.data is already an int for std_msgs/Byte
+        val = msg.data
+        self.get_logger().info(f"Incoming command: {hex(val)}")
         
-        # Code from the i2c_comms
-        send_HEX(int.from_bytes(data.data, 'little'));
-        if data.data == b'\x80':
+        # Send the command to Teensy
+        result = send_HEX(val)
+        
+        if result == -1:
+            self.get_logger().error("I2C Write Failed!")
+            return
+
+        # If the command was 0x80, fetch the sensor feedback
+        if val == 0x80:
             dictionary = get_data_dictionary()
-            print(dictionary)
+            if dictionary:
+                self.get_logger().info(f"Pivot Angle: {dictionary['Pivot angle']}")
+            else:
+                self.get_logger().warn("Failed to read pivot angle from Teensy")
 
 
     def autonomy_callback(self, data: Int16) -> None:

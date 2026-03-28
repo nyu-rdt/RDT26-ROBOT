@@ -2,44 +2,46 @@ import busio
 import board
 import time
 
+# Initialize I2C. 100kHz or 400kHz are standard. 
+# 115200 is a Serial baud rate, not a standard I2C clock, but Blinka usually rounds it.
+i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
 
-print(dir(board))
-i2c = busio.I2C(board.SCL,board.SDA,115200)
-# busio.I2C.configure(500000);
-
-i2c.scan()
-
-#time.sleep(1)
-
-teensy_address = 0x08 # edit this based off teensy address 
+teensy_address = 0x08 
 
 def send_HEX(hexcode):
-	buff = bytearray(1)
-	buff[0] = hexcode
-	i2c.writeto(teensy_address, buff)
-	return 0
-
+    """Sends a single byte to the Teensy with error protection."""
+    if not i2c.try_lock():
+        return -1
+    try:
+        buff = bytearray([hexcode & 0xFF]) # Ensure it's a single byte
+        i2c.writeto(teensy_address, buff)
+        return 0
+    except OSError as e:
+        print(f"I2C Write Error: {e}")
+        return -1
+    finally:
+        i2c.unlock()
 
 def get_data_dictionary():
-	while not i2c.try_lock():
-		pass; # will keep going until the i2c lock has been attained
-	
-	pivot_lower = bytearray(1)
-	pivot_higher = bytearray(1)
-	while pivot_higher == bytearray(1):
-		i2c.readfrom_into(teensy_address, pivot_higher)
-		print("Looking for high")
-		time.sleep(1)
-		
-	print(pivot_higher)
-	while pivot_lower == bytearray(1):
-		i2c.readfrom_into(teensy_address, pivot_lower)
-		print("Looking for low")
-		time.sleep(1)
+    """Reads two bytes from Teensy and combines them into a 16-bit angle."""
+    if not i2c.try_lock():
+        return None
+        
+    try:
+        # It's much faster to read both bytes at once than in two separate loops
+        read_buffer = bytearray(2) 
+        
+        # We try to read 2 bytes from the Teensy
+        i2c.readfrom_into(teensy_address, read_buffer)
+        
+        # Combine bytes: read_buffer[0] is High, read_buffer[1] is Low
+        # No need for bin() strings, just use bit shifting
+        pivot_angle = (read_buffer[0] << 8) | read_buffer[1]
+        
+        return {"Pivot angle": pivot_angle}
 
-	print("out of loop")
-	pivot_angle = (int(bin(pivot_higher[0]), 2) << 8) | int(bin(pivot_lower[0]), 2)
-	Dict = {"Pivot angle" : pivot_angle};
-	
-	i2c.unlock() # safely unlocks i2c
-	return Dict
+    except OSError as e:
+        print(f"I2C Read Error: {e}")
+        return None
+    finally:
+        i2c.unlock()
