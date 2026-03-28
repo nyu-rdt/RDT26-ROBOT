@@ -4,7 +4,7 @@ import time
 
 
 print(dir(board))
-i2c = busio.I2C(board.SCL,board.SDA,100000)
+i2c = busio.I2C(board.SCL,board.SDA,115200)
 # busio.I2C.configure(500000);
 
 i2c.scan()
