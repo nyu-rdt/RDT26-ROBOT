@@ -11,7 +11,7 @@ i2c.scan()
 
 #time.sleep(1)
 
-teensy_address = 0x24 # edit this based off teensy address 
+teensy_address = 0x08 # edit this based off teensy address 
 
 def send_HEX(hexcode):
 	buff = bytearray(1)
