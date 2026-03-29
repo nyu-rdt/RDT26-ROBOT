@@ -41,10 +41,11 @@ class CommandSubscriber(Node):
         self.get_logger().info("Incoming manual control command: %s" % str(data.data))
         
         # Code from the i2c_comms
-        send_HEX(int.from_bytes(data.data, 'little'));
-        # if data.data == b'\x80':
-        #     dictionary = get_data_dictionary()
-        #     print(dictionary)
+        # send_HEX(int.from_bytes(data.data, 'little'));
+        send_HEX(data.data)
+        if data.data == b'\x80':
+            dictionary = get_data_dictionary()
+            print(dictionary)
 
 
     def autonomy_callback(self, data: Int16) -> None:
