@@ -46,7 +46,7 @@ class CommandSubscriber(Node):
         # if data.data == b'\x80':
         #    dictionary = get_data_dictionary()
         #    print(dictionary)
-
+        #  
 
     def autonomy_callback(self, data: Int16) -> None:
         """

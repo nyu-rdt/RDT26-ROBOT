@@ -14,6 +14,7 @@ i2c.scan()
 teensy_address = 0x42 # edit this based off teensy address 
 
 def send_HEX(hexcode):
+	
 	buff = bytearray(1)
 	buff[0] = hexcode
 	i2c.writeto(teensy_address, buff)
