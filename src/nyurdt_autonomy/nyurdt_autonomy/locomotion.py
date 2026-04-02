@@ -77,7 +77,7 @@ class LocomotionNode(Node):
         super().__init__('LocomotionNode')
 
         # Publisher for autonomy commands
-        self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
+        self.send_mcu_command = self.create_publisher(Byte, 'robot/mcu_cmd', 10)
         
         self.telemetry = self.create_subscription(RobotStatus, 'robot/telemtry', self.telemetry_callback, 10)
 
@@ -130,13 +130,14 @@ class LocomotionNode(Node):
         """
         msg = Byte()
         msg.data = data.to_bytes(1, 'little')
-        self.publisher.publish(msg)
+        self.send_mcu_command.publish(msg)
         self.get_logger().info("Publishing: %s" % str(msg.data))
 
     def manual_callback(self, msg):
         """
         Manual callback to stop the node if a manual control command is sent
         """
+      
         sys.exit()
 
     def mode_callback(self, msg):
@@ -160,7 +161,7 @@ class LocomotionNode(Node):
         if fix_byte != 0x00:
             cmd = Byte()
             cmd.data = fix_byte
-            self.publisher.publish(cmd)
+            self.send_mcu_command.publish(cmd)
             self.get_logger().info(f"Published traction fix command: {fix_byte} to MCU")
 
     def execute_machine(self):
@@ -179,7 +180,7 @@ class LocomotionNode(Node):
             self.current_state = self.stage_1
 
         # Send command
-        self.publish_msg(0x00)  # make a 180
+        self.send_mcu_command(0x00) # make a 180
 
         if self.spin_start_time == 0:
             self.spin_start_time = time.time()
@@ -198,7 +199,7 @@ class LocomotionNode(Node):
             self.current_state = self.stage_2
 
         # Send command
-        self.publish_msg(0x00)  # drive forward 100
+        self.send_mcu_command(0x00) # drive forward 100
 
         if self.drive_start_time == 0:
             self.drive_start_time = time.time()

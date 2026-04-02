@@ -17,7 +17,7 @@ class ExcavationNode(Node):
         super().__init__('ExcavationNode')
 
         # Publisher for autonomy commands
-        self.publisher = self.create_publisher(Byte, "/robotCmds/manual", 10)
+        self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
 
 
         # Publisher for autonomy commands
@@ -72,6 +72,7 @@ class ExcavationNode(Node):
         """
         Manual callback to stop the node if a manual control command is sent
         """
+
         sys.exit()
 
     def position_callback(self, msg):

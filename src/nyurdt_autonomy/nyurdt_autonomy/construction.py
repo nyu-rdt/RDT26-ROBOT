@@ -2,18 +2,10 @@ import rclpy
 from rclpy.node import Node
 import sys
 import time
-from time import sleep
 
 from std_msgs.msg import Byte, String
 
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
-from nyurdt_localization.pid_controller import PID
-from nyurdt_localization.apriltag_detector import AprilTagDetector
-
-import cv2
-import numpy as np
-from scipy.spatial.transform import Rotation as R
-import apriltag
 
 class ConstructionNode(Node):
     """
