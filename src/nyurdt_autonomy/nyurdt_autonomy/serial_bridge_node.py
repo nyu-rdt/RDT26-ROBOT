@@ -19,7 +19,7 @@ class SerialBridgeNode(Node):
 
     def spin_serial(self, data):
         if self.ser.in_waiting >=18:
-            raw_bytes = s9elf.ser.read(18)
+            raw_bytes = self.ser.read(18)
             self.unpack_and_publish(raw_bytes)
 
     def unpack_and_publish(self, data):

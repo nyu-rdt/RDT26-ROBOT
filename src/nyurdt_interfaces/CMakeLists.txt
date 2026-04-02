@@ -21,7 +21,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 # srv filepath
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/SensorData.srv"
+  "srv/SensorData.msg"
 )
 
 if(BUILD_TESTING)
