@@ -3,22 +3,15 @@ from rclpy.node import Node
 import sys
 import time
 from time import sleep
+from std_msgs.msg import Byte, String
 
-from std_msgs.msg import Byte, Bool, String
 
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
-from nyurdt_localization.pid_controller import PID
-from nyurdt_localization.apriltag_detector import AprilTagDetector
 
-import cv2
-import numpy as np
-from scipy.spatial.transform import Rotation as R
-import apriltag
+from nyurdt_interfaces.msg import RobotStatus
+
 
 class ExcavationNode(Node):
-    """
-    Node combining Digging and Dumping stages
-    """
 
     def __init__(self):
         super().__init__('ExcavationNode')
@@ -26,13 +19,13 @@ class ExcavationNode(Node):
         # Publisher for autonomy commands
         self.publisher = self.create_publisher(Byte, "/robotCmds/manual", 10)
 
+
+        # Publisher for autonomy commands
+        self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
+
         self.is_at_excavation_position = False
 
-        self.pos_subscriber = self.create_subscription(
-            Bool,
-            "/sensor/at_limit",
-            self.position_callback,
-            10)
+        self.telemetry = self.create_subscription(RobotStatus, 'robot/telemtry', self.telemetry_callback, 10)
         
         self.mode_sub = self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
 
@@ -43,26 +36,11 @@ class ExcavationNode(Node):
 
         # Using encoders we will get the distance travelled
         self.dig_length = 0.5 # meters
-        self.dist_traveled = self.get_sensor_data()
-
-        ## Locomotion variables ##
-        self.localization_timer = time.time()
-        self.LOCALIZATION_TIMEOUT = 30  # Timeout for Apriltag localization
-        
-        # PID controllers
-        self.turn_controller = PID(P=1, I=0, D=0.1)
-        self.move_controller = PID(P=0.4, I=0, D=0)
-
-        # Locomotion speed limits
-        self.MAX_POWER = 50
-        self.MIN_POWER = 20
-
-        # Apriltag variables
-        self.STOP_TIME = 1  # Robot stop time after losing Apriltag detection
-        self.apriltag_detector = AprilTagDetector()
 
         # Variable used to avoid repeated logging of state
         self.current_state = None
+
+        self.mass_flow = 0
 
     def create_machine(self):
         """
@@ -112,6 +90,8 @@ class ExcavationNode(Node):
         if self.current_mode != "DIGGING":
             return
         
+        self.mass_flow = (self.telemetry.total_mass - self.prev_mass) / self.dt
+        
         self.execute_machine()
 
     def execute_machine(self):
@@ -122,16 +102,17 @@ class ExcavationNode(Node):
         self.machine.execute()
 
     def check_ladder_health(self, telemetry):
-        # Measured current / Nominal current
-        nominal_current = 5
         current_draw = telemetry.motor_currents[5]
+        nominal_current_draw = 6
 
-        proxy_ratio = current_draw / nominal_current
+        proxy_ratio = current_draw /nominal_current_draw
 
-        if proxy_ratio > 2.5:
+        if proxy_ratio > 2.0 and self.mass_flow < 0.01:
             self.get_logger().error("LADDER JAM RISK - Triggering Anti-Jam")
             self.send_mcu_cmd(0x00)  # Anti-jam command
 
+        elif proxy_ratio < 0.4 and self.current_mode == "DIGGING":
+            self.get_logger.info("Low current - Nothing being excavated")
 
     # ------------------ DIGGING STAGES ------------------
 

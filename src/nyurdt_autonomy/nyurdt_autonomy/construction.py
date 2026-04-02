@@ -28,18 +28,7 @@ class ConstructionNode(Node):
 
         self.mode_sub = self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
         
-        ## Locomotion variables ##
-        self.localization_timer = time.time()
-        self.LOCALIZATION_TIMEOUT = 30  # Timeout for Apriltag localization
-
-        # Use the realsense IMU to determine orientation for a 180 turn
-        self.current_pose = self.get_sensor_data()
-        self.start_pose = self.get_sensor_data()
-  
-  
-        # Apriltag variables
-        self.STOP_TIME = 1  # Robot stop time after losing Apriltag detection
-        self.apriltag_detector = AprilTagDetector()
+        self.telemetry = self.create_subscription(RobotStatus, 'robot/telemtry', self.telemetry_callback, 10)
         
         ## Deposition variables ##
         # timestamp to keep track of deposition time
@@ -88,6 +77,15 @@ class ConstructionNode(Node):
             return
         
         self.execute_machine()
+
+    def check_gate_health(self):
+        gate_current = self.telemetry.motor_currents[7]
+        nominal_gate_current = 2
+        load_proxy = gate_current / nominal_gate_current
+
+        if self.target_gate_pos == 0 and load_proxy > 2.5:
+            self.get_logger.error("GATE STALL: Material Blockage")
+            self.send_mcu_cmd(0x00) # GATE_RESET fix
 
     def execute_machine(self):
         """

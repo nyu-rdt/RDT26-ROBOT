@@ -11,10 +11,7 @@ from geometry_msgs.msg import Twist
 
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
 
-import cv2
-import numpy as np
-from scipy.spatial.transform import Rotation as R
-import apriltag
+from nyurdt_interfaces.msg import RobotStatus
 
 
 class TractionLogic:
@@ -82,15 +79,17 @@ class LocomotionNode(Node):
         # Publisher for autonomy commands
         self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
         
-        self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
+        self.telemetry = self.create_subscription(RobotStatus, 'robot/telemtry', self.telemetry_callback, 10)
 
+        # Listens to nav2/manual control commands
         self.create_subscription(Twist, '/robot/cmd_vel', self.cmd_vel_callback, 10)
 
-        self.traction = TractionLogic()
+#
+        self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
+
+        self.traction = TractionLogic(nominal_current=5.0)
 
         self.target_v_x = 0.0
-
-
 
         ## Excavation variables ##
         self.spin_start_time = 0
@@ -99,21 +98,8 @@ class LocomotionNode(Node):
         self.spin_time = 5  # Digging duration in seconds
         self.drive_time = 5
 
-        ## Locomotion variables ##
-        self.localization_timer = time.time()
-        self.LOCALIZATION_TIMEOUT = 30  # Timeout for Apriltag localization
-        
-        # PID controllers
-        # self.turn_controller = PID(P=1, I=0, D=0.1)
-        # self.move_controller = PID(P=0.4, I=0, D=0)
-
-        # Locomotion speed limits
-        self.MAX_POWER = 50
-        self.MIN_POWER = 20
-
         # Apriltag variables
         self.STOP_TIME = 1  # Robot stop time after losing Apriltag detection
-        # self.apriltag_detector = AprilTagDetector()
         
         ## Deposition variables ##
         # timestamp to keep track of deposition time
@@ -123,9 +109,6 @@ class LocomotionNode(Node):
 
         # Variable used to avoid repeated logging of state
         self.current_state = None
-
-        # determine which zone we are in
-        self.current_zone = None
 
     def create_machine(self):
         """
@@ -187,12 +170,6 @@ class LocomotionNode(Node):
         self.create_machine()
         self.machine.execute()
 
-    # ------------------ DIGGING STAGES ------------------
-
-    def stage_1(self):
-        """
-        Stage 1: Determine current zone
-        """
     def stage_1(self):
         """
         Stage 1: Spin in a circle 
@@ -211,7 +188,6 @@ class LocomotionNode(Node):
             return 'stage_1'
         else:
             return 'stage_2'
-
     
     def stage_2(self):
         """
@@ -234,7 +210,6 @@ class LocomotionNode(Node):
             sleep(1)
             return 'stage_3'
 
-    
     def stage_3(self):
         """
         Stage 3: Kill autonomy
