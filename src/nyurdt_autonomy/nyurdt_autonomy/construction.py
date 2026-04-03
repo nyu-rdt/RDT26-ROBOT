@@ -6,6 +6,7 @@ import time
 from std_msgs.msg import Byte, String
 
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
+from nyurdt_interfaces.msg import RobotStatus
 
 class ConstructionNode(Node):
     """
