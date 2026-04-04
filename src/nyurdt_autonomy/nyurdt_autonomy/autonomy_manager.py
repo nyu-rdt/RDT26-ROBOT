@@ -8,8 +8,10 @@ from nav2_msgs.action import NavigateToPose
 from action_msgs.msg import GoalStatus
 from std_msgs.msg import String
 
-from enum import Enum, auto
 import math
+
+from nyurdt_state_machine import StateMachine
+
 
 ZONES = {
     "excavation":   {"x": (-4.5720, 9.14 - 4.5720), "y": (0.00, 4.00)},
@@ -28,14 +30,6 @@ COV_SETTLE_SEC = 2.0
 
 ZONE_ENTRY_MARGIN = 0.12
 
-class State(Enum):
-    INIT_LOCALIZING = auto() # boot: find the Apriltag
-    NAVIGATING      = auto()
-    RELOCALIZING    = auto()
-    IN_ZONE         = auto()
-    EXECUTING_TASK  = auto()
-    IDLE            = auto()
-
 TASK_QUEUE = [
     {"zone": "excavation", "action": "excavate"},
     {"zone": "construction", "action": "deposit"},
@@ -46,7 +40,7 @@ class AutonomyManager(Node):
         super().__init__('autonomy_manager')
 
         # State
-        self.state = State.INIT_LOCALIZING
+        self.current_state = self.stage_1
         self.task_index = 0
         self.current_zone = None
         self.pose = None
@@ -76,158 +70,30 @@ class AutonomyManager(Node):
         self.get_logger().info("AutonomyManager started - state: INIT_LOCALIZING")
 
 
+    def create_machine(self):
+        """
+        Create a state machine with all desired states
+        """
+        self.get_logger().info("Initializing state machine")
+        self.machine = StateMachine('autonomy_manager_machine')
+
+        # Adding states
+        self.machine.add_state('stage_1', self.stage_1)
+        self.machine.add_state('stage_2', self.stage_2)
+        self.machine.add_state('stage_3', self.stage_3)
+        self.machine.add_state('stage_4', self.stage_4)
+        self.machine.add_state('stage_5', self.stage_5)
+    
+    def execute_machine(self):
+        """
+        Begin execution of the machine
+        """
+        self.create_machine()
+        self.machine.execute()
+
     def _pose_cb(self, msg: PoseWithCovarianceStamped):
         self.pose = msg.pose.pose
         self.covariance = msg.pose.covariance
-
-    def _loop(self):
-        self._publish_status()
-
-        if self.state == State.INIT_LOCALIZING:
-            self._handle_init_localizing()
-
-        elif self.state == State.RELOCALIZING:
-            self._handle_navigating()
-
-        elif self.state == State.IN_ZONE:
-            self._handle_in_zone()
-
-        elif self.state == State.EXECUTING_TASK:
-            self._handle_executing_task()
-
-        elif self.state == State.IDLE:
-            pass
-
-    def _handle_init_localizing(self):
-        """Spin in place until we have a solid fix on the Apriltag."""
-        if self._covariance_ok():
-            self.get_logger().info("Initial localization acquired")
-            self._transition(State.NAVIGATING)
-        else:
-            pass
-
-    def _handle_navigating(self):
-        """Send a Nav2 goal for the current task's zone, monitor for drift."""
-        if self.task_index >= len(TASK_QUEUE):
-            self._transition(State.IDLE)
-            return
- 
-        # Check for drift mid-navigation
-        if not self._covariance_ok():
-            self.get_logger().warn("Drift detected while navigating — relocalizing.")
-            self._cancel_nav_goal()
-            self.relocalize_after = State.NAVIGATING
-            self._transition(State.RELOCALIZING)
-            return
- 
-        # Send goal if not already in flight
-        if not self.nav_in_flight:
-            task = TASK_QUEUE[self.task_index]
-            zone = ZONES[task["zone"]]
-            target_x = (zone["x"][0] + zone["x"][1]) / 2.0
-            target_y = (zone["y"][0] + zone["y"][1]) / 2.0
-            self._send_nav_goal(target_x, target_y)
-            return
- 
-        # Check if we've arrived (Nav2 goal succeeded)
-        if self._nav_goal_succeeded():
-            self.get_logger().info(f"Arrived near {TASK_QUEUE[self.task_index]['zone']}.")
-            self.nav_in_flight = False
-            self._transition(State.IN_ZONE)
- 
-    def _handle_relocalizing(self):
-        """Navigate to the AprilTag view pose; wait for covariance to settle."""
-        if not self.nav_in_flight:
-            p = RELOCALIZE_POSE
-            self._send_nav_goal(p["x"], p["y"], yaw=p["yaw"])
-            self.get_logger().info("Heading to relocalization pose.")
-            return
- 
-        if self._nav_goal_succeeded():
-            self.nav_in_flight = False
-            self.get_logger().info("At relocalization pose — waiting for covariance to settle.")
- 
-        # Stay here until confidence is restored
-        if self._covariance_ok():
-            self.get_logger().info("Covariance settled — resuming mission.")
-            next_state = self.relocalize_after or State.NAVIGATING
-            self.relocalize_after = None
-            self._transition(next_state)
- 
-    def _handle_in_zone(self):
-        """Confirm we're inside the correct zone with enough confidence before acting."""
-        task = TASK_QUEUE[self.task_index]
-        zone_name = task["zone"]
- 
-        # Check covariance first — if bad, relocalize then come back
-        if not self._covariance_ok():
-            self.get_logger().warn("Covariance too high in-zone — relocalizing before acting.")
-            self.relocalize_after = State.IN_ZONE
-            self._transition(State.RELOCALIZING)
-            return
- 
-        # Track how long covariance has been OK (require a short hold)
-        now = self.get_clock().now()
-        if self._cov_ok_since is None:
-            self._cov_ok_since = now
-            return
-        elapsed = (now - self._cov_ok_since).nanoseconds / 1e9
-        if elapsed < COV_SETTLE_SEC:
-            return  # still settling
-        self._cov_ok_since = None
- 
-        # Confirm physical zone membership (with margin)
-        if not self._inside_zone(zone_name, margin=ZONE_ENTRY_MARGIN):
-            self.get_logger().warn(
-                f"Covariance OK but not inside {zone_name} boundary — re-navigating."
-            )
-            self.nav_in_flight = False
-            self._transition(State.NAVIGATING)
-            return
- 
-        self.get_logger().info(f"Confirmed in zone '{zone_name}' — starting task.")
-        self._transition(State.EXECUTING_TASK)
- 
-    def _handle_executing_task(self):
-        """
-        Dispatch to zone-specific logic.
-        """
-        task = TASK_QUEUE[self.task_index]
-        action = task["action"]
-        done = False
- 
-        if action == "excavate":
-            done = self._do_excavate()
-        elif action == "deposit":
-            done = self._do_deposit()
-        else:
-            self.get_logger().warn(f"Unknown action '{action}' — skipping.")
-            done = True
- 
-        if done:
-            self.task_pub.publish(String(data="none"))
-            self.task_index += 1
-            if self.task_index >= len(TASK_QUEUE):
-                self._transition(State.IDLE)
-            else:
-                self.nav_in_flight = False
-                self._transition(State.NAVIGATING)
- 
-    def _do_excavate(self) -> bool:
-        """Return True when the excavation task is complete."""
-        self.task_pub.publish(String(data="excavating"))
-        self.get_logger().info("[stub] Excavating...")
-
-        if self.bin_mass >= self.goal_bin_mass:
-            return True  
- 
-    def _do_deposit(self) -> bool:
-        """Return True when the deposit task is complete."""
-        self.task_pub.publish(String(data="depositing"))
-        self.get_logger().info("[stub] Depositing...")
-
-        if self.bin_mass == 0:
-            return True
  
     # =======================================================================
     # Nav2 helpers
@@ -312,10 +178,6 @@ class AutonomyManager(Node):
     # Utilities
     # =======================================================================
  
-    def _transition(self, new_state: State):
-        self.get_logger().info(f"State: {self.state.name} → {new_state.name}")
-        self.state = new_state
- 
     def _publish_status(self):
         task_name = (
             TASK_QUEUE[self.task_index]["zone"]
@@ -325,13 +187,144 @@ class AutonomyManager(Node):
         msg = String(data=f"state={self.state.name} task={task_name} "
                          f"cov_x={self.covariance[0]:.4f} cov_y={self.covariance[7]:.4f}")
         self.status_pub.publish(msg)
- 
 
+    
+    def stage_1(self):
+        """
+        Stage 1: Initial Localization
+        """
+        if self.current_state != self.stage_1:
+            self.get_logger().info("Stage 1: Initial Localization")
+            self.current_state = self.stage_1
+
+        self.publish_msg(0x00) # turn 180
+        
+        if self._covariance_ok():
+            self.get_logger.info("Initial Localization aquired")
+            return 'stage_2'
+        
+        return 'stage_1'
+
+    def stage_2(self):
+        """
+        Stage 2: Send a Nav2 goal for the current task's zone, monitor for drift.
+        """
+        if self.current_state != self.stage_2:
+            self.get_logger().info("Stage 2: Navigating")
+            self.current_state = self.stage_2
+
+        if self.task_index >= len(TASK_QUEUE):
+            return 'stage_6'
+ 
+        # Check for drift mid-navigation
+        if not self._covariance_ok():
+            self.get_logger().warn("Drift detected while navigating — relocalizing.")
+            self._cancel_nav_goal()
+            self.relocalize_after = 'stage_2'
+            return 'stage_3'
+ 
+        # Send goal if not already in flight
+        if not self.nav_in_flight:
+            task = TASK_QUEUE[self.task_index]
+            zone = ZONES[task["zone"]]
+            target_x = (zone["x"][0] + zone["x"][1]) / 2.0
+            target_y = (zone["y"][0] + zone["y"][1]) / 2.0
+            self._send_nav_goal(target_x, target_y)
+            return 'stage_2'
+ 
+        # Check if we've arrived (Nav2 goal succeeded)
+        if self._nav_goal_succeeded():
+            self.get_logger().info(f"Arrived near {TASK_QUEUE[self.task_index]['zone']}.")
+            self.nav_in_flight = False
+            return 'stage_4'
+        
+    def stage_3(self):
+        """
+        Stage 3: Navigate to the AprilTag view pose; wait for covariance to settle.
+        """
+        if self.current_state != self.stage_3:
+            self.get_logger().info("Stage 3: Relocalizing")
+            self.current_state = self.stage_3
+
+        if not self.nav_in_flight:
+            p = RELOCALIZE_POSE
+            self._send_nav_goal(p["x"], p["y"], yaw=p["yaw"])
+            self.get_logger().info("Heading to relocalization pose.")
+            return 'stage_3'
+ 
+        if self._nav_goal_succeeded():
+            self.nav_in_flight = False
+            self.get_logger().info("At relocalization pose — waiting for covariance to settle.")
+ 
+        # Stay here until confidence is restored
+        if self._covariance_ok():
+            self.get_logger().info("Covariance settled — resuming mission.")
+            next_state = self.relocalize_after or 'stage_2'
+            self.relocalize_after = None
+            return next_state
+    
+    def stage_4(self):
+        """
+        Stage 4: Confirm we're inside the correct zone with enough confidence before acting.
+        """
+        if self.current_state != self.stage_4:
+            self.get_logger().info('Stage 4: In Zone')
+            self.current_state = self.stage_4
+
+        task = TASK_QUEUE[self.task_index]
+        zone_name = task["zone"]
+ 
+        # Check covariance first — if bad, relocalize then come back
+        if not self._covariance_ok():
+            self.get_logger().warn("Covariance too high in-zone — relocalizing before acting.")
+            self.relocalize_after = 'stage_4'
+            return 'stage_3'
+ 
+        # Track how long covariance has been OK (require a short hold)
+        now = self.get_clock().now()
+        if self._cov_ok_since is None:
+            self._cov_ok_since = now
+            return
+        elapsed = (now - self._cov_ok_since).nanoseconds / 1e9
+        if elapsed < COV_SETTLE_SEC:
+            return  # still settling
+        self._cov_ok_since = None
+ 
+        # Confirm physical zone membership (with margin)
+        if not self._inside_zone(zone_name, margin=ZONE_ENTRY_MARGIN):
+            self.get_logger().warn(
+                f"Covariance OK but not inside {zone_name} boundary — re-navigating."
+            )
+            self.nav_in_flight = False
+            return 'stage_2'
+ 
+        self.get_logger().info(f"Confirmed in zone '{zone_name}' — starting task.")
+        return 'stage_5'
+    
+    def stage_5(self):
+        """
+        Stage 5: Dispatch to zone-specific logic.
+        """
+        if self.current_state != self.stage_5:
+            self.get_logger().info('Stage 5: State Specifc logic')
+            self.current_state = self.stage_5
+        
+    
+    def stage_6(self):
+        """
+        Stage 6: Idle
+        """
+        if self.current_state != self.stage_6:
+            self.get_logger().info('Stage 6: Idle')
+            self.current_state = self.stage_6
+
+        return 'stage_6'
+    
 def main(args=None):
     rclpy.init(args=args)
     node = AutonomyManager()
     try:
-        rclpy.spin(node)
+        node.execute_machine()
     except KeyboardInterrupt:
         pass
     finally:
