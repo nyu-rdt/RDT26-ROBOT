@@ -1,45 +1,95 @@
-import busio
-import board
-import time
+"""I2C helpers for talking to the robot Teensy from the Jetson."""
+
+import os
+import sys
+from typing import Dict
+
+teensy_address = int(os.environ.get("NYURDT_TEENSY_I2C_ADDRESS", "0x08"), 0)
+_bus_num = int(os.environ.get("NYURDT_TEENSY_I2C_BUS", "7"))
+_backend = None
+_i2c = None
+_smbus = None
 
 
-print(dir(board))
-i2c = busio.I2C(board.SCL,board.SDA,100000)
-# busio.I2C.configure(500000);
-
-i2c.scan()
-
-#time.sleep(1)
-
-teensy_address = 0x24
-
-def send_HEX(hexcode):
-	buff = bytearray(1)
-	buff[0] = hexcode
-	i2c.writeto(teensy_address, buff)
-	return 0
+def _default_sensor_dict() -> Dict[str, int | bool]:
+    return {
+        "relay_status": 0,
+        "left_speed": 0,
+        "right_speed": 0,
+        "at_locomotion_position": False,
+        "at_excavation_position": False,
+        "at_construction_position": False,
+        "belt_pivot_angle": 0,
+    }
 
 
-def get_data_dictionary():
-	while not i2c.try_lock():
-		pass; # will keep going until the i2c lock has been attained
-	
-	pivot_lower = bytearray(1)
-	pivot_higher = bytearray(1)
-	while pivot_higher == bytearray(1):
-		i2c.readfrom_into(teensy_address, pivot_higher)
-		print("Looking for high")
-		time.sleep(1)
-		
-	print(pivot_higher)
-	while pivot_lower == bytearray(1):
-		i2c.readfrom_into(teensy_address, pivot_lower)
-		print("Looking for low")
-		time.sleep(1)
+def _to_signed_byte(value: int) -> int:
+    return value - 256 if value > 127 else value
 
-	print("out of loop")
-	pivot_angle = (int(bin(pivot_higher[0]), 2) << 8) | int(bin(pivot_lower[0]), 2)
-	Dict = {"Pivot angle" : pivot_angle};
-	
-	i2c.unlock() # safely unlocks i2c
-	return Dict
+
+try:
+    from smbus2 import SMBus  # type: ignore
+
+    _smbus = SMBus(_bus_num)
+    _backend = "smbus"
+except Exception:
+    _smbus = None
+    _backend = None
+
+if _backend is None:
+    try:
+        import busio  # type: ignore
+        import board  # type: ignore
+
+        try:
+            try:
+                _i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            except TypeError:
+                _i2c = busio.I2C(board.SCL, board.SDA)
+            _backend = "busio"
+        except Exception:
+            _i2c = None
+            _backend = None
+    except Exception:
+        _backend = None
+
+
+def send_HEX(hexcode: int) -> int:
+    try:
+        if _backend == "smbus":
+            _smbus.write_byte(teensy_address, hexcode & 0xFF)  # type: ignore[union-attr]
+            return 0
+        if _backend == "busio":
+            _i2c.writeto(teensy_address, bytes([hexcode & 0xFF]))
+            return 0
+        raise RuntimeError("No I2C backend available")
+    except Exception as exc:
+        print(f"send_HEX failed ({_backend}, bus={_bus_num}, addr={teensy_address:#04x}): {exc}", file=sys.stderr)
+        return -1
+
+
+def get_data_dictionary() -> Dict[str, int | bool]:
+    result = _default_sensor_dict()
+
+    try:
+        if _backend == "smbus":
+            arr = _smbus.read_i2c_block_data(teensy_address, 0, 3)  # type: ignore[union-attr]
+        elif _backend == "busio":
+            data = bytearray(3)
+            while not _i2c.try_lock():  # type: ignore[union-attr]
+                pass
+            try:
+                _i2c.readfrom_into(teensy_address, data)  # type: ignore[union-attr]
+            finally:
+                _i2c.unlock()  # type: ignore[union-attr]
+            arr = list(data)
+        else:
+            raise RuntimeError("No I2C backend available")
+
+        result["relay_status"] = int(arr[0])
+        result["left_speed"] = _to_signed_byte(int(arr[1]))
+        result["right_speed"] = _to_signed_byte(int(arr[2]))
+        return result
+    except Exception as exc:
+        print(f"get_data_dictionary failed ({_backend}, bus={_bus_num}, addr={teensy_address:#04x}): {exc}", file=sys.stderr)
+        return result
