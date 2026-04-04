@@ -13,15 +13,18 @@ class ConstructionNode(Node):
     Node combining Digging and Dumping stages
     """
 
-    def __init__(self):
+    def __init__(self, node):
         super().__init__('ConstructionNode')
 
-        # Publisher for autonomy commands
-        self.publisher = self.create_publisher(Byte, "/robotCmds/manual", 10)
+        self.node = node
+        self.machine = StateMachine('construction_machine')
 
-        self.mode_sub = self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
-        
-        self.telemetry = self.create_subscription(RobotStatus, 'robot/telemtry', self.telemetry_callback, 10)
+        self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
+
+        # Publisher hex commands for teensy comms
+        self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
+
+        self.telemetry = self.create_subscription(RobotStatus, 'robot/telemetry', self.telemetry_callback, 10)
         
         ## Deposition variables ##
         # timestamp to keep track of deposition time
@@ -62,14 +65,8 @@ class ConstructionNode(Node):
         """
         sys.exit()
 
-    def mode_callback(self, msg):
-        """
-        Mode callback to stop the node if the mode changes from excavation to something else
-        """
-        if msg.data != "DUMPING":
-            return
-        
-        self.execute_machine()
+    def telemetry_callback(self):
+        pass
 
     def check_gate_health(self):
         gate_current = self.telemetry.motor_currents[7]

@@ -2,11 +2,12 @@ import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
 from rclpy.duration import Duration
+import sys
 
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped
 from nav2_msgs.action import NavigateToPose
 from action_msgs.msg import GoalStatus
-from std_msgs.msg import String
+from std_msgs.msg import String, Byte
 
 from excavation_machine import ExcavationMachine
 from construction_machine import ConstructionMachine
@@ -62,6 +63,8 @@ class AutonomyManager(Node):
             10,
         )
 
+        self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
+
         self.task_pub = self.create_publisher(String, "/autonomy/current_task", 10)
 
         self.status_pub = self.create_publisher(String, "/autonomy/status", 10)
@@ -70,6 +73,13 @@ class AutonomyManager(Node):
 
         self.get_logger().info("AutonomyManager started - state: INIT_LOCALIZING")
 
+
+    def manual_callback(self, msg):
+        """
+        Manual callback to stop the node if a manual control command is sent
+        """
+
+        sys.exit()
 
     def create_machine(self):
         """

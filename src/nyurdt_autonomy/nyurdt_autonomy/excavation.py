@@ -15,19 +15,16 @@ class ExcavationNode(Node):
 
     def __init__(self):
         super().__init__('ExcavationNode')
+        self.machine = StateMachine('excavation_machine')
 
-        # Publisher for autonomy commands
         self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
 
-
-        # Publisher for autonomy commands
+        # Publisher hex commands for teensy comms
         self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
 
-        self.is_at_excavation_position = False
-
-        self.telemetry = self.create_subscription(RobotStatus, 'robot/telemtry', self.telemetry_callback, 10)
+        self.telemetry = self.create_subscription(RobotStatus, 'robot/telemetry', self.telemetry_callback, 10)
         
-        self.mode_sub = self.create_subscription(String, '/robot/current_mode', self.mode_callback, 10)
+        self.is_at_excavation_position = False
 
         ## Excavation variables ##
         self.dig_start_time = 0
