@@ -8,6 +8,9 @@ from nav2_msgs.action import NavigateToPose
 from action_msgs.msg import GoalStatus
 from std_msgs.msg import String
 
+from excavation_machine import ExcavationMachine
+from construction_machine import ConstructionMachine
+
 import math
 
 from nyurdt_state_machine import StateMachine
@@ -63,9 +66,7 @@ class AutonomyManager(Node):
 
         self.status_pub = self.create_publisher(String, "/autonomy/status", 10)
 
-        self.nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
-
-        self.create_timer(0.1, self._loop)
+        self._nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
 
         self.get_logger().info("AutonomyManager started - state: INIT_LOCALIZING")
 
@@ -184,7 +185,7 @@ class AutonomyManager(Node):
             if self.task_index < len(TASK_QUEUE)
             else "none"
         )
-        msg = String(data=f"state={self.state.name} task={task_name} "
+        msg = String(data=f"state={self.current_state.__name__} task={task_name} "
                          f"cov_x={self.covariance[0]:.4f} cov_y={self.covariance[7]:.4f}")
         self.status_pub.publish(msg)
 
@@ -200,7 +201,7 @@ class AutonomyManager(Node):
         self.publish_msg(0x00) # turn 180
         
         if self._covariance_ok():
-            self.get_logger.info("Initial Localization aquired")
+            self.get_logger().info("Initial Localization aquired")
             return 'stage_2'
         
         return 'stage_1'
@@ -284,10 +285,10 @@ class AutonomyManager(Node):
         now = self.get_clock().now()
         if self._cov_ok_since is None:
             self._cov_ok_since = now
-            return
+            return 'stage_4'
         elapsed = (now - self._cov_ok_since).nanoseconds / 1e9
         if elapsed < COV_SETTLE_SEC:
-            return  # still settling
+            return  'stage_4' # still settling
         self._cov_ok_since = None
  
         # Confirm physical zone membership (with margin)
@@ -302,13 +303,28 @@ class AutonomyManager(Node):
         return 'stage_5'
     
     def stage_5(self):
-        """
-        Stage 5: Dispatch to zone-specific logic.
-        """
         if self.current_state != self.stage_5:
-            self.get_logger().info('Stage 5: State Specifc logic')
+            self.get_logger().info('Stage 5: Task-specific logic')
             self.current_state = self.stage_5
-        
+            task = TASK_QUEUE[self.task_index]
+
+            # Instantiate the right machine for this task
+            if task["action"] == "excavate":
+                self._task_machine = ExcavationMachine(self)
+            elif task["action"] == "deposit":
+                self._task_machine = ConstructionMachine(self)
+
+        # Run one step of the sub-machine
+        self._task_machine.execute()
+
+        # When done, advance to next task
+        if self._task_machine.is_done():
+            self._task_machine = None
+            self.task_index += 1
+            self.nav_in_flight = False
+            return 'stage_2'
+
+        return 'stage_5'
     
     def stage_6(self):
         """
