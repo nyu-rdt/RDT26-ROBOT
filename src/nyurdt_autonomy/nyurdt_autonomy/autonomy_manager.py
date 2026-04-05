@@ -55,6 +55,14 @@ class AutonomyManager(Node):
         self.cov_ok_since = None
         self.bin_mass = None
         self.goal_bin_mass = 0.4 # REPLACE WITH GOAL MASS 
+        self.last_apriltag_correction = None
+
+        self.create_subscription(
+            PoseWithCovarianceStamped,
+            '/apriltag/robot_pose',
+            self._apriltag_cb,
+            10
+        )
 
         self.create_subscription(
             PoseWithCovarianceStamped,
@@ -105,6 +113,9 @@ class AutonomyManager(Node):
     def _pose_cb(self, msg: PoseWithCovarianceStamped):
         self.pose = msg.pose.pose
         self.covariance = msg.pose.covariance
+
+    def _apriltag_cb(self, msg):
+        self.last_apriltag_correction = self.get_clock().now()
 
     # Nav2 helpers
  
@@ -245,10 +256,7 @@ class AutonomyManager(Node):
             self.nav_in_flight = False
             return 'stage_4'
         
-    def stage_3(self):
-        """
-        Stage 3: Navigate to the AprilTag view pose; wait for covariance to settle.
-        """
+    def stage_3(self):  
         if self.current_state != self.stage_3:
             self.get_logger().info("Stage 3: Relocalizing")
             self.current_state = self.stage_3
@@ -256,19 +264,23 @@ class AutonomyManager(Node):
         if not self.nav_in_flight:
             p = RELOCALIZE_POSE
             self._send_nav_goal(p["x"], p["y"], yaw=p["yaw"])
-            self.get_logger().info("Heading to relocalization pose.")
             return 'stage_3'
- 
+
         if self._nav_goal_succeeded():
             self.nav_in_flight = False
-            self.get_logger().info("At relocalization pose — waiting for covariance to settle.")
- 
-        # Stay here until confidence is restored
-        if self._covariance_ok():
-            self.get_logger().info("Covariance settled — resuming mission.")
-            next_state = self.relocalize_after or 'stage_2'
-            self.relocalize_after = None
-            return next_state
+
+        # Wait for BOTH covariance to drop AND a fresh tag correction
+        tag_seen_recently = (
+            self.last_apriltag_correction is not None
+            and (self.get_clock().now() - self.last_apriltag_correction).nanoseconds / 1e9 < 2.0
+        )
+
+        if self._covariance_ok() and tag_seen_recently:
+            self.get_logger().info("Relocalization confirmed by AprilTag.")
+            self.last_apriltag_correction = None
+            return self.relocalize_after or 'stage_2'
+
+        return 'stage_3'
     
     def stage_4(self):
         """
