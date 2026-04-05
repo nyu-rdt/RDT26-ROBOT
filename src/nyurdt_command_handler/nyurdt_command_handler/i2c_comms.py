@@ -1,46 +1,115 @@
+import rclpy
+from rclpy.node import Node
 import busio
 import board
-import time
+import struct
+
+from nyurdt_interfaces.msg import RobotStatus
+
+TEENSY_ADDRESS = 0x08
+
+# Packet layout from MCU (18 bytes total):
+# Bytes 0-7:   motor_currents[8]   uint8, mapped 0-255 = 0-20A
+# Bytes 8-9:   left_encoder, right_encoder  uint8
+# Bytes 10-13: load_cells[4]       uint8 each
+# Byte 14:     string_pot (conveyor_pos)    uint8
+# Byte 15:     gate_pos            uint8
+# Byte 16:     flags               uint8 (bit field)
+# Byte 17:     fixes_attempted     uint8
+
+PACKET_SIZE = 18
+PACKET_FORMAT = '8B2B4BBBBB'  
+
+CURRENT_MAX_AMPS = 20.0
+ENCODER_MAX_DEG  = 360.0
 
 
-print(dir(board))
-i2c = busio.I2C(board.SCL, board.SDA, 100000)
-# busio.I2C.configure(500000);
+class I2CReaderNode(Node):
+    def __init__(self):
+        super().__init__('i2c_reader')
 
-i2c.scan()
+        self.pub = self.create_publisher(RobotStatus, 'robot/telemetry_raw', 10)
 
-#time.sleep(1)
+        try:
+            self.i2c = busio.I2C(board.SCL, board.SDA, frequency=100000)
+            self.get_logger().info("I2C initialized")
+        except Exception as e:
+            self.get_logger().error(f"I2C init failed: {e}")
+            self.i2c = None
 
-teensy_address = 0x42 # edit this based off teensy address 
+        # Read at 20Hz — adjust to however fast MCU can respond
+        self.create_timer(0.05, self._read_and_publish)
 
-def send_HEX(hexcode):
-	
-	buff = bytearray(1)
-	buff[0] = hexcode
-	i2c.writeto(teensy_address, buff)
-	return 0
+    def _read_and_publish(self):
+        if self.i2c is None:
+            return
+
+        try:
+            buf = bytearray(PACKET_SIZE)
+            self.i2c.readfrom_into(TEENSY_ADDRESS, buf)
+        except Exception as e:
+            self.get_logger().warn(f"I2C read failed: {e}")
+            return
+
+        try:
+            fields = struct.unpack(PACKET_FORMAT, buf)
+        except struct.error as e:
+            self.get_logger().error(f"Packet unpack failed: {e}")
+            return
+
+        currents_raw  = fields[0:8]
+        left_enc_raw  = fields[8]
+        right_enc_raw = fields[9]
+        load_raw      = fields[10:14]
+        conv_raw      = fields[14]
+        gate_raw      = fields[15]
+        flags         = fields[16]
+        fixes         = fields[17]
+
+        msg = RobotStatus()
+
+        # Convert currents: 0-255 → 0-20A
+        msg.motor_currents = [
+            (v / 255.0) * CURRENT_MAX_AMPS for v in currents_raw
+        ]
+
+        # Encoders — keep as raw ticks for now, odometry node handles conversion
+        msg.left_encoder  = left_enc_raw
+        msg.right_encoder = right_enc_raw
+
+        # Load cells — normalize 0-255 to kg (calibrate scale factor for your cells)
+        LOAD_CELL_MAX_KG = 5.0  # replace with your real max
+        msg.load_cells = [
+            (v / 255.0) * LOAD_CELL_MAX_KG for v in load_raw
+        ]
+
+        # Positions: normalize 0-255 to 0.0-1.0
+        msg.conveyor_pos = conv_raw / 255.0
+        msg.gate_pos     = gate_raw / 255.0
+
+        # Parse flags byte
+        msg.heartbeat        = bool(flags & (1 << 0))
+        msg.battery_low_3s   = bool(flags & (1 << 1))
+        msg.battery_low_6s   = bool(flags & (1 << 2))
+        msg.motor_overcurrent = bool(flags & (1 << 3))
+
+        msg.fixes_attempted = fixes
+
+        # Drop packet if no heartbeat — MCU is not sending valid data
+        if not msg.heartbeat:
+            self.get_logger().warn("No heartbeat — dropping packet")
+            return
+
+        self.pub.publish(msg)
 
 
-def get_data_dictionary():
-	while not i2c.try_lock():
-		pass; # will keep going until the i2c lock has been attained
-	
-	pivot_lower = bytearray(1)
-	pivot_higher = bytearray(1)
-	while pivot_higher == bytearray(1):
-		i2c.readfrom_into(teensy_address, pivot_higher)
-		print("Looking for high")
-		time.sleep(1)
-		
-	print(pivot_higher)
-	while pivot_lower == bytearray(1):
-		i2c.readfrom_into(teensy_address, pivot_lower)
-		print("Looking for low")
-		time.sleep(1)
+def main(args=None):
+    rclpy.init(args=args)
+    node = I2CReaderNode()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
 
-	print("out of loop")
-	pivot_angle = (int(bin(pivot_higher[0]), 2) << 8) | int(bin(pivot_lower[0]), 2)
-	Dict = {"Pivot angle" : pivot_angle};
-	
-	i2c.unlock() # safely unlocks i2c
-	return Dict
+
+if __name__ == '__main__':
+    main()

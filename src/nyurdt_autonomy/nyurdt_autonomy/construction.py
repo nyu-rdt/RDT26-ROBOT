@@ -1,161 +1,108 @@
 import rclpy
 from rclpy.node import Node
-import sys
 import time
-
-from std_msgs.msg import Byte, String
-
+from std_msgs.msg import Byte, Bool
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
 from nyurdt_interfaces.msg import RobotStatus
 
+
 class ConstructionNode(Node):
-    """
-    Node combining Digging and Dumping stages
-    """
 
-    def __init__(self, node):
-        super().__init__('ConstructionNode')
+    def __init__(self):                          
+        super().__init__('construction_node')
 
-        self.node = node
-        self.machine = StateMachine('construction_machine')
-
-        self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
-
-        # Publisher hex commands for teensy comms
         self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
+        self.gate_target_pub = self.create_publisher(Bool, '/robot/target_gate_closed', 10)
 
-        self.telemetry = self.create_subscription(RobotStatus, 'robot/telemetry', self.telemetry_callback, 10)
-        
-        ## Deposition variables ##
-        # timestamp to keep track of deposition time
+
+        self.latest_telemetry = None
+        self.create_subscription(RobotStatus, 'robot/telemetry', self._telemetry_cb, 10)
+
         self.depo_start_time = 0
-        # NEED TO CHANGE VALUE -----------------------------------------------
         self.depo_time = 30
-
-        # Variable used to avoid repeated logging of state
+        self.goal_mass = 0.05      # kg remaining in bin = "empty enough"
         self.current_state = None
+        self._finished = False
+
+        self.start_yaw = None      # set when stage_1 begins
+
+    def _set_gate_target(self, closed: bool):
+        """Call this whenever you command the gate open or closed."""
+        msg = Bool()
+        msg.data = closed
+        self.gate_target_pub.publish(msg)
+
+    def _telemetry_cb(self, msg: RobotStatus):
+        self.latest_telemetry = msg
+
+    def is_done(self) -> bool:
+        return self._finished
+
+    def publish_msg(self, data: int):
+        msg = Byte()
+        msg.data = data.to_bytes(1, 'little')
+        self.publisher.publish(msg)
 
     def create_machine(self):
-        """
-        Create a state machine with all desired states
-        """
-        self.get_logger().info("Initializing state machine")
-        self.machine = StateMachine('full_dig_dump_machine')
-
-        # Adding states
+        self.machine = StateMachine('construction_machine')
         self.machine.add_state('stage_1', self.stage_1)
         self.machine.add_state('stage_2', self.stage_2)
         self.machine.add_state('stage_3', self.stage_3)
         self.machine.add_state('stage_4', self.stage_4)
         self.machine.add_state('stage_5', self.stage_5)
 
-    def publish_msg(self, data: bytes):
-        """
-        Method used to publish a message to a topic
-        :param data: data to be published
-        """
-        msg = Byte()
-        msg.data = data.to_bytes(1, 'little')
-        self.publisher.publish(msg)
-        self.get_logger().info(f"Publishing: {msg.data}")
-
-    def manual_callback(self, msg):
-        """
-        Manual callback to stop the node if a manual control command is sent
-        """
-        sys.exit()
-
-    def telemetry_callback(self):
-        pass
-
-    def check_gate_health(self):
-        gate_current = self.telemetry.motor_currents[7]
-        nominal_gate_current = 2
-        load_proxy = gate_current / nominal_gate_current
-
-        if self.target_gate_pos == 0 and load_proxy > 2.5:
-            self.get_logger.error("GATE STALL: Material Blockage")
-            self.send_mcu_cmd(0x00) # GATE_RESET fix
-
-    def execute_machine(self):
-        """
-        Begin execution of the machine
-        """
+    def execute(self):
         self.create_machine()
         self.machine.execute()
 
-    # ------------------ CONSTRUCTION STAGES ------------------
+
+    # ── State Machines ───────────────────────────────
 
     def stage_1(self):
-        """
-        Stage 1: Turn in place 180 degrees
-        """
-        self.get_logger().info("Stage 1: Make a 180")
-
-        self.publish_msg(0x00) # turn 180
-        
-        # check IMU data from realsense camera to see if we have turned fully 
-        if self.current_pose - self.start_pose > 180:
-            return 'stage_2'
-        
-        return 'stage_1'
+        if self.current_state != self.stage_1:
+            self.get_logger().info("Construction stage 1: Turn 180")
+            self.current_state = self.stage_1
+        self.publish_msg(0x00)  # turn 180 command
+        # replace with real IMU yaw check from your pose topic
+        return 'stage_2'
 
     def stage_2(self):
-        """
-        Stage 2: Open depo bin hatch
-        """
-        self.get_logger().info('Stage 2: Open depo bin hatch')
-
-        self.publish_msg(0x00)  # open depo bin hatch
-        
+        # opening the hatch
+        if self.current_state != self.stage_2:
+            self.get_logger().info("Construction stage 2: Open hatch")
+            self.current_state = self.stage_2
+            self._set_gate_target(False)   # gate is now commanded open
+        self.publish_msg(0x70)
         return 'stage_3'
-    
+
     def stage_3(self):
-        """
-        Stage 3: Vibrate depo motor to start dumping
-        """
-        self.get_logger().info('Stage 3: Vibrate depo motor')
-
-        self.publish_msg(0x00) # vibrate depo motor
-
-        if self.depo_start_time == 0:
+        if self.current_state != self.stage_3:
+            self.get_logger().info("Construction stage 3: Vibrating")
+            self.current_state = self.stage_3
             self.depo_start_time = time.time()
 
-        # is depo bin weight less than x kg?
-        if self.bin_mass < self.goal_mass:
-            return 'stage_4'
-        elif time.time() - self.depo_start_time > self.depo_time:
-            return 'stage_4'
+        self.publish_msg(0x72)  # vibrate
 
+        tel = self.latest_telemetry
+        if tel is not None and tel.total_mass <= self.goal_mass:
+            return 'stage_4'
+        if time.time() - self.depo_start_time > self.depo_time:
+            return 'stage_4'
         return 'stage_3'
-    
+
     def stage_4(self):
-        """
-        Stage 4: Stop vibrating depo motor
-        """
-        self.get_logger().info('Stage 4: Stop vibrating depo motor')
-
-        self.publish_msg(0x00) # stop vibrating depo motor
-
+        if self.current_state != self.stage_4:
+            self.get_logger().info("Construction stage 4: Stop vibrating")
+            self.current_state = self.stage_4
+        self.publish_msg(0x73)  # stop vibrate
         return 'stage_5'
-    
+
     def stage_5(self):
-        """
-        Stage 5: Close depo bin hatch
-        """
-        self.get_logger().info('Stage 5: Close depo bin hatch')
-
-        self.publish_msg(0x00) # close depo bin hatch
-
+        # closing the hatch
+        if self.current_state != self.stage_5:
+            self.get_logger().info("Construction stage 5: Close hatch")
+            self.current_state = self.stage_5
+            self._set_gate_target(True)    # gate is now commanded closed
+        self.publish_msg(0x70)
+        self._finished = True
         return None
-
-# ---------------- MAIN ----------------
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = ConstructionNode()
-    node.execute_machine()
-    rclpy.shutdown()
-
-if __name__ == "__main__":
-    main()

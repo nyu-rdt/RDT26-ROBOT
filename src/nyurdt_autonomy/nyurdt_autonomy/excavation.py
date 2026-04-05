@@ -1,217 +1,131 @@
 import rclpy
 from rclpy.node import Node
-import sys
 import time
-from time import sleep
-from std_msgs.msg import Byte, String
-
-
+from std_msgs.msg import Byte, Float32
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
-
 from nyurdt_interfaces.msg import RobotStatus
 
 
 class ExcavationNode(Node):
 
     def __init__(self):
-        super().__init__('ExcavationNode')
-        self.machine = StateMachine('excavation_machine')
+        super().__init__('excavation_node')
 
-        self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
-
-        # Publisher hex commands for teensy comms
         self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
+        self.conveyor_target_pub = self.create_publisher(Float32, '/robot/target_conveyor_pos', 10)
 
-        self.telemetry = self.create_subscription(RobotStatus, 'robot/telemetry', self.telemetry_callback, 10)
-        
+        # Telemetry — stored as data, not the subscription object
+        self.latest_telemetry = None
+        self.create_subscription(RobotStatus, 'robot/telemetry', self._telemetry_cb, 10)
+
         self.is_at_excavation_position = False
-
-        ## Excavation variables ##
         self.dig_start_time = 0
-        # NEED TO CHANGE VALUE -----------------------------------------------
-        self.dig_time = 120  # Digging duration in seconds
-
-        # Using encoders we will get the distance travelled
-        self.dig_length = 0.5 # meters
-
-        # Variable used to avoid repeated logging of state
+        self.dig_time = 120
+        self.dig_length = 0.5
+        self.goal_mass = 0.4        # kg — set real value
+        self.dist_traveled = 0.0   # update this from encoder odometry
         self.current_state = None
+        self._finished = False
 
-        self.mass_flow = 0
+    def _set_conveyor_target(self, pos: float):
+        """Call this whenever you command a new conveyor position."""
+        msg = Float32()
+        msg.data = pos
+        self.conveyor_target_pub.publish(msg)
+
+    def _telemetry_cb(self, msg: RobotStatus):
+        self.latest_telemetry = msg  
+
+    def is_done(self) -> bool:
+        return self._finished
+
+    def publish_msg(self, data: int):
+        msg = Byte()
+        msg.data = data.to_bytes(1, 'little')
+        self.publisher.publish(msg)
+
+    def check_ladder_health(self):
+        if self.latest_telemetry is None:
+            return
+        current_draw = self.latest_telemetry.motor_currents[5]
+        nominal = 6.0
+        ratio = current_draw / nominal
+        if ratio > 2.0:
+            self.get_logger().error("LADDER JAM RISK - Triggering Anti-Jam")
+            self.publish_msg(0x00)  # replace with real anti-jam byte
+        elif ratio < 0.4:
+            self.get_logger().info("Low current - nothing being excavated")
 
     def create_machine(self):
-        """
-        Create a state machine with all desired states
-        """
-        self.get_logger().info("Initializing state machine")
-        self.machine = StateMachine('full_dig_dump_machine')
-
-        # Adding states
+        self.machine = StateMachine('excavation_machine')
         self.machine.add_state('stage_1', self.stage_1)
         self.machine.add_state('stage_2', self.stage_2)
         self.machine.add_state('stage_3', self.stage_3)
         self.machine.add_state('stage_4', self.stage_4)
         self.machine.add_state('stage_5', self.stage_5)
-        self.machine.add_state('stage_6', self.stage_6)
 
-
-    def publish_msg(self, data: bytes):
-        """
-        Method used to publish a message to a topic
-        :param data: data to be published
-        """
-        msg = Byte()
-        msg.data = data.to_bytes(1, 'little')
-        self.publisher.publish(msg)
-        self.get_logger().info(f"Publishing: {msg.data}")
-
-    def manual_callback(self, msg):
-        """
-        Manual callback to stop the node if a manual control command is sent
-        """
-
-        sys.exit()
-
-    def position_callback(self, msg):
-        """
-        Callback to update whether we are at the excavation position or not
-        """
-        self.is_at_excavation_position = msg.data
-
-    def mode_callback(self, msg):
-        """
-        Callback to update the current mode of the robot
-        """
-        self.current_mode = msg.data
-
-    def excavation_loop(self):
-        if self.current_mode != "DIGGING":
-            return
-        
-        self.mass_flow = (self.telemetry.total_mass - self.prev_mass) / self.dt
-        
-        self.execute_machine()
-
-    def execute_machine(self):
-        """
-        Begin execution of the machine
-        """
+    def execute(self):
         self.create_machine()
         self.machine.execute()
 
-    def check_ladder_health(self, telemetry):
-        current_draw = telemetry.motor_currents[5]
-        nominal_current_draw = 6
-
-        proxy_ratio = current_draw /nominal_current_draw
-
-        if proxy_ratio > 2.0 and self.mass_flow < 0.01:
-            self.get_logger().error("LADDER JAM RISK - Triggering Anti-Jam")
-            self.send_mcu_cmd(0x00)  # Anti-jam command
-
-        elif proxy_ratio < 0.4 and self.current_mode == "DIGGING":
-            self.get_logger.info("Low current - Nothing being excavated")
-
-    # ------------------ DIGGING STAGES ------------------
+    # ── State Machines ───────────────────────────────
 
     def stage_1(self):
-        """
-        Stage 1: Start rotating conveyor belt
-        """
+        # start conveyor — target is fully lowered (0.0)
         if self.current_state != self.stage_1:
-            self.get_logger().info("Stage 1: Start rotating conveyor belt")
+            self.get_logger().info("Excavation stage 1: Start conveyor belt")
             self.current_state = self.stage_1
-
-        self.publish_msg(0x00) # rotate conveyor belt
-
+            self._set_conveyor_target(0.0)
+        self.publish_msg(0x65)
         return 'stage_2'
 
     def stage_2(self):
-        """
-        Stage 2: Move conveyor system to excavation position
-        """
+        # moving to excavation position — target is fully lowered (1.0 = down)
         if self.current_state != self.stage_2:
-            self.get_logger().info("Stage 2: Move to excavation position")
+            self.get_logger().info("Excavation stage 2: Move to excavation position")
             self.current_state = self.stage_2
-
-        # Send command
-        self.publish_msg(0x00)  # Move conveyor to excavation position
-
-        # Check if pivot is at excavation position, repeat state if not
+            self._set_conveyor_target(1.0)   # adjust real target
+        self.publish_msg(0x62)
         if self.is_at_excavation_position:
-            self.get_logger().info("Reached excavation position")
             return 'stage_3'
-        else:
-            return 'stage_2'
-        
-    def stage_3(self):
-        """
-        Stage 3: Dig
-        """
-        if self.current_state != self.stage_3:
-            self.get_logger().info("Stage 3: Dig")
-            self.current_state = self.stage_3
+        return 'stage_2'
 
-        if self.dig_start_time == 0:
+    def stage_3(self):
+        if self.current_state != self.stage_3:
+            self.get_logger().info("Excavation stage 3: Digging")
+            self.current_state = self.stage_3
             self.dig_start_time = time.time()
 
-        # have we digged for x seconds?
+        self.check_ladder_health()
+
+        tel = self.latest_telemetry
+        if tel is not None and tel.bin_mass >= self.goal_mass:
+            return 'stage_4'
         if time.time() - self.dig_start_time > self.dig_time:
             return 'stage_4'
-        # have we moved forward more than x meters?
-        elif self.dist_traveled > self.dig_length:
+        if self.dist_traveled >= self.dig_length:
             return 'stage_4'
-        # have we collected more than x kg of regolith?
-        elif self.telemetry.bin_mass > self.goal_mass:
-            return 'stage_4'
-        # have we collected less than x kg of regolith?
-        elif self.telemetry.bin_mass < self.goal_mass:
-            self.publish_msg(0x00) #move forward 1 meters
-            return 'stage_3'
-        elif self.telemtry.motor_stall_flag:
-            return 'stage_error_recovery'
-        
+
+        self.publish_msg(0x20)  # drive forward
         return 'stage_3'
 
     def stage_4(self):
-        """
-        Stage 4: Stop the motion of the conveyor belt
-        """
         if self.current_state != self.stage_4:
-            self.get_logger().info("Stage 4: Stop spinning the conveyor belt")
+            self.get_logger().info("Excavation stage 4: Stop conveyor")
             self.current_state = self.stage_4
-
-        # Stop the belt
-        self.publish_msg(0x00)
-
+        self.publish_msg(0x63)  # stop belt
+        return 'stage_5'
+    
+    def stage_5(self):
+        # retracting — target is fully raised (0.0 = up)
+        if self.current_state != self.stage_5:
+            self.get_logger().info("Excavation stage 5: Return to locomotion position")
+            self.current_state = self.stage_5
+            self._set_conveyor_target(0.0)
+        self.publish_msg(0x61)
+        if self.latest_telemetry is not None and self.latest_telemetry.conveyor_pos < 0.05:
+            self._finished = True
+            return None
         return 'stage_5'
 
-    def stage_5(self):
-        """
-        Stage 5: Move conveyor belt to locomotion position
-        """
-        if self.current_state != self.stage_5:
-            self.get_logger().info("Stage 5: Move to locomotion position")
-            self.current_state = self.stage_5
-
-        # Move conveyor belt to locomotion position
-        self.publish_msg(0x00)
-        sleep(7)
-
-        # Check if pivot at starting position
-        sensor_data = self.get_sensor_data()
-        if not sensor_data.at_locomotion_position:
-            return 'stage_5'
-
-        return 'stage_6'
-
-# ---------------- MAIN ----------------
-
-def main(args=None):
-    rclpy.init(args=args)
-    node = ExcavationNode()
-    node.execute_machine()
-    rclpy.shutdown()
-
-if __name__ == "__main__":
-    main()
+    

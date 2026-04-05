@@ -9,8 +9,8 @@ from nav2_msgs.action import NavigateToPose
 from action_msgs.msg import GoalStatus
 from std_msgs.msg import String, Byte
 
-from excavation_machine import ExcavationMachine
-from construction_machine import ConstructionMachine
+from excavation_node import ExcavationNode
+from construction_node import ConstructionNode
 
 import math
 
@@ -105,10 +105,8 @@ class AutonomyManager(Node):
     def _pose_cb(self, msg: PoseWithCovarianceStamped):
         self.pose = msg.pose.pose
         self.covariance = msg.pose.covariance
- 
-    # =======================================================================
+
     # Nav2 helpers
-    # =======================================================================
  
     def _send_nav_goal(self, x: float, y: float, yaw: float = 0.0):
         if not self._nav_client.wait_for_server(timeout_sec=2.0):
@@ -153,9 +151,7 @@ class AutonomyManager(Node):
             self.nav_goal_handle.cancel_goal_async()
         self.nav_in_flight = False
  
-    # =======================================================================
     # Localization helpers
-    # =======================================================================
  
     def _covariance_ok(self) -> bool:
         """True when x and y positional uncertainty are below thresholds."""
@@ -185,9 +181,6 @@ class AutonomyManager(Node):
                 return name
         return None
  
-    # =======================================================================
-    # Utilities
-    # =======================================================================
  
     def _publish_status(self):
         task_name = (
@@ -200,6 +193,9 @@ class AutonomyManager(Node):
         self.status_pub.publish(msg)
 
     
+    # ── State Machines ───────────────────────────────
+
+
     def stage_1(self):
         """
         Stage 1: Initial Localization
@@ -314,22 +310,17 @@ class AutonomyManager(Node):
     
     def stage_5(self):
         if self.current_state != self.stage_5:
-            self.get_logger().info('Stage 5: Task-specific logic')
+            self.get_logger().info("Stage 5: Executing task")
             self.current_state = self.stage_5
-            task = TASK_QUEUE[self.task_index]
+            task = TASK_QUEUE[self.task_index]["action"]
+            if task == "excavate":
+                self._task_node = ExcavationNode()
+            elif task == "deposit":
+                self._task_node = ConstructionNode()
+            self._task_node.execute()
 
-            # Instantiate the right machine for this task
-            if task["action"] == "excavate":
-                self._task_machine = ExcavationMachine(self)
-            elif task["action"] == "deposit":
-                self._task_machine = ConstructionMachine(self)
-
-        # Run one step of the sub-machine
-        self._task_machine.execute()
-
-        # When done, advance to next task
-        if self._task_machine.is_done():
-            self._task_machine = None
+        if self._task_node.is_done():
+            self._task_node = None
             self.task_index += 1
             self.nav_in_flight = False
             return 'stage_2'
