@@ -30,7 +30,7 @@ def generate_launch_description():
     # )
 
     return LaunchDescription([
-        command_subscriber
+        command_subscriber,
         # sensor_service,
         # autonomy_destroyer,
     ])
