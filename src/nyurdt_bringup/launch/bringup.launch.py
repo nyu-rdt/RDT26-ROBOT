@@ -4,24 +4,22 @@ from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
-from launch.substitutions import LaunchConfiguration # <--- IMPORTANT IMPORT
+from launch.substitutions import LaunchConfiguration 
 
 def generate_launch_description():
 
-    # 1. Define the simulation time variable to prevent NameError
+
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
-    # 2. Get Package Directories
     nav2_dir    = get_package_share_directory('rdt_nav2_bringup')
     description_dir = get_package_share_directory('nyurdt_description')
     realsense_dir = get_package_share_directory('realsense2_camera')
+
     
-    # 3. Path to your custom Nav2 parameters
     nav2_params = os.path.join(nav2_dir, 'config', 'nav2_params.yaml')
 
     return LaunchDescription([
         
-        # Declare the argument so it can be passed via terminal
         DeclareLaunchArgument(
             'use_sim_time',
             default_value='false',
@@ -103,8 +101,8 @@ def generate_launch_description():
         ),
 
         # ── Autonomy Nodes ───────────────────────────────────────────────
-        Node(package='nyurdt_autonomy', executable='apriltag_localization', name='apriltag_localization'),
-        Node(package='nyurdt_autonomy', executable='i2c_reader', name='i2c_reader'),
+        Node(package='nyurdt_localization', executable='apriltag_detector', name='apriltag_detector'),
+        Node(package='nyurdt_command_handler', executable='i2c_reader', name='i2c_reader'),
         Node(package='nyurdt_autonomy', executable='telemetry_processor', name='telemetry_processor'),
         Node(package='nyurdt_autonomy', executable='autonomy_manager', name='autonomy_manager'),
     ])

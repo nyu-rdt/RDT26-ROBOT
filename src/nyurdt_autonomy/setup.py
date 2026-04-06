@@ -22,14 +22,11 @@ setup(
             'pytest',
         ],
     },
+
     entry_points={
         'console_scripts': [
-            'serial_bridge = nyurdt_autonomy.serial_bridge:main',
-            'LocomotionNode = nyurdt_autonomy.locomotion:main',
-            'ExcavationNode = nyurdt_autonomy.excavation:main',
-            'ConstructionNode = nyurdt_autonomy.construction:main',
-            'autonomy_destroyer = nyurdt_autonomy.autonomy_destroyer:main',
-            'autonomy_manager = nyurdt_autonomy.autonomy_manager:main'
+            'telemetry_processor = nyurdt_autonomy.telemetry_processor:main',
+            'autonomy_manager = nyurdt_autonomy.autonomy_manager:main',
         ],
     },
 )
