@@ -226,6 +226,7 @@
     </collision>
     <xacro:inertia_wheel />
 </link>
+
 <xacro:sensor_d435 parent="body_link" name="camera" use_nominal_extrinsics="true">
     <origin xyz="0.5 0 0.3" rpy="0 0 0"/>
 </xacro:sensor_d435>
