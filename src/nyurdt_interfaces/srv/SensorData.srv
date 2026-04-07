@@ -1,5 +1,0 @@
----
-bool at_locomotion_position
-bool at_excavation_position
-bool at_construction_position
-int64 belt_pivot_angle
