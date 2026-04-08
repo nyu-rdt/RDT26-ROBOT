@@ -19,10 +19,12 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 
-# srv filepath
+# generate message files
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/SensorData.srv"
-)
+  "msg/RobotStatus.msg"
+  )
+
+ament_export_dependencies(rosidl_default_generators)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
