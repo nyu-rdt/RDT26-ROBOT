@@ -26,6 +26,12 @@ def read_camera_feed(source: Union[int, str] = 0) -> List[np.ndarray]:
    cap = cv2.VideoCapture(source)
    if not cap.isOpened():
       return []
+   
+   cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+   cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+
+   print(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+   print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
    # Begin reading from the camera until ESC key is hit
    frames = []
@@ -98,7 +104,7 @@ def calibrate(frames: List[np.ndarray]) -> None:
    # Calibrate the camera
    ret, mtx, dist, _, _ = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1], None, None)
 
-   # Print output if calibration successful
+   # # Print output if calibration successful
    if ret:
       print("DISTORTION COEFFICIENTS:")
       print(dist.tolist())
@@ -110,9 +116,23 @@ def calibrate(frames: List[np.ndarray]) -> None:
       print("CALIBRATION MATRIX")
       pprint(mtx.tolist())
 
+   # print("\n=== Calibration Results ===")
+   # print("RMS Reprojection Error:", ret)
+
+   # print("\nDISTORTION COEFFICIENTS:")
+   # print(dist.tolist())
+
+   # print("\nCALIBRATION MATRIX:")
+   # pprint(mtx.tolist())
+
+   # print("\nfx =", mtx[0,0])
+   # print("fy =", mtx[1,1])
+   # print("cx =", mtx[0,2])
+   # print("cy =", mtx[1,2])
+
 
 def main(args=None):
-   frames = read_camera_feed()
+   frames = read_camera_feed(0)
    calibrate(frames)
 
 
