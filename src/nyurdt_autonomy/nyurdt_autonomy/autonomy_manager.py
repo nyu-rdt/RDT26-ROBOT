@@ -35,7 +35,12 @@ COV_SETTLE_SEC = 2.0
 
 ZONE_ENTRY_MARGIN = 0.12
 
+# queue for 3 cycles of autonomy
 TASK_QUEUE = [
+    {"zone": "excavation", "action": "excavate"},
+    {"zone": "construction", "action": "deposit"},
+    {"zone": "excavation", "action": "excavate"},
+    {"zone": "construction", "action": "deposit"},
     {"zone": "excavation", "action": "excavate"},
     {"zone": "construction", "action": "deposit"},
 ]
@@ -216,7 +221,8 @@ class AutonomyManager(Node):
             self.get_logger().info("Stage 1: Initial Localization")
             self.current_state = self.stage_1
 
-        self.publish_msg(0x00) # turn 180
+        # turn until an apriltag is spotted
+        self.publish_msg(0x50) # turn right at 25%
         
         if self._covariance_ok():
             self.get_logger().info("Initial Localization aquired")
@@ -233,7 +239,7 @@ class AutonomyManager(Node):
             self.current_state = self.stage_2
 
         if self.task_index >= len(TASK_QUEUE):
-            return 'stage_6'
+            return 'stage_6' # finished with autonomy
  
         # Check for drift mid-navigation
         if not self._covariance_ok():

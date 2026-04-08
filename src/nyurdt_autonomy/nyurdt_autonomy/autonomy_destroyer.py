@@ -32,12 +32,12 @@ class AutonomyDestroyer(Node):
         is sent
         :return: None
         """
-        # Kill locomotion node
-        process_one = subprocess.Popen(['killall', 'locomotion'])
+        # Kill construction node
+        process_one = subprocess.Popen(['killall', 'construction'])
         process_one.wait()
 
-        # Kill dig and dump node
-        process_two = subprocess.Popen(['killall', 'dig_and_dump'])
+        # Kill excavation node
+        process_two = subprocess.Popen(['killall', 'excavation'])
         process_two.wait()
 
         # Log that autonomies were killed

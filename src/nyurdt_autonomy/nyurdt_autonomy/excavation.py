@@ -23,7 +23,7 @@ class ExcavationNode(Node):
         self.dig_time = 120
         self.dig_length = 0.5
         self.goal_mass = 0.4        # kg — set real value
-        self.dist_traveled = 0.0   # update this from encoder odometry
+        f   # update this from encoder odometry
         self.current_state = None
         self._finished = False
 
