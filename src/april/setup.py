@@ -28,7 +28,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "april_tf=april.apriltag_tf:main",
+            "april_tf=april.apriltag_detector:main",
         ],
     },
 )
