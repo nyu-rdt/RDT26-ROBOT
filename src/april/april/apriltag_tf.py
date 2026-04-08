@@ -11,48 +11,37 @@ class AprilTagTF(Node):
         #as well as a buffer and listener to subscribe to /tf topic and store transforms
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer,self)
-        self.tag_camera_broadcaster = TransformBroadcaster(self)
+        #self.tag_camera_broadcaster = TransformBroadcaster(self)
         self.timer = self.create_timer(0.1, self.tag_camera_tf)
 
-    #     self.arena_tag_tf = TransformBroadcaster(self)
-    #     self.arena_timer = self.create_timer(0.1, self.get_arena_tag_tf)
-
-    # def get_arena_tag_tf(self):
-    #     tf = TransformStamped()
-    #     tf.header.stamp = self.get_clock().now().to_msg()
-    #     tf.header.frame_id = 'arena'
-    #     tf.child_frame_id = 'tag_19'
-    #     #temporary numbers
-    #     tf.transform.translation.x = 1.0
-    #     tf.transform.translation.y = 1.0
-    #     tf.transform.translation.z = 0.0
-    #     tf.transform.rotation.x = 0.0
-    #     tf.transform.rotation.y = 0.0
-    #     tf.transform.rotation.z = 0.0
-    #     tf.transform.rotation.w = 1.0
-
-    #     self.arena_tag_tf.sendTransform(tf)
 
 
     def tag_camera_tf(self):
+        frames = ['tag_18', 'tag_19', 'tag_20', 'tag_21']
         try: 
-            camera_tag = self.tf_buffer.lookup_transform('camera_optical_frame_link',
-                                                        'tag_19',
-                                                        rclpy.time.Time()
-                                                        )
+            for frame in frames: 
+                camera_tag = self.tf_buffer.lookup_transform('camera_optical_frame_link',
+                                                            frame,
+                                                            rclpy.time.Time()
+                                                            )
         except (LookupException, ConnectivityException, ExtrapolationException):
             return
-        translation = [camera_tag.transform.translation.x, 
-                        camera_tag.transform.translation.y, 
-                        camera_tag.transform.translation.z]
+        self.get_logger().info(f"Horizontal Distance: {camera_tag.transform.translation.z}", throttle_duration_sec=.5)
         
-        rotation = [camera_tag.transform.rotation.x,
-                    camera_tag.transform.rotation.y,
-                    camera_tag.transform.rotation.z,
-                    camera_tag.transform.rotation.w]
+
+#CODE BELOW IS ONLY NECESSARY WHEN TRYING TO MODIFY TRANSFORMS
+
+    #     translation = [camera_tag.transform.translation.x, 
+    #                     camera_tag.transform.translation.y, 
+    #                     camera_tag.transform.translation.z]
         
-        camera_tag_tf = ts.concatenate_matrices(ts.translation_matrix(translation), 
-                                                ts.quaternion_matrix(rotation))
+    #     rotation = [camera_tag.transform.rotation.x,
+    #                 camera_tag.transform.rotation.y,
+    #                 camera_tag.transform.rotation.z,
+    #                 camera_tag.transform.rotation.w]
+        
+        # camera_tag_tf = ts.concatenate_matrices(ts.translation_matrix(translation), 
+        #                                         ts.quaternion_matrix(rotation))
         #invert matrix so that tf works around stationary tag to moving camera instead of static camera to moving tag
         # tag_camera_tf = ts.inverse_matrix(camera_tag_tf)
 
@@ -71,7 +60,7 @@ class AprilTagTF(Node):
         # tf.transform.rotation.z = inverted_rotation[2]
         # tf.transform.rotation.w = inverted_rotation[3]
 
-        self.tag_camera_broadcaster.sendTransform(camera_tag_tf)
+        # self.tag_camera_broadcaster.sendTransform(tf)
 
 
             
