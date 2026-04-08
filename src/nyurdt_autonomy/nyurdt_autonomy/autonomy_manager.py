@@ -10,8 +10,8 @@ from nav2_msgs.action import NavigateToPose
 from action_msgs.msg import GoalStatus
 from std_msgs.msg import String, Byte
 
-from excavation_node import ExcavationNode
-from construction_node import ConstructionNode
+from excavation import ExcavationNode
+from construction import ConstructionNode
 
 import math
 
