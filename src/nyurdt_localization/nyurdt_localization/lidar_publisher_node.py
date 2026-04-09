@@ -1,3 +1,8 @@
+"""Also seems to be legacy, probably just use a different package & node to spin up the LiDAR
+
+Slamtec provides a ros2 package for this
+"""
+
 import rclpy
 from rclpy.node import Node
 import sensor_msgs.msg as sensor_msgs

@@ -3,6 +3,12 @@ Detects AprilTag boards created for the 2023-2024 season
 Calculates the linear distances (x,y,z) & rotations (R, P, Y) between the tags and the cameras
 '''
 
+
+"""
+Is this intended for use? What's the point in this if the apriltag_ros nodes exist? (and vice-versa?)
+Also just seems like legacy code (2023-2024 season above ^), maybe it doesn't fit your needs anymore?
+"""
+
 from nyurdt_localization.tag_information import TAG_OBJECT_POINTS
 import time
 
