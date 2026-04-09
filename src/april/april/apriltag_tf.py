@@ -26,8 +26,8 @@ class AprilTagTF(Node):
                                                             Time(),
                                                             )
                 self.get_logger().info(f"Horizontal Distance: {camera_tag.transform.translation.z}", throttle_duration_sec=.5)
-            except (LookupException, ConnectivityException, ExtrapolationException):
-                self.get_logger().warn("transform not found")            
+            except Exception as e:
+                self.get_logger().warn(f"{e}")            
                 return
         
 
