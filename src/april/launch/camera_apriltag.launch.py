@@ -9,8 +9,8 @@ import os
 
 def generate_launch_description():
     device_arg1 = DeclareLaunchArgument('device1', default_value='0')
-    device_arg2 = DeclareLaunchArgument('device2', default_value='3')
-    device_arg3 = DeclareLaunchArgument('device3', default_value='4')
+    device_arg2 = DeclareLaunchArgument('device2', default_value='1')
+    device_arg3 = DeclareLaunchArgument('device3', default_value='2')
 
     device1 = LaunchConfiguration('device1')
     device2 = LaunchConfiguration('device2')
@@ -34,9 +34,9 @@ def generate_launch_description():
                 namespace='camera1',
                 parameters=[
                     {'camera': device1},
-                    {'width': 640},
-                    {'height': 480},
-                    {'fps': 15},
+                    {'width': 352},
+                    {'height': 288},
+                    {'fps': 5},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_a},
                     {'frame_id': 'camera_optical_frame_link'}
@@ -70,9 +70,9 @@ def generate_launch_description():
                 namespace='camera2',
                 parameters=[
                     {'camera': device2},
-                    {'width': 640},
-                    {'height': 480},
-                    {'fps': 15},
+                    {'width': 352},
+                    {'height': 288},
+                    {'fps': 5},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_b},
                     {'frame_id': 'camera_optical_frame_link'}
@@ -106,9 +106,9 @@ def generate_launch_description():
                 namespace='camera3',
                 parameters=[
                     {'camera': device3},
-                    {'width': 640},
-                    {'height': 480},
-                    {'fps': 15},
+                    {'width': 352},
+                    {'height': 288},
+                    {'fps': 5},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_c},
                     {'frame_id': 'camera_optical_frame_link'}

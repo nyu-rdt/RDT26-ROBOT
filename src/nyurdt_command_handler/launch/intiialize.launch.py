@@ -17,20 +17,20 @@ def generate_launch_description():
         output='screen'
     )
 
-    sensor_service = Node(
-        package='nyurdt_autonomy',
-        executable='sensor_service',
-        output='screen'
-    )
+    # sensor_service = Node(
+    #     package='nyurdt_autonomy',
+    #     executable='sensor_service',
+    #     output='screen'
+    # )
     
-    autonomy_destroyer = Node(
-        package='nyurdt_autonomy',
-        executable='autonomy_destroyer',
-        output='screen'
-    )
+    # autonomy_destroyer = Node(
+    #     package='nyurdt_autonomy',
+    #     executable='autonomy_destroyer',
+    #     output='screen'
+    # )
 
     return LaunchDescription([
         command_subscriber,
-        sensor_service,
-        autonomy_destroyer,
+        # sensor_service,
+        # autonomy_destroyer,
     ])
