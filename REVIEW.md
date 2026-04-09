@@ -106,3 +106,14 @@ CMake Error at CMakeLists.txt:10 (find_package):
 - Depending on who you fork from, they may have some licensing requirements
   - rtabmap_ros is licensed under BSD 3-Clause, which has some requirements for usage (include the license and copyright with your modified work)
   - This is honestly a very industry thing so, more than anything, it's just something to keep in mind
+
+### Misc
+
+---
+
+- Have the state machines been tested?
+  - Even just trying to run them?
+- State machines might block forever
+  - Since they use `while` loops
+- There's a lot of magic numbers
+  - Maybe use yaml files for config?

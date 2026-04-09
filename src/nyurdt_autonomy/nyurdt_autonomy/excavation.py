@@ -84,8 +84,13 @@ class ExcavationNode(Node):
         if self.current_state != self.stage_2:
             self.get_logger().info("Excavation stage 2: Move to excavation position")
             self.current_state = self.stage_2
+            # What's the point in _set_conveyor_target if you're just publishing
+            #   the hex command anyway?
             self._set_conveyor_target(1.0)   # adjust real target
         self.publish_msg(0x62)
+        
+        # This is an infinite loop
+        #   self.is_at_excavation_position defaults to False and then is never updated
         if self.is_at_excavation_position:
             return 'stage_3'
         return 'stage_2'
@@ -96,9 +101,14 @@ class ExcavationNode(Node):
             self.current_state = self.stage_3
             self.dig_start_time = time.time()
 
+        # You might want the function to return a bool or something here
+        #   to indicate that you should wait before sending more hex
+        #   commands. Right now you risk immediately overwriting your
+        #   "ladder health" command
         self.check_ladder_health()
 
         tel = self.latest_telemetry
+        # RobotStatus doesn't have a bin_mass attribute
         if tel is not None and tel.bin_mass >= self.goal_mass:
             return 'stage_4'
         if time.time() - self.dig_start_time > self.dig_time:
@@ -121,6 +131,7 @@ class ExcavationNode(Node):
         if self.current_state != self.stage_5:
             self.get_logger().info("Excavation stage 5: Return to locomotion position")
             self.current_state = self.stage_5
+            # Same question as above
             self._set_conveyor_target(0.0)
         self.publish_msg(0x61)
         if self.latest_telemetry is not None and self.latest_telemetry.conveyor_pos < 0.05:

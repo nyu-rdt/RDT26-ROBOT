@@ -1,12 +1,19 @@
 #!/usr/bin/env python3
+
+"""I think just revisit and check this file
+
+This node is also not spun up anywhere
+"""
+
 import rclpy
 from rclpy.node import Node
-import time
+import time  # Unused import
 from std_msgs.msg import Float32, Bool
 from geometry_msgs.msg import Twist
 
 from nyurdt_interfaces.msg import RobotStatus
 
+# How were these determined?
 # Slip score weights
 W1, W2, W3 = 0.4, 0.3, 0.3
 
@@ -30,6 +37,8 @@ class TelemetryProcessor(Node):
 
         self.pub = self.create_publisher(RobotStatus, 'robot/telemetry', 10)
 
+        # Does this node begin before any operation starts?
+        #   Aka, are these always guaranteed to start at 0?
         self.prev_mass          = 0.0
         self.prev_left_enc      = 0
         self.prev_right_enc     = 0
@@ -50,6 +59,7 @@ class TelemetryProcessor(Node):
     # ── Load cell computations ──────────────────────────────────────────────
 
     def _compute_mass(self, msg: RobotStatus, dt: float):
+        # How noisy are the load cells?
         msg.total_mass = sum(msg.load_cells)
         msg.mass_flow  = (msg.total_mass - self.prev_mass) / dt
         # mass_flow > 0  → filling (excavation)
@@ -59,12 +69,16 @@ class TelemetryProcessor(Node):
     # ── Encoder + motor current computations ───────────────────────────────
 
     def _compute_locomotion(self, msg: RobotStatus, dt: float):
+        # Doesn't the encoder values being unsigned bytes mean you can have some weird behavior here?
+        #   Like, what if  your encoder value overflows from 254 -> 5?
+        #   Your actual change would be 6 ticks, but this would read as -249
+        # Also, RobotStatus doesn't have left_encoder and right_encoder fields
         # Encoder ticks → wheel surface speed (m/s)
         d_left  = (msg.left_encoder  - self.prev_left_enc)
         d_right = (msg.right_encoder - self.prev_right_enc)
 
         # ticks are 0-255 per full rotation → convert to radians
-        rad_left  = (d_left  / 255.0) * (2 * 3.14159)
+        rad_left  = (d_left  / 255.0) * (2 * 3.14159) # Just use math.pi??
         rad_right = (d_right / 255.0) * (2 * 3.14159)
 
         v_left  = (rad_left  * WHEEL_RADIUS) / dt
@@ -77,6 +91,9 @@ class TelemetryProcessor(Node):
         speed_error     = abs(self.target_vel - v_measured)
         speed_asymmetry = abs(v_left - v_right)
 
+        # Not familiar with this, how was this formula determined?
+        # Also, is it possible for the wheels to be spinning "correctly"
+        #   but to actually be digging yourself into a hole?
         msg.slip_score = (W1 * speed_error) + (W2 * speed_asymmetry) + (W3 * current_ratio)
 
         # Locomotion flags
@@ -100,6 +117,7 @@ class TelemetryProcessor(Node):
         msg.empty_cut = ladder_ratio < 0.4 and msg.mass_flow < 0.01
 
         # Conveyor not reaching target (you set target_conveyor_pos from your task node)
+        # There's no conveyor_pos field in RobotStatus
         msg.exc_pos_error = (
             abs(msg.conveyor_pos - self.target_conveyor_pos) > POS_TOLERANCE
         )
@@ -113,6 +131,7 @@ class TelemetryProcessor(Node):
         gate_ratio   = gate_current / NOMINAL_GATE_CURRENT
 
         # Gate commanded closed but still reading open
+        # gate_pos does not exist on RobotStatus
         msg.gate_not_closed = self.target_gate_closed and msg.gate_pos > 0.05
 
         # Gate stalled — high current and position not changing
@@ -121,6 +140,8 @@ class TelemetryProcessor(Node):
         # Bin empty
         msg.depo_empty = msg.total_mass < EMPTY_THRESHOLD
 
+        # What if the bin is just empty? Mass flow would be near zero but
+        #   that doesn't imply a blockage
         # Gate is open but mass flow out is near zero = blockage
         msg.depo_flow_blocked = (
             msg.gate_pos > 0.5
@@ -132,6 +153,8 @@ class TelemetryProcessor(Node):
     # ── Main callback ───────────────────────────────────────────────────────
 
     def _cb(self, msg: RobotStatus):
+        # A really tiny dt might make some of your calculations noisy 
+        #   since X / tiny number = bigger number
         now = self.get_clock().now()
         dt  = (now - self.prev_time).nanoseconds / 1e9
 

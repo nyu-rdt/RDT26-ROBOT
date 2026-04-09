@@ -18,6 +18,7 @@ import math
 from nyurdt_state_machine import StateMachine
 
 
+# I understand why these numbers are used but some detailing somewhere would be nice
 ZONES = {
     "excavation":   {"x": (-4.5720, 9.14 - 4.5720), "y": (0.00, 4.00)},
     "construction": {"x": (4.5720 - 2.00, 4.5720), "y": (5.50, 8.10)},
@@ -25,9 +26,11 @@ ZONES = {
     "starting":     {"x": (-2.00, 2.00), "y": (0.00, 2.00)},
 }
 
+# How was this determined?
 # pose where robot can see the Apriltag 
 RELOCALIZE_POSE = {"x": 0.0, "y": 0.0, "yaw": 0.0}
 
+# How were these determined?
 # covariance thresholds
 COV_X_THRESH = 0.05
 COV_Y_THRESH = 0.05
@@ -74,6 +77,7 @@ class AutonomyManager(Node):
 
         self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
 
+        # task_pub is never used 
         self.task_pub = self.create_publisher(String, "/autonomy/current_task", 10)
 
         self.status_pub = self.create_publisher(String, "/autonomy/status", 10)
@@ -88,7 +92,7 @@ class AutonomyManager(Node):
         Manual callback to stop the node if a manual control command is sent
         """
 
-        sys.exit()
+        sys.exit()  # might be dangerous? not sure how this interacts with other nodes
 
     def create_machine(self):
         """
@@ -135,6 +139,12 @@ class AutonomyManager(Node):
  
         send_future = self._nav_client.send_goal_async(goal)
         send_future.add_done_callback(self._nav_goal_response_cb)
+
+        # How come this isn't being set in self._nav_goal_response_cb()?
+        # You need know if the goal is accepted before you can declare
+        #   the robot "in flight", right?
+        # Unless his refers to the ActionClient request/response cycle, and
+        #   not robot movement?
         self.nav_in_flight = True
         self._nav_result_ready = False
  
@@ -154,7 +164,7 @@ class AutonomyManager(Node):
  
     def _nav_goal_succeeded(self) -> bool:
         return (
-            getattr(self, "_nav_result_ready", False)
+            getattr(self, "_nav_result_ready", False)  # Why not just set _nav_result_ready = False in __init__?
             and self._nav_result.status == GoalStatus.STATUS_SUCCEEDED
         )
  
@@ -212,14 +222,19 @@ class AutonomyManager(Node):
         """
         Stage 1: Initial Localization
         """
+        # Instead of copy pasting boilerplate, you can just modify the state machine 
+        #   definition to include logging
+        # Also this if statement never happens because self.current_state
+        #   defaults to self.stage_1
         if self.current_state != self.stage_1:
             self.get_logger().info("Stage 1: Initial Localization")
             self.current_state = self.stage_1
 
+        # self.publish_msg() doesn't exist?
         self.publish_msg(0x00) # turn 180
         
         if self._covariance_ok():
-            self.get_logger().info("Initial Localization aquired")
+            self.get_logger().info("Initial Localization acquired")
             return 'stage_2'
         
         return 'stage_1'
@@ -232,6 +247,8 @@ class AutonomyManager(Node):
             self.get_logger().info("Stage 2: Navigating")
             self.current_state = self.stage_2
 
+        # why not do this check in the originating stage and just jump
+        #   straight to stage_6?
         if self.task_index >= len(TASK_QUEUE):
             return 'stage_6'
  
@@ -263,6 +280,8 @@ class AutonomyManager(Node):
             self.current_state = self.stage_3
 
         if not self.nav_in_flight:
+            # Does this mean you go back to the beginning every
+            #   single time there's uncertainty?
             p = RELOCALIZE_POSE
             self._send_nav_goal(p["x"], p["y"], yaw=p["yaw"])
             return 'stage_3'
@@ -344,6 +363,7 @@ class AutonomyManager(Node):
         """
         Stage 6: Idle
         """
+        # Is there a point in idling? You might as well end the state machine
         if self.current_state != self.stage_6:
             self.get_logger().info('Stage 6: Idle')
             self.current_state = self.stage_6

@@ -5,6 +5,10 @@ File for managing & destroying autonomy nodes by listening to any manual control
 Any manual control command stops autonomy files from running, regardless of what it is.
 """
 
+"""
+File is not spun up anywhere
+"""
+
 import subprocess
 
 import rclpy
@@ -32,6 +36,13 @@ class AutonomyDestroyer(Node):
         is sent
         :return: None
         """
+        # I know this is legacy code but there's definitely a better way to do this
+        # For example, use `ros2 node kill ...`
+        
+        # Ros2 also has the idea of "managed nodes" that can be accessed directly from other nodes
+        # ^ thats probably the "correct" way to do it
+        # You get the chance to tell the robot to "stop" before killing the node
+        
         # Kill locomotion node
         process_one = subprocess.Popen(['killall', 'locomotion'])
         process_one.wait()

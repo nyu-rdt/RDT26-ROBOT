@@ -3,6 +3,7 @@ from launch_ros.actions import Node
 
 def generate_launch_description():
 
+    # Does this work? Most of these aren't defined in setup.py
     return LaunchDescription([
         Node(package='nyurdt_autonomy', executable='serial_bridge', name='serial_bridge_node'),
         Node(package='nyurdt_autonomy', executable='LocomotionNode', name='locomotion'),
