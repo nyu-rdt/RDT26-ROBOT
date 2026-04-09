@@ -10,9 +10,10 @@ from launch.conditions import IfCondition
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    pkg_rdt = get_package_share_directory("rdt_nav2_bringup")
+    pkg_navigation = get_package_share_directory("nyurdt_navigation")
     pkg_nav2 = get_package_share_directory("nav2_bringup")
     pkg_gz = get_package_share_directory("ros_gz_sim")
+    pkg_description = get_package_share_directory("nyurdt_description")
 
     # -------------------------
     # Launch arguments
@@ -33,19 +34,19 @@ def generate_launch_description():
 
     declare_params_file = DeclareLaunchArgument(
         "params_file",
-        default_value=os.path.join(pkg_rdt, "config", "nav2_params.yaml"),
+        default_value=os.path.join(pkg_navigation, "config", "nav2_params.yaml"),
         description="Full path to the ROS2 parameters file to use for Nav2",
     )
 
     declare_world = DeclareLaunchArgument(
             "world",
-            default_value=os.path.join(pkg_rdt, "worlds", "my_world.sdf"),
+            default_value=os.path.join(pkg_navigation, "worlds", "my_world.sdf"),
             description="Gazebo world file",
     )
 
     declare_map = DeclareLaunchArgument(
         "map",
-        default_value=os.path.join(pkg_rdt, "config", "my_map.yaml"),
+        default_value=os.path.join(pkg_navigation, "config", "my_map.yaml"),
         description="Full path to map.yaml. Leave empty if using SLAM.",
     )
 
@@ -71,7 +72,7 @@ def generate_launch_description():
     # Robot State Publisher
     # -------------------------
     rsp = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(pkg_rdt, "launch", "rsp.launch.py")),
+        PythonLaunchDescriptionSource(os.path.join(pkg_navigation, "launch", "rsp.launch.py")),
         launch_arguments={"use_sim_time": use_sim_time}.items(),
     )
 
@@ -109,9 +110,7 @@ def generate_launch_description():
         arguments=[
             # Clock
             "/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock",
-            
-            # Lidar (FIX FOR MISSING SCANS)
-            "/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan",
+
 
             # Odom and TF
             PythonExpression(['"/model/" + "', robot_name, '" + "/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry"']),

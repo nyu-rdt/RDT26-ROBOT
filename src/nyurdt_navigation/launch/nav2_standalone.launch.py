@@ -7,7 +7,7 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    pkg_rdt = get_package_share_directory('rdt_nav2_bringup')
+    pkg_rdt = get_package_share_directory('nyurdt_navigation')
     pkg_nav2 = get_package_share_directory('nav2_bringup')
 
     # Arguments

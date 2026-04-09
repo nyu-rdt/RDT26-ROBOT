@@ -6,15 +6,17 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    pkg_name = 'rdt_nav2_bringup'
+    pkg_navigation = 'nyurdt_navigation'
+    pkg_description = 'nyurdt_description'
     
+
     # Path to your custom world file
-    world_file = os.path.join(get_package_share_directory(pkg_name), 'worlds', 'my_world.sdf')
+    world_file = os.path.join(get_package_share_directory(pkg_navigation), 'worlds', 'my_world.sdf')
 
     # 1. Include existing Robot State Publisher
     rsp = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory(pkg_name),'launch','rsp.launch.py'
+            get_package_share_directory(pkg_description),'launch','rsp.launch.py'
         )]), launch_arguments={'use_sim_time': 'true'}.items()
     )
 
@@ -40,12 +42,9 @@ def generate_launch_description():
         '/model/rdt26_robot/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
         '/model/rdt26_robot/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
         '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
-        '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan',
-        '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock', # <--- ADDED COMMA
-        '/world/my_world/model/rdt26_robot/link/laser_frame/sensor/laser_sensor/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan'
+        '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock', 
         ],
         remappings=[
-            ('/world/my_world/model/rdt26_robot/link/laser_frame/sensor/laser_sensor/scan', '/scan'),
             ('/model/rdt26_robot/tf', '/tf'),
             ('/model/rdt26_robot/odometry', '/odom'),
         ],

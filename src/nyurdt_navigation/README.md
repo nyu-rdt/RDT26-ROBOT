@@ -14,14 +14,14 @@ We will use a single `launch.py` file which will:
 
 ```bash
 cd ~/RDT/RDT26-ROBOT
-colcon build --packages-select rdt_nav2_bringup --symlink-install
+colcon build --packages-select nyurdt_navigation --symlink-install
 source install/setup.bash
 ```
 
 ## B. Launch Gazebo and RVIZ and Robot State Publisher
 
 ```bash
-ros2 launch rdt_nav2_bringup nav2_sim.launch.py
+ros2 launch nyurdt_navigation nav2_sim.launch.py
 ```
 
 ## C. Export the TF tree

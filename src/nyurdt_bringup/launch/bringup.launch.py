@@ -11,7 +11,7 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
-    nav2_dir    = get_package_share_directory('rdt_nav2_bringup')
+    nav2_dir    = get_package_share_directory('nyurdt_navigation')
     description_dir = get_package_share_directory('nyurdt_description')
     realsense_dir = get_package_share_directory('realsense2_camera')
 
@@ -89,7 +89,7 @@ def generate_launch_description():
             ]
         ),
 
-        # ── Nav2 (from rdt_nav2_bringup) ─────────────────────────────────
+        # ── Nav2 (from nyurdt_navigation) ─────────────────────────────────
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(nav2_dir, 'launch', 'nav2_sim.launch.py')

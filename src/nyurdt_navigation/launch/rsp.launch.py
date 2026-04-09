@@ -6,7 +6,7 @@ import xacro
 
 def generate_launch_description():
     # 1. Path to your xacro file
-    pkg_path = get_package_share_directory('rdt_nav2_bringup')
+    pkg_path = get_package_share_directory('nyurdt_navigation')
     xacro_file = os.path.join(pkg_path, 'config', 'robot.xacro')
 
     # 2. Process the xacro file into raw URDF (XML)
