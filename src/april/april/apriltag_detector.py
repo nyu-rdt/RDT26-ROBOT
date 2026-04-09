@@ -1,9 +1,15 @@
 #thanks Celestino
+"""
 
+What's the purpose of this file? Is it just for testing apriltag detection?
+
+"""
 import cv2
 import numpy as np
 from pupil_apriltags import Detector
 
+
+# How come you have the intrinsics both here and in an yaml file?
 # === CAMERA INTRINSICS ===
 #Logitech c615 bad wire camera
 fx, fy = 473.8791885468119744, 473.6890399956254214
@@ -44,6 +50,8 @@ detector = Detector(families='tag36h11',
                     refine_edges=True, 
                     decode_sharpening=0.25) #contrast
 
+# If commenting out cause it's deadcode, just delete it
+# This file also just doesn't work, guaranteed RuntimeError with this commented out code
 # === AXIS FOR VISUALIZATION ===
 
 # IMAGE CAPTURE
