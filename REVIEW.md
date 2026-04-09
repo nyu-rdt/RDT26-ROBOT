@@ -48,6 +48,15 @@ CMake Error at CMakeLists.txt:10 (find_package):
     - For example, if you depend on numpy to run some code, `<depend>python3-numpy</depend>`
   - If these files are kept up to date, then anyone can make a clean install and know what dependencies are required to get your package working as intended
 
+#### Note on READMEs
+
+> [!NOTE]
+> You can also include images of things working in your READMEs, like this:
+
+<p align="center">
+  <img src="grid.png" alt="Description" />
+</p>
+
 ### Commits
 
 ---
