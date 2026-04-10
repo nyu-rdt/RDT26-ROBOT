@@ -7,7 +7,6 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(nyurdt_navigation REQUIRED)
 find_package(rclcpp REQUIRED)
 
 if(BUILD_TESTING)
