@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from rclpy.time import Time
 from geometry_msgs.msg import TransformStamped
 from tf2_ros import Buffer, TransformListener, TransformBroadcaster, LookupException, ConnectivityException, ExtrapolationException
 import tf_transformations as ts
@@ -18,15 +19,16 @@ class AprilTagTF(Node):
 
     def tag_camera_tf(self):
         frames = ['tag_18', 'tag_19', 'tag_20', 'tag_21']
-        try: 
-            for frame in frames: 
+        for frame in frames: 
+            try: 
                 camera_tag = self.tf_buffer.lookup_transform('camera_optical_frame_link',
                                                             frame,
-                                                            rclpy.time.Time()
+                                                            Time(),
                                                             )
-        except (LookupException, ConnectivityException, ExtrapolationException):
-            return
-        self.get_logger().info(f"Horizontal Distance: {camera_tag.transform.translation.z}", throttle_duration_sec=.5)
+                self.get_logger().info(f"Horizontal Distance: {camera_tag.transform.translation.z}", throttle_duration_sec=.5)
+            except Exception as e:
+                self.get_logger().warn(f"{e}")            
+                return
         
 
 #CODE BELOW IS ONLY NECESSARY WHEN TRYING TO MODIFY TRANSFORMS
