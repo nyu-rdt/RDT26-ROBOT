@@ -1,14 +1,11 @@
 '''
 command_subscriber.py
-
-File for testing subscribe only, never used
 '''
 
 import rclpy
 from rclpy.node import Node
 
 from .i2c_comms import send_HEX
-# from .i2c_comms import get_data_dictionary
 
 from std_msgs.msg import Byte, Int16
 from std_srvs.srv import Empty

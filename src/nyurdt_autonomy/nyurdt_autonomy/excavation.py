@@ -4,6 +4,7 @@ import time
 from std_msgs.msg import Byte, Float32
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
 from nyurdt_interfaces.msg import RobotStatus
+import sleep
 
 
 class ExcavationNode(Node):
@@ -18,12 +19,11 @@ class ExcavationNode(Node):
         self.latest_telemetry = None
         self.create_subscription(RobotStatus, 'robot/telemetry', self._telemetry_cb, 10)
 
-        self.is_at_excavation_position = False
         self.dig_start_time = 0
         self.dig_time = 120
         self.dig_length = 0.5
         self.goal_mass = 0.4        # kg — set real value
-        f   # update this from encoder odometry
+        self.dist_traveled = 0.0   # update this from encoder odometry
         self.current_state = None
         self._finished = False
 
@@ -86,8 +86,18 @@ class ExcavationNode(Node):
             self.current_state = self.stage_2
             self._set_conveyor_target(1.0)   # adjust real target
         self.publish_msg(0x62)
-        if self.is_at_excavation_position:
+        sleep(5)
+
+        tel = self.latest_telemetry
+
+        if tel.exc_pos_err == True:
+            self.publish_msg(0x61)
+            sleep(4)
+            self.publish_msg(0x62)
+        
+        if tel.exc_pos_err == False:
             return 'stage_3'
+        
         return 'stage_2'
 
     def stage_3(self):

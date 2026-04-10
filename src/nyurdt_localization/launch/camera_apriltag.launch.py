@@ -16,10 +16,10 @@ def generate_launch_description():
     device2 = LaunchConfiguration('device2')
     device3 = LaunchConfiguration('device3')
 
-    apriltag_cfg = os.path.join(get_package_share_directory('april'), 'config', 'tags_36h11.yaml')
-    camera_cfg_a = os.path.join(get_package_share_directory('april'), 'config', 'LogitechC615.yaml')
-    camera_cfg_b = os.path.join(get_package_share_directory('april'), 'config', 'LogitechC615b.yaml')
-    camera_cfg_c = os.path.join(get_package_share_directory('april'), 'config', 'LogitechC615c.yaml')
+    apriltag_cfg = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'tags_36h11.yaml')
+    camera_cfg_a = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC615.yaml')
+    camera_cfg_b = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC615b.yaml')
+    camera_cfg_c = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC615c.yaml')
 
     container1 = ComposableNodeContainer(
             name='apriltag_cam_nodes',

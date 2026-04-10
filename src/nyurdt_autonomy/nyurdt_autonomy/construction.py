@@ -12,8 +12,6 @@ class ConstructionNode(Node):
         super().__init__('construction_node')
 
         self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
-        self.gate_target_pub = self.create_publisher(Bool, '/robot/target_gate_closed', 10)
-
 
         self.latest_telemetry = None
         self.create_subscription(RobotStatus, 'robot/telemetry', self._telemetry_cb, 10)
@@ -26,11 +24,6 @@ class ConstructionNode(Node):
 
         self.start_yaw = None      # set when stage_1 begins
 
-    def _set_gate_target(self, closed: bool):
-        """Call this whenever you command the gate open or closed."""
-        msg = Bool()
-        msg.data = closed
-        self.gate_target_pub.publish(msg)
 
     def _telemetry_cb(self, msg: RobotStatus):
         self.latest_telemetry = msg
@@ -71,7 +64,7 @@ class ConstructionNode(Node):
         if self.current_state != self.stage_2:
             self.get_logger().info("Construction stage 2: Open hatch")
             self.current_state = self.stage_2
-            self._set_gate_target(False)   # gate is now commanded open
+
         self.publish_msg(0x70)
         return 'stage_3'
 
@@ -94,6 +87,7 @@ class ConstructionNode(Node):
         if self.current_state != self.stage_4:
             self.get_logger().info("Construction stage 4: Stop vibrating")
             self.current_state = self.stage_4
+        
         self.publish_msg(0x73)  # stop vibrate
         return 'stage_5'
 
@@ -102,7 +96,7 @@ class ConstructionNode(Node):
         if self.current_state != self.stage_5:
             self.get_logger().info("Construction stage 5: Close hatch")
             self.current_state = self.stage_5
-            self._set_gate_target(True)    # gate is now commanded closed
-        self.publish_msg(0x70)
+
+        self.publish_msg(0x71)
         self._finished = True
         return None

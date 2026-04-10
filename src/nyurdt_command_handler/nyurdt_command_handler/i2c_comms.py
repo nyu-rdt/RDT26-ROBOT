@@ -85,7 +85,9 @@ class I2CReaderNode(Node):
 
         # Positions: normalize 0-255 to 0.0-1.0
         msg.conveyor_pos = conv_raw / 255.0
-        msg.gate_pos     = gate_raw / 255.0
+
+        
+        msg.gate_pos     = gate_raw 
 
         # Parse flags byte
         msg.heartbeat        = bool(flags & (1 << 0))

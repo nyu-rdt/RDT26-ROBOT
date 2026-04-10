@@ -7,11 +7,11 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 def generate_launch_description():
-    launch_dir = PathJoinSubstitution([FindPackageShare('april'), 'launch'])
+    launch_dir = PathJoinSubstitution([FindPackageShare('nyurdt_localization'), 'launch'])
 
     return LaunchDescription([
         IncludeLaunchDescription(
-            PathJoinSubstitution([launch_dir, 'camera_apriltag.launch.py'])
+            PathJoinSubstitution([launch_dir, 'camera_tag.launch.py'])
         ),
         IncludeLaunchDescription(
             PathJoinSubstitution([launch_dir, 'tf.launch.py'])

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 import rclpy
 from rclpy.node import Node
-import time
 from std_msgs.msg import Float32, Bool
 from geometry_msgs.msg import Twist
+import math
 
 from nyurdt_interfaces.msg import RobotStatus
 
@@ -26,7 +26,6 @@ class TelemetryProcessor(Node):
         self.create_subscription(RobotStatus, 'robot/telemetry_raw', self._cb, 10)
         self.create_subscription(Twist, '/robot/cmd_vel', self._cmd_vel_cb, 10)
         self.create_subscription(Float32, '/robot/target_conveyor_pos', self._conveyor_target_cb, 10)
-        self.create_subscription(Bool, '/robot/target_gate_closed', self._gate_target_cb, 10)
 
         self.pub = self.create_publisher(RobotStatus, 'robot/telemetry', 10)
 
@@ -44,8 +43,6 @@ class TelemetryProcessor(Node):
     def _conveyor_target_cb(self, msg: Float32):
         self.target_conveyor_pos = msg.data
 
-    def _gate_target_cb(self, msg: Bool):
-        self.target_gate_closed = msg.data
 
     # ── Load cell computations ──────────────────────────────────────────────
 
@@ -64,8 +61,8 @@ class TelemetryProcessor(Node):
         d_right = (msg.right_encoder - self.prev_right_enc)
 
         # ticks are 0-255 per full rotation → convert to radians
-        rad_left  = (d_left  / 255.0) * (2 * 3.14159)
-        rad_right = (d_right / 255.0) * (2 * 3.14159)
+        rad_left  = (d_left  / 255.0) * (2 * math.pi)
+        rad_right = (d_right / 255.0) * (2 * math.pi)
 
         v_left  = (rad_left  * WHEEL_RADIUS) / dt
         v_right = (rad_right * WHEEL_RADIUS) / dt
@@ -113,7 +110,7 @@ class TelemetryProcessor(Node):
         gate_ratio   = gate_current / NOMINAL_GATE_CURRENT
 
         # Gate commanded closed but still reading open
-        msg.gate_not_closed = self.target_gate_closed and msg.gate_pos > 0.05
+        msg.gate_not_closed = self.target_gate_closed and msg.gate_pos == 0
 
         # Gate stalled — high current and position not changing
         msg.gate_stall = gate_ratio > 2.5 and msg.gate_not_closed
@@ -123,7 +120,7 @@ class TelemetryProcessor(Node):
 
         # Gate is open but mass flow out is near zero = blockage
         msg.depo_flow_blocked = (
-            msg.gate_pos > 0.5
+            msg.gate_pos == 1
             and msg.mass_flow > -0.001   # barely any material leaving
         )
 

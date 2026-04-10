@@ -6,7 +6,7 @@ from ament_index_python.packages import get_package_share_directory
 import xacro
 
 def generate_launch_description():
-    robot_xacro = os.path.join(get_package_share_directory('april'), 'model', 'robot.xacro')
+    robot_xacro = os.path.join(get_package_share_directory('nyurdt_localization'), 'model', 'robot.xacro')
     robot_desc = xacro.process_file(robot_xacro).toxml()
 
     robot_state_publisher = Node(
@@ -34,7 +34,7 @@ def generate_launch_description():
     )
     
     april_tf_node = Node(
-            package='april',
+            package='nyurdt_localization',
             executable='april_tf',
             name='apriltag_tf',
             output='screen'
