@@ -4,7 +4,7 @@ import time
 from std_msgs.msg import Byte, Float32
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
 from nyurdt_interfaces.msg import RobotStatus
-import sleep
+from time import sleep
 
 
 class ExcavationNode(Node):

@@ -15,7 +15,7 @@ RDT26-ROBOT/
 │   ├── nyurdt_command_handler/
 │   ├── nyurdt_interfaces/
 │   ├── nyurdt_localization/
-│   └── rtab/
+│   └── nyurdt_slam/
 ├── build/                # Generated (ignored)
 ├── install/              # Generated (ignored)
 ├── log/                  # Generated (ignored)
