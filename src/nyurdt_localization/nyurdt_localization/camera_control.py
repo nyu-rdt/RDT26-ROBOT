@@ -1,3 +1,7 @@
+"""
+just seems like a dead file, i'd remove it
+"""
+
 import cv2
 from cv_bridge import CvBridge
 import numpy as np

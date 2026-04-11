@@ -1,3 +1,8 @@
+"""
+This also just seems to be legacy code?
+Not too obvious what the point of this file is, but probably just use whatever realsense nodes come provided
+"""
+
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import PointCloud2

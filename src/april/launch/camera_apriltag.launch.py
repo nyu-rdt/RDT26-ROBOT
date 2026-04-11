@@ -38,7 +38,7 @@ def generate_launch_description():
                     {'height': 288},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_a},
-                    {'frame_id': 'camera_optical_frame_link'}
+                    {'frame_id': 'camera_optical_frame_link'} # Every single camera is using the same frame id
                 ],
                 extra_arguments=[{'use_intra_process_comms': True}],
             ),

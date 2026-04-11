@@ -1,6 +1,9 @@
 """
 nyurdt_state_machine.py
 Author: Justin Rivera
+^ idiot didnt add a way to control frequency
+right now this file just spams the states as fast as possible, maybe add some sleep somewhere
+
 NYU RDT's implementation of a state machine.
 States are added one at a time to the machine, then can be executed from a valid starting state.
 Supports functionality for nested state machines.

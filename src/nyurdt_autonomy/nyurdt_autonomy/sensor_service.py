@@ -1,3 +1,6 @@
+# This is dead code???
+# Seems to be copied from a previous year
+
 from nyurdt_interfaces.srv import SensorData
 from nyurdt_command_handler.i2c_comms import get_data_dictionary
 

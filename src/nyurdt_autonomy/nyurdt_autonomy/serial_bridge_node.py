@@ -1,3 +1,7 @@
+"""
+This node is never spun up anywhere
+"""
+
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Byte
@@ -11,18 +15,22 @@ class SerialBridgeNode(Node):
 
         self.ser = serial.Serial('/dev/ttyACM0', 115200, timeout=0.05)
 
-        self.status_pub = self.create_publisher(RobotStatus, '/robot/telemtry', 10)
+        self.status_pub = self.create_publisher(RobotStatus, '/robot/telemtry', 10) # Careful of typos in topic names
         self.cmd_sub = self.create_subscription(Byte, 'robot/mcu_cmd', self.write_to_teensy, 10)
 
         self.timer = self.create_timer(0.02, self.spin_serial)
 
 
+    # unused variable `data`
+    # can you even pass args to a timer function?
     def spin_serial(self, data):
-        if self.ser.in_waiting >=18:
+        # This seems unsafe but Im going to assume you tested this
+        if self.ser.in_waiting >= 18:
             raw_bytes = self.ser.read(18)
             self.unpack_and_publish(raw_bytes)
 
     def unpack_and_publish(self, data):
+        # Most of the fields unpacked here do not exist in RobotStatus
         msg = RobotStatus()
 
         #1. Currents (Bytes 0-7)

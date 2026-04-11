@@ -2,12 +2,14 @@
 command_subscriber.py
 
 File for testing subscribe only, never used
+^^^
+If this file is never used, what file is handling the incoming commands??
 '''
 
 import rclpy
 from rclpy.node import Node
 
-from .i2c_comms import send_HEX
+from .i2c_comms import send_HEX # send_HEX does not exist
 # from .i2c_comms import get_data_dictionary
 
 from std_msgs.msg import Byte, Int16
@@ -59,6 +61,7 @@ class CommandSubscriber(Node):
         pass
     
 
+    # Probably should return bools to signify whether there was success of not
     def excavation_auto(self, request: Empty, response: Empty) -> Empty:
         """
         Begin excacation autonomy

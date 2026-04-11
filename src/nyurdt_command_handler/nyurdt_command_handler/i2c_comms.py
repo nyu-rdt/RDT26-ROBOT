@@ -1,3 +1,11 @@
+"""
+A bit outside my expertise, so not too much to say regarding the math and such
+But I would make sure this even executes? command_subscriber.py imports a function from here
+    that doesn't even exist
+
+Also this node is never spun up anywhere
+"""
+
 import rclpy
 from rclpy.node import Node
 import busio
@@ -66,6 +74,8 @@ class I2CReaderNode(Node):
         flags         = fields[16]
         fixes         = fields[17]
 
+        # Most of the fields being accessed in this function do not 
+        #   exist on RobotStatus
         msg = RobotStatus()
 
         # Convert currents: 0-255 → 0-20A

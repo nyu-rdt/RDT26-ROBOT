@@ -63,7 +63,7 @@ class ConstructionNode(Node):
             self.get_logger().info("Construction stage 1: Turn 180")
             self.current_state = self.stage_1
         self.publish_msg(0x00)  # turn 180 command
-        # replace with real IMU yaw check from your pose topic
+        # replace with real IMU yaw check from your pose topic  # uh???
         return 'stage_2'
 
     def stage_2(self):
@@ -71,8 +71,13 @@ class ConstructionNode(Node):
         if self.current_state != self.stage_2:
             self.get_logger().info("Construction stage 2: Open hatch")
             self.current_state = self.stage_2
+            # What's the point in _set_gate_target if you're just publishing
+            #   the hex command anyway?
             self._set_gate_target(False)   # gate is now commanded open
         self.publish_msg(0x70)
+        
+        # Is there no way to check that the door is open
+        #   before trying to dump?
         return 'stage_3'
 
     def stage_3(self):
@@ -102,7 +107,12 @@ class ConstructionNode(Node):
         if self.current_state != self.stage_5:
             self.get_logger().info("Construction stage 5: Close hatch")
             self.current_state = self.stage_5
+            # same question as above
             self._set_gate_target(True)    # gate is now commanded closed
+
+        # isn't this hex command supposed to be 0x71?
         self.publish_msg(0x70)
+
+        # Same question as above
         self._finished = True
         return None

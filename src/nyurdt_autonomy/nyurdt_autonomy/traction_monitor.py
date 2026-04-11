@@ -1,3 +1,12 @@
+"""
+Unused class, deadcode
+
+Either use somewhere or just delete it?
+
+Also seems to repeat a lot the functionality from telemetry_processor.py?
+    (or telemetry_processor.py repeats this file? Not sure which came first)
+In general has a lot of the same issues as telemetry_processor.py
+"""
 import time
 import math
 
@@ -5,6 +14,7 @@ class TractionMonitor:
     def __init__(self, nominal_current: float = 5.0, wheel_radius: float = 0.1):
         self.nominal_current = nominal_current
         self.wheel_radius = wheel_radius
+        # How were these weights determined?
         self.w1, self.w2, self.w3 = 0.4, 0.3, 0.3
 
         self.last_left_tick = 0
@@ -17,9 +27,12 @@ class TractionMonitor:
         if dt <= 0:
             return 0.0, 0x00
 
+        # This math doesn't seem correct
+        #   Seems you you end up double counting self.wheel_radius / dt
         d_left  = (msg.left_encoder  - self.last_left_tick)  * self.wheel_radius / dt
         d_right = (msg.right_encoder - self.last_right_tick) * self.wheel_radius / dt
 
+        # This unit ends up as something like m^2 / s^2
         v_left  = (d_left  / 255) * (2 * math.pi * self.wheel_radius) / dt
         v_right = (d_right / 255) * (2 * math.pi * self.wheel_radius) / dt
         v_measured = (v_left + v_right) / 2

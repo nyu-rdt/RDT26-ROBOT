@@ -1,3 +1,5 @@
+# definitely outdated
+
 import numpy as np
 
 SMALL_TAG_SIZE_L = 68.04  * 0.1
