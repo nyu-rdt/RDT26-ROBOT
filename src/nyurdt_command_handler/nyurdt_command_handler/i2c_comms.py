@@ -10,16 +10,34 @@ _backend = None
 _i2c = None
 _smbus = None
 
-
+# // Packet layout (18 bytes):
+# //   [0-7]   motor_currents[8]  uint8, 0-255 = 0-20A   (CURRENT_SENSE_ENABLED)
+# //   [8]     left_encoder       uint8, 0-255 = 0-360°  (ROTARY_ENCODERS_ENABLED)
+# //   [9]     right_encoder      uint8, 0-255 = 0-360°  (ROTARY_ENCODERS_ENABLED)
+# //   [10-13] load_cells[4]      uint8 each             (LOAD_CELLS_ENABLED)
+# //   [14]    string_pot         uint8 (conveyor pos)   (STRING_POT_ENABLED)
+# //   [15]    gate_pos           uint8                  (GATE_POS_ENABLED)
+# //   [16]    flags              uint8 (bit0=relay, bit1=3s_low, bit2=6s_low)
+# //   [17]    fixes_attempted    uint8                  (no driver yet)
 def _default_sensor_dict() -> Dict[str, int | bool]:
     return {
-        "relay_status": 0,
-        "left_speed": 0,
-        "right_speed": 0,
-        "at_locomotion_position": False,
-        "at_excavation_position": False,
-        "at_construction_position": False,
-        "belt_pivot_angle": 0,
+        "motor_currents": [0] * 8,
+        "left_encoder": 0,
+        "right_encoder": 0,
+        "load_cells": [0] * 4,
+        "string_pot": 0,
+        "gate_pos": 0,
+        "flags": 0,
+        "fixes_attempted": 0,
+        
+        # 2025 variables
+        # "relay_status": 0,
+        # "left_speed": 0,
+        # "right_speed": 0,
+        # "at_locomotion_position": False,
+        # "at_excavation_position": False,
+        # "at_construction_position": False,
+        # "belt_pivot_angle": 0,
     }
 
 
@@ -68,6 +86,16 @@ def send_HEX(hexcode: int) -> int:
         return -1
 
 
+# Directly from child.cpp on teensy
+# // Packet layout (18 bytes):
+# //   [0-7]   motor_currents[8]  uint8, 0-255 = 0-20A   (CURRENT_SENSE_ENABLED)
+# //   [8]     left_encoder       uint8, 0-255 = 0-360°  (ROTARY_ENCODERS_ENABLED)
+# //   [9]     right_encoder      uint8, 0-255 = 0-360°  (ROTARY_ENCODERS_ENABLED)
+# //   [10-13] load_cells[4]      uint8 each             (LOAD_CELLS_ENABLED)
+# //   [14]    string_pot         uint8 (conveyor pos)   (STRING_POT_ENABLED)
+# //   [15]    gate_pos           uint8                  (GATE_POS_ENABLED)
+# //   [16]    flags              uint8 (bit0=relay, bit1=3s_low, bit2=6s_low)
+# //   [17]    fixes_attempted    uint8                  (no driver yet)
 def get_data_dictionary() -> Dict[str, int | bool]:
     result = _default_sensor_dict()
 
@@ -86,9 +114,23 @@ def get_data_dictionary() -> Dict[str, int | bool]:
         else:
             raise RuntimeError("No I2C backend available")
 
-        result["relay_status"] = int(arr[0])
-        result["left_speed"] = _to_signed_byte(int(arr[1]))
-        result["right_speed"] = _to_signed_byte(int(arr[2]))
+        
+        result["motor_currents"] = arr[0:8]
+        result["left_encoder"] = arr[8]
+        result["right_encoder"] = arr[9]
+        result["load_cells"] = arr[10:14]
+        result["string_pot"] = arr[14]
+        result["gate_pos"] = arr[15]
+        result["flags"] = arr[16]
+        result["fixes_attempted"] = arr[17]
+        
+        
+        # result["relay_status"] = int(arr[0])
+        # result["left_speed"] = _to_signed_byte(int(arr[1]))
+        # result["right_speed"] = _to_signed_byte(int(arr[2]))
+        
+        
+        
         return result
     except Exception as exc:
         print(f"get_data_dictionary failed ({_backend}, bus={_bus_num}, addr={teensy_address:#04x}): {exc}", file=sys.stderr)
