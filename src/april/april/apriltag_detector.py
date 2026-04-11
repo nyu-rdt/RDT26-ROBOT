@@ -10,14 +10,14 @@ import tf_transformations as ts
 # Known tag poses in MAP frame 
 # (x, y, z, roll, pitch, yaw) in metres/radians
 TAG_POSES_IN_MAP = {
-    19: (0.0, 0.0, 0.5, 0.0, 0.0, 0.0),   # starting zone tag 
+    19: (0.0, 0.0, 0.0, 0.0, 1.57, 0.0),   # starting zone tag 
 }
 
 # Calibration
-fx, fy = 473.8791885468119744, 473.6890399956254214
-cx, cy = 507.3397801369775948, 344.0735124444565827
+fx, fy = 245.13135523728707, 268.4239205880632
+cx, cy = 189.39414643843767, 150.29951972007822
 camera_matrix = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])
-dist_coeffs   = np.array([-6.04e-03, -7.75e-04, -4.29e-04, 7.27e-03, -1.84e-03])
+dist_coeffs   = np.array([0.7050221560988748, -3.7284367615305674, 0.013911897238276847, 0.001701746020378662, 5.078060359070571])
 
 tag_sizes = {18: 0.069, 19: 0.245, 20: 0.196, 21: 0.069}
 
@@ -40,9 +40,11 @@ class AprilTagLocalizationNode(Node):
             quad_decimate=1.5, refine_edges=True, decode_sharpening=0.25
         )
 
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(0, cv2.CAP_V4L2)
         if not self.cap.isOpened():
             self.get_logger().error("Cannot open camera")
+        self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, 352)
+        self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 288)
 
         # Covariance to assign to apriltag-derived pose corrections
         # Tune these — smaller = more trust in tag, less in odometry
@@ -92,7 +94,7 @@ class AprilTagLocalizationNode(Node):
 
             # ── camera→base_link (from your URDF, fixed offset) ─────────
             # adjust these to match where camera sits on the robot
-            cam_x, cam_y, cam_z = 0.1, 0.0, 0.2   # metres forward, left, up
+            cam_x, cam_y, cam_z = 0.0, 0.0, 0.0   # metres forward, left, up
             T_cam_to_base = ts.concatenate_matrices(
                 ts.translation_matrix([-cam_x, -cam_y, -cam_z]),
                 ts.euler_matrix(0, 0, 0)

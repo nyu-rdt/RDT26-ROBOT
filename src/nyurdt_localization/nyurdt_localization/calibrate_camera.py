@@ -23,12 +23,12 @@ def read_camera_feed(source: Union[int, str] = 0) -> List[np.ndarray]:
    :return: A list of images that were taken by the user
    """
    # Initialize video capture
-   cap = cv2.VideoCapture(source)
+   cap = cv2.VideoCapture(source, cv2.CAP_V4L2)
    if not cap.isOpened():
       return []
    
-   cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-   cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+   cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+   cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 360)
 
    print(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
    print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
