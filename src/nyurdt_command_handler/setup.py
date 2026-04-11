@@ -25,6 +25,7 @@ setup(
     entry_points={
         'console_scripts': [
             'command_subscriber=nyurdt_command_handler.command_subscriber:main',
+            'i2c_reader=nyurdt_command_handler.i2c_reader:main',
         ],
     },
 )

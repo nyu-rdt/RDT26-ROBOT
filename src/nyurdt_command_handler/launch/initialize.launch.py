@@ -16,7 +16,12 @@ def generate_launch_description():
         executable='command_subscriber',
         output='screen'
     )
-
+    i2c_reader = Node(
+        package='nyurdt_command_handler',
+        executable='i2c_reader',
+        output='screen'
+    )
+    
     # sensor_service = Node(
     #     package='nyurdt_autonomy',
     #     executable='sensor_service',
@@ -31,6 +36,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         command_subscriber,
+        i2c_reader,
         # sensor_service,
         # autonomy_destroyer,
     ])
