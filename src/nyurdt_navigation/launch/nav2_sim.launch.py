@@ -13,7 +13,6 @@ def generate_launch_description():
     pkg_navigation = get_package_share_directory("nyurdt_navigation")
     pkg_nav2 = get_package_share_directory("nav2_bringup")
     pkg_gz = get_package_share_directory("ros_gz_sim")
-    pkg_description = get_package_share_directory("nyurdt_description")
 
     # -------------------------
     # Launch arguments

@@ -10,12 +10,12 @@ from nav2_msgs.action import NavigateToPose
 from action_msgs.msg import GoalStatus
 from std_msgs.msg import String, Byte
 
-from excavation import ExcavationNode
-from construction import ConstructionNode
+from .excavation import ExcavationNode
+from .construction import ConstructionNode
 
 import math
 
-from nyurdt_state_machine import StateMachine
+from .nyurdt_state_machine import StateMachine
 
 
 ZONES = {
@@ -84,6 +84,8 @@ class AutonomyManager(Node):
         self.status_pub = self.create_publisher(String, "/autonomy/status", 10)
 
         self._nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
+
+        self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
 
         self.get_logger().info("AutonomyManager started - state: INIT_LOCALIZING")
 
@@ -208,6 +210,11 @@ class AutonomyManager(Node):
         msg = String(data=f"state={self.current_state.__name__} task={task_name} "
                          f"cov_x={self.covariance[0]:.4f} cov_y={self.covariance[7]:.4f}")
         self.status_pub.publish(msg)
+
+    def publish_msg(self, data: int):
+        msg = Byte()
+        msg.data = data.to_bytes(1, 'little')
+        self.publisher.publish(msg)
 
     
     # ── State Machines ───────────────────────────────

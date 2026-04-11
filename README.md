@@ -46,7 +46,7 @@ RDT26-ROBOT/
 │   ├── nyurdt_bringup/
 |   ├── nyurdt_description/
 │   ├── nyurdt_autonomy/
-│   ├── nyurdt_command_handler/
+│   ├── nyurdt_control/
 │   ├── nyurdt_interfaces/
 │   ├── nyurdt_localization/
 │   └── nyurdt_slam/

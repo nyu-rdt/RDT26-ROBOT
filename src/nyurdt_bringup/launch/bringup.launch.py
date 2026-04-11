@@ -11,12 +11,16 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
-    nav2_dir    = get_package_share_directory('nyurdt_navigation')
-    description_dir = get_package_share_directory('nyurdt_description')
-    realsense_dir = get_package_share_directory('realsense2_camera')
+    navigation   = get_package_share_directory('nyurdt_navigation')
+    description  = get_package_share_directory('nyurdt_description')
+    realsense    = get_package_share_directory('realsense2_camera')
+    localization = get_package_share_directory('nyurdt_localization')
+    slam         = get_package_share_directory('nyurdt_slam')
+    rtabmap      = get_package_share_directory('rtabmap_launch')
 
     
-    nav2_params = os.path.join(nav2_dir, 'config', 'nav2_params.yaml')
+    nav2_params = os.path.join(navigation, 'config', 'nav2_params.yaml')
+    slam_params = os.path.join(slam, 'config', 'rtabmap.yaml')
 
     return LaunchDescription([
         
@@ -28,7 +32,7 @@ def generate_launch_description():
         # ── Robot State Publisher (from nyurdt_description) ──────────────
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                os.path.join(description_dir, 'launch', 'rsp.launch.py')
+                os.path.join(description, 'launch', 'rsp.launch.py')
             ),
             launch_arguments={'use_sim_time': use_sim_time}.items()
         ),
@@ -36,63 +40,47 @@ def generate_launch_description():
         # ── RealSense ────────────────────────────────────────────────────
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                os.path.join(realsense_dir, 'launch', 'rs_launch.py')
+                os.path.join(realsense, 'launch', 'rs_launch.py')
             ),
             launch_arguments={
                 'enable_gyro': 'true',
                 'enable_accel': 'true',
                 'unite_imu_method': '2',
                 'enable_sync': 'true',
+                "align_depth.enable": "true",
+                "pointcloud.enable": "true",
+                'serial_no': '244422300437',
             }.items()
         ),
 
-        # ── RTAB-Map SLAM ────────────────────────────────────────────────
-        Node(
-            package='rtabmap_slam',
-            executable='rtabmap',
-            name='rtabmap',
-            output='screen',
-            parameters=[{
-                'subscribe_depth': True,
-                'subscribe_odom_info': False,
-                'approx_sync': True,
-                'frame_id': 'base_link',
-                'odom_frame_id': 'odom',
-                'map_frame_id': 'map',
-                'use_sim_time': use_sim_time,
-                'Mem/IncrementalMemory': 'true',
-                'Kp/MaxFeatures': '400',
-            }],
-            remappings=[
-                ('rgb/image',        '/camera/color/image_raw'),
-                ('rgb/camera_info',  '/camera/color/camera_info'),
-                ('depth/image',      '/camera/depth/image_rect_raw'),
-                ('initialpose',      '/apriltag/robot_pose'),
-            ]
+        # ── Apriltag ────────────────────────────────────────────────────
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(localization, 'launch', 'camera_apriltag.launch.py'),
+            ),
+            launch_arguments={'device2': '0'}.items() 
         ),
 
-        # ── RTAB-Map Odometry ────────────────────────────────────────────
-        Node(
-            package='rtabmap_odom',
-            executable='rgbd_odometry',
-            name='rgbd_odometry',
-            output='screen',
-            parameters=[{
-                'frame_id': 'base_link',
-                'approx_sync': True,
-                'use_sim_time': use_sim_time,
-            }],
-            remappings=[
-                ('rgb/image',       '/camera/color/image_raw'),
-                ('rgb/camera_info', '/camera/color/camera_info'),
-                ('depth/image',     '/camera/depth/image_rect_raw'),
-            ]
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(rtabmap, 'launch', 'rtabmap.launch.py')
+            ),
+            launch_arguments={
+                    'params_file': slam_params,
+                    'use_sim_time': use_sim_time,
+                    'rgb_topic': '/camera/camera/color/image_raw',
+                    'depth_topic': '/camera/camera/aligned_depth_to_color/image_raw',
+                    'camera_info_topic': '/camera/camera/color/camera_info',
+                    'frame_id': 'base_link',
+                    'approx_sync': 'true',
+                    'wait_imu_to_init': 'true',
+                }.items()
         ),
 
         # ── Nav2 (from nyurdt_navigation) ─────────────────────────────────
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                os.path.join(nav2_dir, 'launch', 'nav2_sim.launch.py')
+                os.path.join(navigation, 'launch', 'nav2_standalone.launch.py')
             ),
             launch_arguments={
                 'params_file': nav2_params,
@@ -101,8 +89,7 @@ def generate_launch_description():
         ),
 
         # ── Autonomy Nodes ───────────────────────────────────────────────
-        Node(package='nyurdt_localization', executable='apriltag_detector', name='apriltag_detector'),
-        Node(package='nyurdt_command_handler', executable='i2c_reader', name='i2c_reader'),
+        Node(package='nyurdt_control', executable='i2c_reader', name='i2c_reader'),
         Node(package='nyurdt_autonomy', executable='telemetry_processor', name='telemetry_processor'),
         Node(package='nyurdt_autonomy', executable='autonomy_manager', name='autonomy_manager'),
     ])
