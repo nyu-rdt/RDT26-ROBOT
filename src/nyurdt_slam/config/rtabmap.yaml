@@ -28,12 +28,18 @@ launch:
         value: "424x240x90"
 
 # ! NEW ==========================================================================
-      # - name: "enable_gyro"
-      #   value: "true"
+      - name: "enable_gyro"
+        value: "true"
 
-      # - name: "enable_accel"
-      #   value: "true"
+      - name: "enable_accel"
+        value: "true"
 
+      - name: "Optimizer/GravitySigma"
+        value: "0.3"
+
+      - name: "imu_topic"
+        value: "/imu/data"
+        
       # - name: "initial_reset"
       #   value: "true"
 
