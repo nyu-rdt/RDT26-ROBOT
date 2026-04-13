@@ -5,9 +5,10 @@ from launch_ros.actions import Node
 import xacro
 
 def generate_launch_description():
-    # 1. Path to your xacro file
-    pkg_path = get_package_share_directory('nyurdt_navigation')
-    xacro_file = os.path.join(pkg_path, 'config', 'robot.xacro')
+    # Use the canonical robot model from the description package so TF frames
+    # match Gazebo / Nav2 expectations (odom -> base_link -> body_link ...).
+    pkg_path = get_package_share_directory('nyurdt_description')
+    xacro_file = os.path.join(pkg_path, 'urdf', 'robot.xacro')
 
     # 2. Process the xacro file into raw URDF (XML)
     robot_description_config = xacro.process_file(xacro_file)
