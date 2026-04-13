@@ -1,3 +1,9 @@
+"""
+excavation.py
+
+File for running through the full excavation cycle autonomously.
+"""
+
 import rclpy
 from rclpy.node import Node
 import time

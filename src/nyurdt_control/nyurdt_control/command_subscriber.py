@@ -1,5 +1,7 @@
 '''
 command_subscriber.py
+
+this file may be deleted or reconfigured in the future
 '''
 
 import rclpy
@@ -25,7 +27,7 @@ class CommandSubscriber(Node):
 
         # Services for beginning autonomies
         self.excavation_srv = self.create_service(Empty, 'excavation_autonomy', self.excavation_auto)
-        self.construction_srv = self.create_service(Empty, 'construction_autonomy', self.construction_auto)
+        self.deposition_srv = self.create_service(Empty, 'deposition_autonomy', self.deposition_auto)
 
 
     def manual_callback(self, data: Byte) -> None:
@@ -64,11 +66,11 @@ class CommandSubscriber(Node):
         return response
     
 
-    def construction_auto(self, request: Empty, response: Empty) -> Empty:
+    def deposition_auto(self, request: Empty, response: Empty) -> Empty:
         """
-        Begin construction autonomy
+        Begin deposition autonomy
         """
-        subprocess.Popen(['ros2', 'run', 'nyurdt_autonomy', 'construction'])
+        subprocess.Popen(['ros2', 'run', 'nyurdt_autonomy', 'deposition'])
         return response
         
         

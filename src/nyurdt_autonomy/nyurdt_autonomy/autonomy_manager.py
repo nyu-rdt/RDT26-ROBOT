@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+
+"""
+autonomy_manager.py
+
+File for calling respective autonomies at the correct time. 
+"""
+
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
@@ -11,7 +18,7 @@ from action_msgs.msg import GoalStatus
 from std_msgs.msg import String, Byte
 
 from .excavation import ExcavationNode
-from .construction import ConstructionNode
+from .deposition import DepositionNode
 
 import math
 
@@ -20,7 +27,7 @@ from .nyurdt_state_machine import StateMachine
 
 ZONES = {
     "excavation":   {"x": (-4.5720, 9.14 - 4.5720), "y": (0.00, 4.00)},
-    "construction": {"x": (4.5720 - 2.00, 4.5720), "y": (5.50, 8.10)},
+    "deposition": {"x": (4.5720 - 2.00, 4.5720), "y": (5.50, 8.10)},
     "obstacle":     {"x": (-4.5720, 4.5720 - 2.00), "y": (4.00, 8.10)},
     "starting":     {"x": (-2.00, 2.00), "y": (0.00, 2.00)},
 }
@@ -38,11 +45,11 @@ ZONE_ENTRY_MARGIN = 0.12
 # queue for 3 cycles of autonomy
 TASK_QUEUE = [
     {"zone": "excavation", "action": "excavate"},
-    {"zone": "construction", "action": "deposit"},
+    {"zone": "deposition", "action": "deposit"},
     {"zone": "excavation", "action": "excavate"},
-    {"zone": "construction", "action": "deposit"},
+    {"zone": "deposition", "action": "deposit"},
     {"zone": "excavation", "action": "excavate"},
-    {"zone": "construction", "action": "deposit"},
+    {"zone": "deposition", "action": "deposit"},
 ]
 
 class AutonomyManager(Node):
@@ -342,7 +349,7 @@ class AutonomyManager(Node):
             if task == "excavate":
                 self._task_node = ExcavationNode()
             elif task == "deposit":
-                self._task_node = ConstructionNode()
+                self._task_node = DepositionNode()
             self._task_node.execute()
 
         if self._task_node.is_done():

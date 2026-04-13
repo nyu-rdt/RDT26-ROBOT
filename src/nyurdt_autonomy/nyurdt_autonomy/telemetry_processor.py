@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+
+"""
+telemetry_processor.py
+
+File for processing the telemetry data sent by EE through the teensy. Parses the data -> does calculations to 
+give us data we actually need -> adds it to our own custom msg type (RobotStatus) so that we can continuously
+refer to the most up-to-date data when we are running through our autonomy cycles.
+"""
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import Float32, Bool
