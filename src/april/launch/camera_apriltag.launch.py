@@ -36,7 +36,6 @@ def generate_launch_description():
                     {'camera': device1},
                     {'width': 352},
                     {'height': 288},
-                    {'fps': 5},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_a},
                     {'frame_id': 'camera_optical_frame_link'}
@@ -57,6 +56,7 @@ def generate_launch_description():
             )
         ],
     )
+
     container2 = ComposableNodeContainer(
             name='apriltag_cam_nodes2',
             namespace='',
@@ -72,7 +72,6 @@ def generate_launch_description():
                     {'camera': device2},
                     {'width': 352},
                     {'height': 288},
-                    {'fps': 5},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_b},
                     {'frame_id': 'camera_optical_frame_link'}
@@ -108,7 +107,6 @@ def generate_launch_description():
                     {'camera': device3},
                     {'width': 352},
                     {'height': 288},
-                    {'fps': 5},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_c},
                     {'frame_id': 'camera_optical_frame_link'}
