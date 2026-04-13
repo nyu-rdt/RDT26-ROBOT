@@ -1,0 +1,23 @@
+# Maps Xbox controller inputs to robot velocity commands (cmd_vel).
+# It is used by the teleop_twist_joy node to convert raw joystick data from
+# the /joy topic into Twist messages on /cmd_vel.
+#
+# DEADMAN BUTTON:
+#   Button 5 (RB - Right Bumper) must be held to enable any robot movement.
+#   This is a safety feature to prevent accidental movement.
+#
+# AXIS MAPPING (left stick):
+#   Axis 1 (left stick up/down)    → linear.x  (forward/backward)
+#   Axis 0 (left stick left/right) → angular.z (turning)
+
+teleop_twist_joy_node:
+  ros__parameters:
+    enable_button: 5      # must hold RB to enable any movement
+    axis_linear:
+      x: 1                # left stick up/down controls forward/back speed
+    axis_angular:
+      yaw: 0              # left stick left/right controls turning
+    scale_linear:
+      x: 0.5             # max forward speed (0.5 m/s)
+    scale_angular:
+      yaw: 0.5          # max turn speed (negative flips left/right direction)
