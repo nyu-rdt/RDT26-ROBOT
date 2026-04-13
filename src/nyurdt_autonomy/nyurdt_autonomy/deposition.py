@@ -1,3 +1,9 @@
+"""
+deposition.py
+
+File for running through the full deposition cycle of autonomy.
+"""
+
 import rclpy
 from rclpy.node import Node
 import time
@@ -6,10 +12,10 @@ from nyurdt_autonomy.nyurdt_state_machine import StateMachine
 from nyurdt_interfaces.msg import RobotStatus
 
 
-class ConstructionNode(Node):
+class DepositionNode(Node):
 
     def __init__(self):                          
-        super().__init__('construction_node')
+        super().__init__('deposition_node')
 
         self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
 
@@ -37,7 +43,7 @@ class ConstructionNode(Node):
         self.publisher.publish(msg)
 
     def create_machine(self):
-        self.machine = StateMachine('construction_machine')
+        self.machine = StateMachine('deposition_machine')
         self.machine.add_state('stage_1', self.stage_1)
         self.machine.add_state('stage_2', self.stage_2)
         self.machine.add_state('stage_3', self.stage_3)
@@ -53,7 +59,7 @@ class ConstructionNode(Node):
 
     def stage_1(self):
         if self.current_state != self.stage_1:
-            self.get_logger().info("Construction stage 1: Turn 180")
+            self.get_logger().info("Deposition stage 1: Turn 180")
             self.current_state = self.stage_1
         self.publish_msg(0x00)  # turn 180 command
         # replace with real IMU yaw check from your pose topic
@@ -62,7 +68,7 @@ class ConstructionNode(Node):
     def stage_2(self):
         # opening the hatch
         if self.current_state != self.stage_2:
-            self.get_logger().info("Construction stage 2: Open hatch")
+            self.get_logger().info("Deposition stage 2: Open hatch")
             self.current_state = self.stage_2
 
         self.publish_msg(0x70)
@@ -70,7 +76,7 @@ class ConstructionNode(Node):
 
     def stage_3(self):
         if self.current_state != self.stage_3:
-            self.get_logger().info("Construction stage 3: Vibrating")
+            self.get_logger().info("Deposition stage 3: Vibrating")
             self.current_state = self.stage_3
             self.depo_start_time = time.time()
 
@@ -85,7 +91,7 @@ class ConstructionNode(Node):
 
     def stage_4(self):
         if self.current_state != self.stage_4:
-            self.get_logger().info("Construction stage 4: Stop vibrating")
+            self.get_logger().info("Deposition stage 4: Stop vibrating")
             self.current_state = self.stage_4
         
         self.publish_msg(0x73)  # stop vibrate
@@ -94,7 +100,7 @@ class ConstructionNode(Node):
     def stage_5(self):
         # closing the hatch
         if self.current_state != self.stage_5:
-            self.get_logger().info("Construction stage 5: Close hatch")
+            self.get_logger().info("Deposition stage 5: Close hatch")
             self.current_state = self.stage_5
 
         self.publish_msg(0x71)

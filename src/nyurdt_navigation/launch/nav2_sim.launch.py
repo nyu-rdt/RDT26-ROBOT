@@ -1,3 +1,7 @@
+'''
+nav2_sim.launch.py
+'''
+
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -13,7 +17,6 @@ def generate_launch_description():
     pkg_navigation = get_package_share_directory("nyurdt_navigation")
     pkg_nav2 = get_package_share_directory("nav2_bringup")
     pkg_gz = get_package_share_directory("ros_gz_sim")
-    pkg_description = get_package_share_directory("nyurdt_description")
 
     # -------------------------
     # Launch arguments

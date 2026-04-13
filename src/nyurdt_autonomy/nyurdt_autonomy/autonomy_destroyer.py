@@ -32,8 +32,8 @@ class AutonomyDestroyer(Node):
         is sent
         :return: None
         """
-        # Kill construction node
-        process_one = subprocess.Popen(['killall', 'construction'])
+        # Kill deposition node
+        process_one = subprocess.Popen(['killall', 'deposition'])
         process_one.wait()
 
         # Kill excavation node

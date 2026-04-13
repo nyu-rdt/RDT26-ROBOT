@@ -1,3 +1,8 @@
+'''
+rsp.launch.py
+publishes the static transforms of the robot
+'''
+
 import os
 import xacro
 from ament_index_python.packages import get_package_share_directory

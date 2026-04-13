@@ -1,4 +1,6 @@
-#thanks Celestino
+'''
+apriltag_detector.py
+'''
 
 import cv2
 import numpy as np

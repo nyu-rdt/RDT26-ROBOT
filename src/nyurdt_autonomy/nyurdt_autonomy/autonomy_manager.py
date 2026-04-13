@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+
+"""
+autonomy_manager.py
+
+File for calling respective autonomies at the correct time. 
+"""
+
 import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
@@ -10,17 +17,17 @@ from nav2_msgs.action import NavigateToPose
 from action_msgs.msg import GoalStatus
 from std_msgs.msg import String, Byte
 
-from excavation import ExcavationNode
-from construction import ConstructionNode
+from .excavation import ExcavationNode
+from .deposition import DepositionNode
 
 import math
 
-from nyurdt_state_machine import StateMachine
+from .nyurdt_state_machine import StateMachine
 
 
 ZONES = {
     "excavation":   {"x": (-4.5720, 9.14 - 4.5720), "y": (0.00, 4.00)},
-    "construction": {"x": (4.5720 - 2.00, 4.5720), "y": (5.50, 8.10)},
+    "deposition": {"x": (4.5720 - 2.00, 4.5720), "y": (5.50, 8.10)},
     "obstacle":     {"x": (-4.5720, 4.5720 - 2.00), "y": (4.00, 8.10)},
     "starting":     {"x": (-2.00, 2.00), "y": (0.00, 2.00)},
 }
@@ -38,11 +45,11 @@ ZONE_ENTRY_MARGIN = 0.12
 # queue for 3 cycles of autonomy
 TASK_QUEUE = [
     {"zone": "excavation", "action": "excavate"},
-    {"zone": "construction", "action": "deposit"},
+    {"zone": "deposition", "action": "deposit"},
     {"zone": "excavation", "action": "excavate"},
-    {"zone": "construction", "action": "deposit"},
+    {"zone": "deposition", "action": "deposit"},
     {"zone": "excavation", "action": "excavate"},
-    {"zone": "construction", "action": "deposit"},
+    {"zone": "deposition", "action": "deposit"},
 ]
 
 class AutonomyManager(Node):
@@ -84,6 +91,8 @@ class AutonomyManager(Node):
         self.status_pub = self.create_publisher(String, "/autonomy/status", 10)
 
         self._nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
+
+        self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
 
         self.get_logger().info("AutonomyManager started - state: INIT_LOCALIZING")
 
@@ -208,6 +217,11 @@ class AutonomyManager(Node):
         msg = String(data=f"state={self.current_state.__name__} task={task_name} "
                          f"cov_x={self.covariance[0]:.4f} cov_y={self.covariance[7]:.4f}")
         self.status_pub.publish(msg)
+
+    def publish_msg(self, data: int):
+        msg = Byte()
+        msg.data = data.to_bytes(1, 'little')
+        self.publisher.publish(msg)
 
     
     # ── State Machines ───────────────────────────────
@@ -335,7 +349,7 @@ class AutonomyManager(Node):
             if task == "excavate":
                 self._task_node = ExcavationNode()
             elif task == "deposit":
-                self._task_node = ConstructionNode()
+                self._task_node = DepositionNode()
             self._task_node.execute()
 
         if self._task_node.is_done():
