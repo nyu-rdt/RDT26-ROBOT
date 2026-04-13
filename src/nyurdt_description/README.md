@@ -1,0 +1,1 @@
+contains the URDF for NYU RDT's 2026 robot so that all can refer to one urdf and all changes can be made at once for all pkgs.
