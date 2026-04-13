@@ -1,4 +1,21 @@
-1. connect lidar to the port (default port: /dev/ttyUSB0)
-2. run `bash run_lidar.sh` (this may need you to enter the password of your device since it requires root authority to activate the port)
-3. The output can be visualized on rviz2:\
-run `ros2 run rviz2 rviz2` and add 'lidar_scan' PointCloud2 topic.
+# AprilTag Setup
+## In a new terminal (in workspace src folder):
+1. source /opt/ros/jazzy/setup.bash
+2. colcon build for latest changes
+3. source install/setup.bash (isb shortcut on NUC)
+4. cd into RDT26-ROBOT
+
+## Running:
+ros2 launch april launch_robot.launch.py (for everything in sim)
+-- or --
+ros2 launch april camera_apriltag.launch.py (if just checking to see if camera loads and is detecting apriltags)
+(note: make sure to change file path next to camera_info_url parameter in the launch file if running on own computer)
+
+To visualize everything:
+1. Open new terminal tab 
+2. Source your files (src folder)
+3. rviz2 (for now)
+
+
+
+

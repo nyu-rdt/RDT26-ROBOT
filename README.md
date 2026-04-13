@@ -1,20 +1,16 @@
-# RDT26-ROBOT
-
-ROS2 workspace for RDT 2026 robot autonomy.
-
----
-
 ## Workspace Structure
 
 ```
 RDT26-ROBOT/
 ├── src/                  # All ROS2 packages
-│   ├── april/
+│   ├── nyurdt_bringup/
+|   ├── nyurdt_description/
 │   ├── nyurdt_autonomy/
-│   ├── nyurdt_command_handler/
+│   ├── nyurdt_control/
 │   ├── nyurdt_interfaces/
 │   ├── nyurdt_localization/
-│   └── rtab/
+│   ├── nyurdt_navigation/
+│   └── nyurdt_slam/
 ├── build/                # Generated (ignored)
 ├── install/              # Generated (ignored)
 ├── log/                  # Generated (ignored)
