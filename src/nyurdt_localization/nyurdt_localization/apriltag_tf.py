@@ -49,6 +49,7 @@ class AprilTagLocalizationNode(Node):
                     Time()
                 )
 
+                self.get_logger().info(f"Tag {tag_id} detected at distance {tag_to_cam_tf.transform.translation.z:.2f}m", throttle_duration_sec=0.5)
                 t = tag_to_cam_tf.transform.translation
                 q = tag_to_cam_tf.transform.rotation
 
@@ -82,7 +83,7 @@ class AprilTagLocalizationNode(Node):
                 # ── broadcast TF: map → base_link ───────────────────────────
                 self._broadcast_tf(
                     T_map_to_base,
-                    'map'
+                    'map',
                     'base_link'
                 )
 
@@ -117,7 +118,7 @@ class AprilTagLocalizationNode(Node):
         msg.transform.rotation.z = float(q[2])
         msg.transform.rotation.w = float(q[3])
 
-        self.tf_broadcaster.sendTransform(msg)
+        self.broadcaster.sendTransform(msg)
 
     def _publish_pose(self, T):
         t = ts.translation_from_matrix(T)
