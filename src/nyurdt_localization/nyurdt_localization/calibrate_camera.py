@@ -132,7 +132,7 @@ def calibrate(frames: List[np.ndarray]) -> None:
 
 
 def main(args=None):
-   frames = read_camera_feed(3)
+   frames = read_camera_feed(0)
    calibrate(frames)
 
 

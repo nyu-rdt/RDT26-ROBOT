@@ -19,7 +19,7 @@ def generate_launch_description():
     apriltag_cfg = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'tags_36h11.yaml')
     # camera_cfg_a = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC615.yaml')
     #camera_cfg_b = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC615b.yaml')
-    camera_cfg_c = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC615c.yaml')
+    camera_cfg_c = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC6151.yaml')
 
     # container1 = ComposableNodeContainer(
     #         name='apriltag_cam_nodes',
@@ -105,8 +105,8 @@ def generate_launch_description():
                 namespace='camera3',
                 parameters=[
                     {'camera': device3},
-                    {'width': 1920},
-                    {'height': 1080},
+                    {'width': 1600},
+                    {'height': 896},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_c},
                     {'frame_id': 'camera_optical_frame_link'}
