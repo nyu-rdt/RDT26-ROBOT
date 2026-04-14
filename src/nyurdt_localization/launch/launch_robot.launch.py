@@ -12,7 +12,7 @@ def generate_launch_description():
 
     return LaunchDescription([
         IncludeLaunchDescription(
-            PathJoinSubstitution([launch_dir, 'camera_tag.launch.py'])
+            PathJoinSubstitution([launch_dir, 'camera_apriltag.launch.py'])
         ),
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
