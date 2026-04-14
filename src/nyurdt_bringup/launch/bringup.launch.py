@@ -21,6 +21,7 @@ def generate_launch_description():
     
     nav2_params = os.path.join(navigation, 'config', 'nav2_params.yaml')
     slam_params = os.path.join(slam, 'config', 'rtabmap.yaml')
+    realsense_params = os.path.join(slam, 'config', 'realsense.yaml')
 
     return LaunchDescription([
         
@@ -43,13 +44,7 @@ def generate_launch_description():
                 os.path.join(realsense, 'launch', 'rs_launch.py')
             ),
             launch_arguments={
-                'enable_gyro': 'true',
-                'enable_accel': 'true',
-                'unite_imu_method': '2',
-                'enable_sync': 'true',
-                "align_depth.enable": "true",
-                "pointcloud.enable": "true",
-                'serial_no': '244422300437',
+                'params_file': realsense_params,
             }.items()
         ),
 
@@ -66,15 +61,15 @@ def generate_launch_description():
                 os.path.join(rtabmap, 'launch', 'rtabmap.launch.py')
             ),
             launch_arguments={
-                    'params_file': slam_params,
-                    'use_sim_time': use_sim_time,
-                    'rgb_topic': '/camera/camera/color/image_raw',
-                    'depth_topic': '/camera/camera/aligned_depth_to_color/image_raw',
-                    'camera_info_topic': '/camera/camera/color/camera_info',
-                    'frame_id': 'base_link',
-                    'approx_sync': 'true',
-                    'wait_imu_to_init': 'true',
-                }.items()
+                'params_file': slam_params,
+                'use_sim_time': use_sim_time,
+                'depth_topic':         '/camera/camera/aligned_depth_to_color/image_raw',
+                'rgb_topic':           '/camera/camera/color/image_raw',
+                'camera_info_topic':   '/camera/camera/color/camera_info',
+                'frame_id':            'camera_link',
+                'approx_sync':         'true',
+                'rtabmap_args':        '--delete_db_on_start',
+            }.items()
         ),
 
         # ── Nav2 (from nyurdt_navigation) ─────────────────────────────────
