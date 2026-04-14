@@ -1,0 +1,48 @@
+/**:
+  ros__parameters:
+    # ── Core streams ─────────────────────────────────────────────
+    align_depth.enable: true
+    pointcloud.enable: true
+    enable_infra1: true
+    enable_infra2: true
+    enable_sync: true
+
+    # ── Depth / IR profiles ──────────────────────────────────────
+    depth_module.depth_profile: "480x270x90"
+    depth_module.infra_profile: "480x270x90"
+    rgb_camera.color_profile:   "424x240x90"
+
+    # ── IMU ──────────────────────────────────────────────────────
+    enable_gyro: true
+    enable_accel: true
+    imu_topic: "/imu/data"
+    # initial_reset: true
+
+    # ── Decimation filter ────────────────────────────────────────
+    decimation_filter.enable: true
+    decimation_filter.filter_magnitude: 2
+
+    # ── Transport (avoid re-encoding overhead) ───────────────────
+    rgb_transport: "raw"
+    depth_transport: "raw"
+    colorizer.enable: false
+
+    # ── Latency / queue tuning ───────────────────────────────────
+    depth_module.frames_queue_size: 5
+    rgb_camera.frames_queue_size:   5
+
+    # ── Spatial filter (smooth depth) ────────────────────────────
+    spatial_filter.enable: true
+    spatial_filter.frames_queue_size: 5
+
+    # ── Temporal filter (reduce flickering) ──────────────────────
+    temporal_filter.enable: true
+    temporal_filter.frames_queue_size: 5
+
+    # ── Disabled filters ─────────────────────────────────────────
+    hole_filling_filter.enable: false
+    disparity_filter.enable:    false
+    hdr_merge.enable:           false
+
+    # ── Clip distance (indoor stability) ─────────────────────────
+    clip_distance: 5.0
