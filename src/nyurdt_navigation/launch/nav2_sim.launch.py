@@ -76,14 +76,14 @@ def generate_launch_description():
         launch_arguments={"use_sim_time": use_sim_time}.items(),
     )
 
-    # -------------------------
-    # Joint State Publisher (FIX FOR WHEEL ERRORS)
-    # -------------------------
+    # Restore joint_state_publisher so wheel joint TFs are available to
+    # robot_state_publisher even if Gazebo joint states are not reaching ROS.
     joint_state_publisher = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        name='joint_state_publisher',
-        parameters=[{'use_sim_time': use_sim_time}]
+        package="joint_state_publisher",
+        executable="joint_state_publisher",
+        name="joint_state_publisher",
+        parameters=[{"use_sim_time": use_sim_time}],
+        output="screen",
     )
 
     # -------------------------
@@ -97,7 +97,7 @@ def generate_launch_description():
     spawn_entity = Node(
         package="ros_gz_sim",
         executable="create",
-        arguments=["-topic", "robot_description", "-name", robot_name],
+        arguments=["-topic", "robot_description", "-name", robot_name, "-z", "0.5"],
         output="screen",
     )
 
@@ -113,15 +113,11 @@ def generate_launch_description():
 
 
             # Odom and TF
-            PythonExpression(['"/model/" + "', robot_name, '" + "/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry"']),
-            PythonExpression(['"/model/" + "', robot_name, '" + "/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V"']),
+            "/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
+            "/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V",
 
             # Cmd Vel
             "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
-        ],
-        remappings=[
-            (PythonExpression(['"/model/" + "', robot_name, '" + "/tf"']), "/tf"),
-            (PythonExpression(['"/model/" + "', robot_name, '" + "/odometry"']), "/odom"),
         ],
         output="screen",
     )
