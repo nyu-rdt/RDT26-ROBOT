@@ -1,52 +1,53 @@
-/rtabmap/rtabmap:
-  ros__parameters:
-    # ── Sync & queue ─────────────────────────────────────────────
-    sync_queue_size:  10
-    topic_queue_size: 10
+rtabmap:
+  rtabmap:
+    ros__parameters:
+      # ── Sync & queue ─────────────────────────────────────────────
+      sync_queue_size:  50
+      topic_queue_size: 50
 
-    # ── CUDA (off) ───────────────────────────────────────────────
-    PyDetector/Cuda: "false"   # DO NOT TOUCH
-    PyMatcher/Cuda:  "false"   # DO NOT TOUCH
-    SuperPoint/Cuda: "false"   # DO NOT TOUCH
+      # ── CUDA (off) ───────────────────────────────────────────────
+      PyDetector/Cuda: "false"   # DO NOT TOUCH
+      PyMatcher/Cuda:  "false"   # DO NOT TOUCH
+      SuperPoint/Cuda: "false"   # DO NOT TOUCH
 
-    # ── Grid ─────────────────────────────────────────────────────
-    Grid/RayTracing: "false"   # NEVER true
+      # ── Grid ─────────────────────────────────────────────────────
+      Grid/RayTracing: "false"   # NEVER true
 
-    # ==============================================================
-    # EXPERIMENTAL / PENDING TESTING (uncomment to activate)
-    # ==============================================================
+      # ==============================================================
+      # EXPERIMENTAL / PENDING TESTING (uncomment to activate)
+      # ==============================================================
 
-    # ── Odometry ─────────────────────────────────────────────────
-    # Odom/VisKeyFrameThr: "500"       # BEST — do not touch
-    # OdomF2M/MaxSize: "1000"          # needs testing
-    # Odom/ScanKeyFrameThr: "0.6"      # BEST — prevents swap growth
-    # Vis/CorType: "1"                 # GOOD — do not touch
+      # ── Odometry ─────────────────────────────────────────────────
+      # Odom/VisKeyFrameThr: "500"       # BEST — do not touch
+      # OdomF2M/MaxSize: "1000"          # needs testing
+      # Odom/ScanKeyFrameThr: "0.6"      # BEST — prevents swap growth
+      # Vis/CorType: "1"                 # GOOD — do not touch
 
-    # ── Visual features ──────────────────────────────────────────
-    # Vis/MaxFeatures: "800"
-    # Vis/MinInliers: "15"
-    # Vis/Iterations: "200"
-    # Kp/MaxFeatures: "1500"
+      # ── Visual features ──────────────────────────────────────────
+      # Vis/MaxFeatures: "800"
+      # Vis/MinInliers: "15"
+      # Vis/Iterations: "200"
+      # Kp/MaxFeatures: "1500"
 
-    # ── RTAB-Map timing ──────────────────────────────────────────
-    # Rtabmap/DetectionRate: "2"       # BEST — do not touch
-    # Rtabmap/TimeThr: "50"
+      # ── RTAB-Map timing ──────────────────────────────────────────
+      # Rtabmap/DetectionRate: "2"       # BEST — do not touch
+      # Rtabmap/TimeThr: "50"
 
-    # ── RGBD updates ─────────────────────────────────────────────
-    # RGBD/LinearUpdate: "0.2"
-    # RGBD/AngularUpdate: "0.1"
+      # ── RGBD updates ─────────────────────────────────────────────
+      # RGBD/LinearUpdate: "0.2"
+      # RGBD/AngularUpdate: "0.1"
 
-    # ── Memory ───────────────────────────────────────────────────
-    # Mem/ImagePreDecimation: "2"
+      # ── Memory ───────────────────────────────────────────────────
+      # Mem/ImagePreDecimation: "2"
 
-    # ── Grid / occupancy map ─────────────────────────────────────
-    # Grid/DepthDecimation: "8"        # BEST — do not touch
-    # Grid/CellSize: "0.07"
-    # Grid/3D: "false"                 # BEST — do not touch
-    # Grid/MapFrameProjection: "true"
-    # Grid/MaxObstacleHeight: "2.5"
-    # Grid/MaxGroundHeight: "0.25"
+      # ── Grid / occupancy map ─────────────────────────────────────
+      # Grid/DepthDecimation: "8"        # BEST — do not touch
+      # Grid/CellSize: "0.07"
+      # Grid/3D: "false"                 # BEST — do not touch
+      # Grid/MapFrameProjection: "true"
+      # Grid/MaxObstacleHeight: "2.5"
+      # Grid/MaxGroundHeight: "0.25"
 
-    # ── Optimizer ────────────────────────────────────────────────
-    # Optimizer/Iterations: "100"
-    Optimizer/GravitySigma: "0.3"   
+      # ── Optimizer ────────────────────────────────────────────────
+      # Optimizer/Iterations: "100"
+      Optimizer/GravitySigma: "0.3"   
