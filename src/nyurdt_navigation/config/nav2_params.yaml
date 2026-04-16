@@ -108,9 +108,9 @@ map_server:
   ros__parameters:
     yaml_filename: ""   # empty — using RTAB-Map live map
 
-amcl:
-  ros__parameters:
-    use_sim_time: false
+# amcl:
+#   ros__parameters:
+#     use_sim_time: false
 
 velocity_smoother:
   ros__parameters:
@@ -123,3 +123,13 @@ velocity_smoother:
     max_decel: [-2.0, 0.0, -3.2]
     odom_topic: "odom"
     odom_duration: 0.1
+
+lifecycle_manager_navigation:
+  ros__parameters:
+    autostart: true
+    node_names: ['controller_server',
+                 'planner_server',
+                 'bt_navigator',
+                 'waypoint_follower',
+                 'map_server',
+                 'velocity_smoother']

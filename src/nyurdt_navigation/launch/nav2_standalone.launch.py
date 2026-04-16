@@ -30,7 +30,7 @@ def generate_launch_description():
 
     # Include the standard Nav2 bringup
     nav2_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(pkg_nav2, 'launch', 'bringup_launch.py')),
+        PythonLaunchDescriptionSource(os.path.join(pkg_nav2, 'launch', 'navigation_launch.py')),
         launch_arguments={
             'params_file': params_file,
             # POINT THIS TO A REAL MAP FILE (.yaml), NOT nav2_params.yaml
@@ -40,20 +40,20 @@ def generate_launch_description():
         }.items()
     )
 
-    # RViz Node
-    rviz_config = os.path.join(pkg_rdt, 'rviz', 'nav2_view.rviz') 
-    rviz_node = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        arguments=['-d', rviz_config],
-        output='screen',
-        parameters=[{'use_sim_time': use_sim_time}]
-    )
+    # # RViz Node
+    # rviz_config = os.path.join(pkg_rdt, 'rviz', 'nav2_view.rviz') 
+    # rviz_node = Node(
+    #     package='rviz2',
+    #     executable='rviz2',
+    #     name='rviz2',
+    #     arguments=['-d', rviz_config],
+    #     output='screen',
+    #     parameters=[{'use_sim_time': use_sim_time}]
+    # )
 
     return LaunchDescription([
         declare_params_file,
         declare_use_sim_time,
         nav2_launch,
-        rviz_node
+        # rviz_node
     ])
