@@ -8,9 +8,9 @@
     enable_sync: true
 
     # ── Depth / IR profiles ──────────────────────────────────────
-    depth_module.depth_profile: "280x720x30"
-    depth_module.infra_profile: "280x720x30"
-    rgb_camera.color_profile:   "1280x720x30"
+    depth_module.depth_profile: "424x240x30"
+    depth_module.infra_profile: "424x240x30"
+    rgb_camera.color_profile:   "424x240x30"
 
     # ── IMU ──────────────────────────────────────────────────────
     enable_gyro: true
