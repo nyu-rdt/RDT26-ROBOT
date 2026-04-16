@@ -28,12 +28,26 @@ class AprilTagLocalizationNode(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.broadcaster = TransformBroadcaster(self)
 
-        self.tag_sub = self.create_subscription(
+        self.front_sub = self.create_subscription(
             AprilTagDetectionArray,
-            '/apriltag3/detections',
-            self._process_frames,
+            '/front_cam/detections',
+            self._process_front,
             10
         )
+
+        self.right_sub = self.create_subscription(
+            AprilTagDetectionArray,
+            '/right_cam/detections',
+            self._process_right,
+            10
+        )
+    
+        # self.back_sub = self.create_subscription(
+        #     AprilTagDetectionArray,
+        #     '/back_cam/detections',
+        #     self._process_back,
+        #     10
+        # )
 
         self.pose_pub = self.create_publisher(
             PoseWithCovarianceStamped,
@@ -45,8 +59,16 @@ class AprilTagLocalizationNode(Node):
         # Tune these — smaller = more trust in tag, less in odometry
         self.position_variance = 0.02 # metres^2
         self.orientation_variance = 0.01 # radians^2
+    def _process_front(self, msg):
+        self._process_frames(msg, 'front_camera_optical_frame_link')
 
-    def _process_frames(self, msg):
+    def _process_right(self, msg):
+        self._process_frames(msg, 'right_camera_optical_frame_link')
+
+    # def _process_back(self, msg):
+    #     self._process_frames(msg, 'back_camera_optical_frame_link')
+
+    def _process_frames(self, msg, camera_frame):
         if not msg.detections:
             return
         
@@ -66,14 +88,14 @@ class AprilTagLocalizationNode(Node):
             try:
                 # ── tag -> camera transform
                 tag_to_cam_tf = self.tf_buffer.lookup_transform(
-                    'camera_optical_frame_link',
+                    camera_frame,
                     tag_id,
                     Time()
                 )
 
                 t = tag_to_cam_tf.transform.translation
                 q = tag_to_cam_tf.transform.rotation
-                self.get_logger().info(f"{tag_id}->cam dist =  {self.distance(t.x, t.y, t.z)}m", throttle_duration_sec=0.5)
+                self.get_logger().info(f"{tag_id}-> {camera_frame} dist =  {self.distance(t.x, t.y, t.z)}m", throttle_duration_sec=0.5)
 
                 trans = ts.translation_matrix([t.x, t.y, t.z])
                 rot = ts.quaternion_matrix([q.x, q.y, q.z, q.w])
