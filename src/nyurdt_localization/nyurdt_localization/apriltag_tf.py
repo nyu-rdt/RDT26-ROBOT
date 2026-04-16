@@ -118,29 +118,29 @@ class AprilTagLocalizationNode(Node):
             except (LookupException, ConnectivityException, ExtrapolationException) as e:
                 self.get_logger().warn(f'Could not use {tag_id}: {e}', throttle_duration_sec=1.0)
 
-            # Compute weighted average pose based on decision margin
-            if sum_w == 0:
-                return
-            avg_x = sum_x / sum_w
-            avg_y = sum_y / sum_w
-            avg_z = sum_z / sum_w
-            avg_yaw = math.atan2(sum_sin_yaw / sum_w, sum_cos_yaw / sum_w)
-            Tavg_map_to_base = ts.concatenate_matrices(
-                ts.translation_matrix([avg_x, avg_y, avg_z]),
-                ts.euler_matrix(0, 0, avg_yaw)
-            )
-            
-            # ── broadcast TF: map → base_link ───────────────────────────
-            self._broadcast_tf(
-                Tavg_map_to_base,
-                'map',
-                'base_link'
-            )
+        # Compute weighted average pose based on decision margin
+        if sum_w == 0:
+            return
+        avg_x = sum_x / sum_w
+        avg_y = sum_y / sum_w
+        avg_z = sum_z / sum_w
+        avg_yaw = math.atan2(sum_sin_yaw / sum_w, sum_cos_yaw / sum_w)
+        Tavg_map_to_base = ts.concatenate_matrices(
+            ts.translation_matrix([avg_x, avg_y, avg_z]),
+            ts.euler_matrix(0, 0, avg_yaw)
+        )
+        
+        # ── broadcast TF: map → base_link ───────────────────────────
+        self._broadcast_tf(
+            Tavg_map_to_base,
+            'map',
+            'base_link'
+        )
 
-            # ── publish as PoseWithCovarianceStamped for RTAB-Map ────────
-            self._publish_pose(Tavg_map_to_base)
-            avg_t = ts.translation_from_matrix(Tavg_map_to_base)
-            self.get_logger().info(f'averaged map->base dist = {self.distance(avg_t[0], avg_t[1], avg_t[2])}m', throttle_duration_sec=0.5)
+        # ── publish as PoseWithCovarianceStamped for RTAB-Map ────────
+        self._publish_pose(Tavg_map_to_base)
+        avg_t = ts.translation_from_matrix(Tavg_map_to_base)
+        self.get_logger().info(f'averaged map->base dist = {self.distance(avg_t[0], avg_t[1], avg_t[2])}m', throttle_duration_sec=0.5)
 
     def distance(self, x, y, z):
         return math.sqrt(x**2 + y**2 + z**2)

@@ -38,7 +38,7 @@ def generate_launch_description():
     #                 {'height': 288},
     #                 {'format': 'MJPEG'},
     #                 {'camera_info_url': 'file://' + camera_cfg_a},
-    #                 {'frame_id': 'camera_optical_frame_link'}
+    #                 {'frame_id': 'camera_optical_frame_link1'}
     #             ],
     #             extra_arguments=[{'use_intra_process_comms': True}],
     #         ),
@@ -74,7 +74,7 @@ def generate_launch_description():
     #                 {'height': 1080},
     #                 {'format': 'MJPEG'},
     #                 {'camera_info_url': 'file://' + camera_cfg_b},
-    #                 {'frame_id': 'camera_optical_frame_link'}
+    #                 {'frame_id': 'camera_optical_frame_link2'}
     #             ],
     #             extra_arguments=[{'use_intra_process_comms': True}],
     #         ),
@@ -109,7 +109,7 @@ def generate_launch_description():
                     {'height': 896},
                     {'format': 'MJPEG'},
                     {'camera_info_url': 'file://' + camera_cfg_c},
-                    {'frame_id': 'camera_optical_frame_link'}
+                    {'frame_id': 'camera_optical_frame_link3'}
                 ],
                 extra_arguments=[{'use_intra_process_comms': True}],
             ),
