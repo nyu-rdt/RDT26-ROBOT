@@ -14,6 +14,15 @@
 
   <depend>rtabmap_slam</depend>
   <depend>rtabmap_odom</depend>
+  <depend>nav2_bringup</depend>
+  <depend>rtabmap_ros</depend>
+  <depend>realsense2_camera</depend>
+  <depend>nyurdt_autonomy</depend>  
+  <depend>nyurdt_navigation</depend>
+  <depend>nyurdt_description</depend>
+  <depend>nyurdt_control</depend>
+  <depend>nyurdt_slam</depend>
+  <depend>nyurdt_localization</depend>
 
 
   <export>
