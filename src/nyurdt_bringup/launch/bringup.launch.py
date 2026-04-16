@@ -56,22 +56,6 @@ def generate_launch_description():
             launch_arguments={'device2': '0'}.items() 
         ),
 
-        # IncludeLaunchDescription(
-        #     PythonLaunchDescriptionSource(
-        #         os.path.join(rtabmap, 'launch', 'rtabmap.launch.py')
-        #     ),
-        #     launch_arguments={
-        #         'params_file':          slam_params,
-        #         'use_sim_time':         use_sim_time,
-        #         'depth_topic':         '/camera/camera/aligned_depth_to_color/image_raw',
-        #         'rgb_topic':           '/camera/camera/color/image_raw',
-        #         'camera_info_topic':   '/camera/camera/color/camera_info',
-        #         'frame_id':            'camera_link',
-        #         'approx_sync':         'true',
-        #         'rtabmap_args':        '--delete_db_on_start',
-        #     }.items()
-        # ),
-
         # ── Nav2 (from nyurdt_navigation) ─────────────────────────────────
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -96,7 +80,8 @@ def generate_launch_description():
             output='screen',
             arguments=['--delete_db_on_start'],
             parameters=[{
-                'sync_queue_size':50,
+                'sync_queue_size': 50,
+                'topic_queue_size': 50,
                 'subscribe_depth': True,
                 'subscribe_odom_info': False,
                 'approx_sync': True,
@@ -106,6 +91,11 @@ def generate_launch_description():
                 'use_sim_time': use_sim_time,
                 'Mem/IncrementalMemory': 'true',
                 'Kp/MaxFeatures': '400',
+                'PyDetector/Cuda': "false",   
+                'PyMatcher/Cuda':  "false",   
+                'SuperPoint/Cuda': "false",
+                'Optimizer/GravitySigma': "0.3" ,  
+                'Grid/RayTracing': "false",
             }],
             remappings=[
                 ('/rgb/image', '/camera/camera/image_raw'),
