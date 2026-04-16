@@ -80,8 +80,8 @@ def generate_launch_description():
             output='screen',
             arguments=['--delete_db_on_start'],
             parameters=[{
-                'sync_queue_size': 50,
-                'topic_queue_size': 50,
+                'sync_queue_size': 100,
+                'topic_queue_size': 100,
                 'subscribe_depth': True,
                 'subscribe_odom_info': False,
                 'approx_sync': True,
@@ -96,11 +96,12 @@ def generate_launch_description():
                 'SuperPoint/Cuda': "false",
                 'Optimizer/GravitySigma': "0.3" ,  
                 'Grid/RayTracing': "false",
+                'wait_for_transform': 1.0,
             }],
             remappings=[
-                ('/rgb/image', '/camera/camera/image_raw'),
+                ('/rgb/image', '/camera/camera/color/image_raw'),
                 ('/depth/image', '/camera/camera/depth/image_rect_raw'),
-                ('/rgb/camera_info', '/camera/camera/camera_info'),
+                ('/rgb/camera_info', '/camera/camera/color/camera_info'),
             ]
         ),
 
@@ -111,14 +112,17 @@ def generate_launch_description():
             name='rgbd_odometry',
             output='screen',
             parameters=[{
-                'frame_id': 'link',
+                'sync_queue_size': 100,
+                'topic_queue_size': 100,
+                'frame_id': 'base_link',
                 'approx_sync': True,
                 'use_sim_time': use_sim_time,
+                'approx_sync_max_interval': 0.019,
             }],
             remappings=[
-                ('/rgb/image', '/camera/camera/image_raw'),
+                ('/rgb/image', '/camera/camera/color/image_raw'),
                 ('/depth/image', '/camera/camera/depth/image_rect_raw'),
-                ('/rgb/camera_info', '/camera/camera/camera_info'),
+                ('/rgb/camera_info', '/camera/camera/color/camera_info'),
             ]
         ),
     ])
