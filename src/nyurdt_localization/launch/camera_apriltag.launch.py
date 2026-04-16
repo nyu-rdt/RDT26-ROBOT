@@ -8,18 +8,18 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
-    device_arg1 = DeclareLaunchArgument('device1', default_value='0')
-    #device_arg2 = DeclareLaunchArgument('device2', default_value='0')
-    device_arg3 = DeclareLaunchArgument('device3', default_value='1')
+    device_arg1 = DeclareLaunchArgument('front_cam', default_value='0')
+    device_arg2 = DeclareLaunchArgument('right_cam', default_value='2')
+    device_arg3 = DeclareLaunchArgument('back_cam', default_value='1')
 
-    device1 = LaunchConfiguration('device1')
-    #device2 = LaunchConfiguration('device2')
-    device3 = LaunchConfiguration('device3')
+    device1 = LaunchConfiguration('front_cam')
+    device2 = LaunchConfiguration('right_cam')
+    device3 = LaunchConfiguration('back_cam')
 
     apriltag_cfg = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'tags_36h11.yaml')
     camera_cfg_a = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC615.yaml')
-    #camera_cfg_b = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC615b.yaml')
-    camera_cfg_c = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC6151.yaml')
+    camera_cfg_b = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'Innomaker.yaml')
+    camera_cfg_c = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC615c.yaml')
 
     container1 = ComposableNodeContainer(
             name='apriltag_cam_nodes',
@@ -48,8 +48,8 @@ def generate_launch_description():
                 name='apriltag',
                 namespace='front_cam',
                 remappings=[
-                    ('image_rect', '/camera1/camera1/image_raw'),
-                    ('camera_info', '/camera1/camera1/camera_info'),
+                    ('image_rect', '/front_cam/camera/image_raw'),
+                    ('camera_info', '/front_cam/camera/camera_info'),
                 ],
                 parameters=[apriltag_cfg],
                 extra_arguments=[{'use_intra_process_comms': True}],
@@ -57,41 +57,41 @@ def generate_launch_description():
         ],
     )
     
-    # container2 = ComposableNodeContainer(
-    #         name='apriltag_cam_nodes2',
-    #         namespace='',
-    #         package='rclcpp_components',
-    #         executable='component_container',
-    #         composable_node_descriptions=[
-    #         ComposableNode(
-    #             package='camera_ros',
-    #             plugin='camera::CameraNode',
-    #             name='camera2',
-    #             namespace='camera2',
-    #             parameters=[
-    #                 {'camera': device2},
-    #                 {'width': 1920},
-    #                 {'height': 1080},
-    #                 {'format': 'MJPEG'},
-    #                 {'camera_info_url': 'file://' + camera_cfg_b},
-    #                 {'frame_id': 'camera_optical_frame_link2'}
-    #             ],
-    #             extra_arguments=[{'use_intra_process_comms': True}],
-    #         ),
-    #         ComposableNode(
-    #             package='apriltag_ros',
-    #             plugin='AprilTagNode',
-    #             name='apriltag2',
-    #             namespace='apriltag2',
-    #             remappings=[
-    #                 ('image_rect', '/camera2/camera2/image_raw'),
-    #                 ('camera_info', '/camera2/camera2/camera_info'),
-    #             ],
-    #             parameters=[apriltag_cfg],
-    #             extra_arguments=[{'use_intra_process_comms': True}],
-    #         )
-    #     ],
-    # )
+    container2 = ComposableNodeContainer(
+            name='apriltag_cam_nodes2',
+            namespace='',
+            package='rclcpp_components',
+            executable='component_container',
+            composable_node_descriptions=[
+            ComposableNode(
+                package='camera_ros',
+                plugin='camera::CameraNode',
+                name='camera2',
+                namespace='camera2',
+                parameters=[
+                    {'camera': device2},
+                    {'width': 1920},
+                    {'height': 1080},
+                    {'format': 'MJPEG'},
+                    {'camera_info_url': 'file://' + camera_cfg_b},
+                    {'frame_id': 'camera_optical_frame_link2'}
+                ],
+                extra_arguments=[{'use_intra_process_comms': True}],
+            ),
+            ComposableNode(
+                package='apriltag_ros',
+                plugin='AprilTagNode',
+                name='apriltag2',
+                namespace='apriltag2',
+                remappings=[
+                    ('image_rect', '/camera2/camera2/image_raw'),
+                    ('camera_info', '/camera2/camera2/camera_info'),
+                ],
+                parameters=[apriltag_cfg],
+                extra_arguments=[{'use_intra_process_comms': True}],
+            )
+        ],
+    )
     container3 = ComposableNodeContainer(
             name='apriltag_cam_nodes3',
             namespace='',
@@ -119,8 +119,8 @@ def generate_launch_description():
                 name='apriltag',
                 namespace='right_cam',
                 remappings=[
-                    ('image_rect', '/camera3/camera3/image_raw'),
-                    ('camera_info', '/camera3/camera3/camera_info'),
+                    ('image_rect', '/right_cam/camera/image_raw'),
+                    ('camera_info', '/right_cam/camera/camera_info'),
                 ],
                 parameters=[apriltag_cfg],
                 extra_arguments=[{'use_intra_process_comms': True}],
@@ -130,9 +130,9 @@ def generate_launch_description():
 
     return LaunchDescription([
         device_arg1,
-        # device_arg2,
+        device_arg2,
         device_arg3,
         container1,
-        #container2,
+        container2,
         container3
     ])
