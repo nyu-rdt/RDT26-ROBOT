@@ -348,7 +348,6 @@ class AutonomyManager(Node):
         Stage 5: Dispatch to zone-specific logic.
         """
         if self.current_state != self.stage_5:
-<<<<<<< HEAD
             self.get_logger().info("Stage 5: Executing task")
             self.current_state = self.stage_5
             task = TASK_QUEUE[self.task_index]["action"]
@@ -365,11 +364,6 @@ class AutonomyManager(Node):
             return 'stage_2'
 
         return 'stage_5'
-=======
-            self.get_logger().info('Stage 5: State Specifc logic')
-            self.current_state = self.stage_5
-        
->>>>>>> parent of 4565310 (updated stage 5 sm for autonomy manager to call excavation and construction)
     
     def stage_6(self):
         """
