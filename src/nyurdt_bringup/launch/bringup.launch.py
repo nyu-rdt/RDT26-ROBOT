@@ -16,11 +16,10 @@ def generate_launch_description():
     realsense    = get_package_share_directory('realsense2_camera')
     localization = get_package_share_directory('nyurdt_localization')
     slam         = get_package_share_directory('nyurdt_slam')
-    rtabmap      = get_package_share_directory('rtabmap_launch')
 
     
     nav2_params = os.path.join(navigation, 'config', 'nav2_params.yaml')
-    slam_params = os.path.join(slam, 'config', 'rtabmap.yaml')
+    realsense_params = os.path.join(slam, 'config', 'realsense.yaml')
 
     return LaunchDescription([
         
@@ -43,13 +42,55 @@ def generate_launch_description():
                 os.path.join(realsense, 'launch', 'rs_launch.py')
             ),
             launch_arguments={
-                'enable_gyro': 'true',
-                'enable_accel': 'true',
-                'unite_imu_method': '2',
-                'enable_sync': 'true',
+                # 'config_file': realsense_params,
+                    # ── Core streams ─────────────────────────────────────────────
                 "align_depth.enable": "true",
                 "pointcloud.enable": "true",
-                'serial_no': '244422300437',
+                "enable_infra1": "true",
+                "enable_infra2": "true",
+                "enable_sync": "true",
+
+                # ── Depth / IR profiles ──────────────────────────────────────
+                "depth_module.depth_profile": "480x270x90",
+                "depth_module.infra_profile": "480x270x90",
+                "rgb_camera.color_profile":   "424x240x90",
+
+                # "unite_imu_method": "2",
+
+                # ── IMU ──────────────────────────────────────────────────────
+                "enable_gyro": "true",
+                "enable_accel": "true",
+                # "imu_topic": "/imu/data",
+                # initial_reset: true
+
+                # ── Decimation filter ────────────────────────────────────────
+                "decimation_filter.enable": "true",
+                "decimation_filter.filter_magnitude": "2",
+
+                # ── Transport (avoid re-encoding overhead) ───────────────────
+                "rgb_transport": "raw",
+                "depth_transport": "raw",
+                "colorizer.enable": "false",
+
+                # ── Latency / queue tuning ───────────────────────────────────
+                "depth_module.frames_queue_size": "5",
+                "rgb_camera.frames_queue_size":   "5",
+
+                # ── Spatial filter (smooth depth) ────────────────────────────
+                "spatial_filter.enable": "true",
+                "spatial_filter.frames_queue_size": "5",
+
+                # ── Temporal filter (reduce flickering) ──────────────────────
+                "temporal_filter.enable": "true",
+                "temporal_filter.frames_queue_size": "5",
+
+                # ── Disabled filters ─────────────────────────────────────────
+                "hole_filling_filter.enable": "false",
+                "disparity_filter.enable":    "false",
+                "hdr_merge.enable":           "false",
+
+                # ── Clip distance (indoor stability) ─────────────────────────
+                "clip_distance": "5.0",
             }.items()
         ),
 
@@ -63,18 +104,8 @@ def generate_launch_description():
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                os.path.join(rtabmap, 'launch', 'rtabmap.launch.py')
+                os.path.join(slam, 'launch', 'main.launch.py')
             ),
-            launch_arguments={
-                    'params_file': slam_params,
-                    'use_sim_time': use_sim_time,
-                    'rgb_topic': '/camera/camera/color/image_raw',
-                    'depth_topic': '/camera/camera/aligned_depth_to_color/image_raw',
-                    'camera_info_topic': '/camera/camera/color/camera_info',
-                    'frame_id': 'base_link',
-                    'approx_sync': 'true',
-                    'wait_imu_to_init': 'true',
-                }.items()
         ),
 
         # ── Nav2 (from nyurdt_navigation) ─────────────────────────────────

@@ -109,7 +109,7 @@ def launch_setup(context, *args, **kwargs):
             remappings=[
                 ("rgb/image", LaunchConfiguration('rgb_topic_relay')),
                 ("depth/image", LaunchConfiguration('depth_topic_relay')),
-                ("rgb/camera_info", LaunchConfiguration('camera_info_topic')),
+                ("rgb/camera_info", LaunchConfiguration('/camera/camera/color/camera_info')),
                 ("rgbd_image", LaunchConfiguration('rgbd_topic_relay'))],
             namespace=LaunchConfiguration('namespace')),
             
@@ -525,9 +525,9 @@ def generate_launch_description():
         DeclareLaunchArgument('approx_sync_max_interval',  default_value='0.0', description='(sec) 0 means infinite interval duration (used with approx_sync=true)'),
 
         # RGB-D related topics
-        DeclareLaunchArgument('rgb_topic',           default_value='/camera/rgb/image_rect_color',       description=''),
-        DeclareLaunchArgument('depth_topic',         default_value='/camera/depth_registered/image_raw', description=''),
-        DeclareLaunchArgument('camera_info_topic',   default_value='/camera/rgb/camera_info',            description=''),
+        DeclareLaunchArgument('rgb_topic',           default_value='/camera/camera/color/image_raw',       description=''),
+        DeclareLaunchArgument('depth_topic',         default_value='/camera/camera/aligned_depth_to_color/image_raw', description=''),
+        DeclareLaunchArgument('camera_info_topic',   default_value='/camera/camera/color/camera_info',            description=''),
         
         # Stereo related topics
         DeclareLaunchArgument('stereo_namespace',        default_value='/stereo_camera', description=''),
