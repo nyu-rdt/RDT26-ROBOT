@@ -28,11 +28,11 @@ launch:
         value: "424x240x90"
 
 # ! NEW ==========================================================================
-      - name: "enable_gyro"
-        value: "true"
+      # - name: "enable_gyro"
+      #   value: "true"
 
-      - name: "enable_accel"
-        value: "true"
+      # - name: "enable_accel"
+      #   value: "true"
 
       # - name: "initial_reset"
       #   value: "true"
@@ -133,11 +133,6 @@ launch:
        - name: "Grid/RayTracing" # * BEST PARAM, DO NOT TOUCH, FAST AND ACURATE!!!
          value: "false" # ! NEVER SET TO TRUE
 
-       - name: "Optimizer/GravitySigma"
-         value: "0.3"
-
-       - name: "imu_topic"
-         value: "/imu/data"
 # ! NEW ==========================================================================
 
       # #  - name: "Odom/Strategy" # ! HORRIBLE PARAMETER SETTING, DO MORE TESTING
