@@ -1,7 +1,3 @@
-'''
-nav2_sim.launch.py
-'''
-
 import os
 
 from ament_index_python.packages import get_package_share_directory
@@ -17,6 +13,7 @@ def generate_launch_description():
     pkg_navigation = get_package_share_directory("nyurdt_navigation")
     pkg_nav2 = get_package_share_directory("nav2_bringup")
     pkg_gz = get_package_share_directory("ros_gz_sim")
+    pkg_description = get_package_share_directory("nyurdt_description")
 
     # -------------------------
     # Launch arguments
@@ -75,18 +72,18 @@ def generate_launch_description():
     # Robot State Publisher
     # -------------------------
     rsp = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(pkg_navigation, "launch", "rsp.launch.py")),
+        PythonLaunchDescriptionSource(os.path.join(pkg_description, "launch", "rsp.launch.py")),
         launch_arguments={"use_sim_time": use_sim_time}.items(),
     )
 
-    # -------------------------
-    # Joint State Publisher (FIX FOR WHEEL ERRORS)
-    # -------------------------
+    # Restore joint_state_publisher so wheel joint TFs are available to
+    # robot_state_publisher even if Gazebo joint states are not reaching ROS.
     joint_state_publisher = Node(
-        package='joint_state_publisher',
-        executable='joint_state_publisher',
-        name='joint_state_publisher',
-        parameters=[{'use_sim_time': use_sim_time}]
+        package="joint_state_publisher",
+        executable="joint_state_publisher",
+        name="joint_state_publisher",
+        parameters=[{"use_sim_time": use_sim_time}],
+        output="screen",
     )
 
     # -------------------------
@@ -100,7 +97,7 @@ def generate_launch_description():
     spawn_entity = Node(
         package="ros_gz_sim",
         executable="create",
-        arguments=["-topic", "robot_description", "-name", robot_name],
+        arguments=["-topic", "robot_description", "-name", robot_name, "-z", "0.5"],
         output="screen",
     )
 
@@ -116,15 +113,11 @@ def generate_launch_description():
 
 
             # Odom and TF
-            PythonExpression(['"/model/" + "', robot_name, '" + "/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry"']),
-            PythonExpression(['"/model/" + "', robot_name, '" + "/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V"']),
+            "/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry",
+            "/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V",
 
             # Cmd Vel
             "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
-        ],
-        remappings=[
-            (PythonExpression(['"/model/" + "', robot_name, '" + "/tf"']), "/tf"),
-            (PythonExpression(['"/model/" + "', robot_name, '" + "/odometry"']), "/odom"),
         ],
         output="screen",
     )
@@ -132,14 +125,57 @@ def generate_launch_description():
     # -------------------------
     # Nav2 bringup
     # -------------------------
-    nav2_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(pkg_nav2, "launch", "bringup_launch.py")),
+    slam_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(pkg_nav2, "launch", "slam_launch.py")),
+        condition=IfCondition(slam),
         launch_arguments={
             "use_sim_time": use_sim_time,
             "params_file": params_file,
             "autostart": "True",
-            "slam": slam,
-            "map": map_yaml,
+        }.items(),
+    )
+
+    map_server = Node(
+        package="nav2_map_server",
+        executable="map_server",
+        name="map_server",
+        output="screen",
+        condition=IfCondition(PythonExpression(['not ', slam])),
+        parameters=[
+            params_file,
+            {"yaml_filename": map_yaml, "use_sim_time": use_sim_time},
+        ],
+    )
+
+    lifecycle_manager_map = Node(
+        package="nav2_lifecycle_manager",
+        executable="lifecycle_manager",
+        name="lifecycle_manager_map",
+        output="screen",
+        condition=IfCondition(PythonExpression(['not ', slam])),
+        parameters=[
+            {"autostart": True},
+            {"node_names": ["map_server"]},
+            {"use_sim_time": use_sim_time},
+        ],
+    )
+
+    map_to_odom = Node(
+        package="tf2_ros",
+        executable="static_transform_publisher",
+        name="map_to_odom_static_tf",
+        output="screen",
+        condition=IfCondition(PythonExpression(['not ', slam])),
+        arguments=["0", "0", "0", "0", "0", "0", "map", "odom"],
+    )
+
+    navigation_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(os.path.join(pkg_navigation, "launch", "navigation_core.launch.py")),
+        launch_arguments={
+            "use_sim_time": use_sim_time,
+            "params_file": params_file,
+            "autostart": "True",
+            "use_composition": "False",
         }.items(),
     )
 
@@ -174,6 +210,10 @@ def generate_launch_description():
         gazebo,
         spawn_entity,
         bridge,
-        nav2_launch,
+        map_server,
+        lifecycle_manager_map,
+        map_to_odom,
+        slam_launch,
+        navigation_launch,
         rviz_node,
     ])
