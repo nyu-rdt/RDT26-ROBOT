@@ -207,6 +207,8 @@ def launch_setup(context, *args, **kwargs):
                 "OdomF2M/MaxSize": LaunchConfiguration('OdomF2M/MaxSize').perform(context),
                 "OdomF2M/BundleAdjustment": LaunchConfiguration('OdomF2M/BundleAdjustment').perform(context),
                 "Odom/ScanKeyFrameThr": LaunchConfiguration('Odom/ScanKeyFrameThr').perform(context),
+                "Odom/FilteringStrategy": LaunchConfiguration('Odom/FilteringStrategy').perform(context),
+                "Mem/NotLinkedNodesKept": LaunchConfiguration('Mem/NotLinkedNodesKept').perform(context),
                 
                 # & Paramters both in rgbd_odometry and rtabmap
                 "Vis/CorType": LaunchConfiguration('Vis/CorType').perform(context),
@@ -215,7 +217,9 @@ def launch_setup(context, *args, **kwargs):
                 "Vis/Iterations": LaunchConfiguration('Vis/Iterations').perform(context),
                 "FAST/Threshold": LaunchConfiguration('FAST/Threshold').perform(context),
                 "Optimizer/Iterations": LaunchConfiguration('Optimizer/Iterations').perform(context),
-                
+                "PyDetector/Cuda": LaunchConfiguration('PyDetector/Cuda').perform(context),
+                "PyMatcher/Cuda": LaunchConfiguration('PyMatcher/Cuda').perform(context),
+                "SuperPoint/Cuda": LaunchConfiguration('SuperPoint/Cuda').perform(context),
                 }],
             remappings=[
                 ("rgb/image", LaunchConfiguration('rgb_topic_relay')),
@@ -301,7 +305,7 @@ def launch_setup(context, *args, **kwargs):
             namespace=LaunchConfiguration('namespace')),
 
         Node(
-            package='rtabmap_slam', executable='rtabmap', name="rtabmap", output="screen",
+            package='rtabmap_slam', executable='rtabmap', name="rtabmap_slam", output="screen",
             emulate_tty=True,
             parameters=[{
                 "subscribe_depth": LaunchConfiguration('depth'),
@@ -343,11 +347,12 @@ def launch_setup(context, *args, **kwargs):
                 "Mem/IncrementalMemory": ConditionalText("true", "false", IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' != 'true'"]))._predicate_func(context)).perform(context),
                 "Mem/InitWMWithAllNodes": ConditionalText("true", "false", IfCondition(PythonExpression(["'", LaunchConfiguration('localization'), "' == 'true'"]))._predicate_func(context)).perform(context),
                 
-                # & Parameters only in rtabmap
+                # & Parameters only in rtabmap_slam
                 "Rtabmap/DetectionRate": LaunchConfiguration('Rtabmap/DetectionRate').perform(context),
                 "Rtabmap/TimeThr": LaunchConfiguration('Rtabmap/TimeThr').perform(context),
                 "RGBD/LinearUpdate": LaunchConfiguration('RGBD/LinearUpdate').perform(context),
                 "RGBD/AngularUpdate": LaunchConfiguration('RGBD/AngularUpdate').perform(context),
+                "Rtabmap/MemoryThr": LaunchConfiguration('Rtabmap/MemoryThr').perform(context),
                 "Kp/MaxFeatures": LaunchConfiguration('Kp/MaxFeatures').perform(context),
                 "Mem/STMSize": LaunchConfiguration('Mem/STMSize').perform(context),
                 "Mem/RecentWmRatio": LaunchConfiguration('Mem/RecentWmRatio').perform(context),
@@ -355,9 +360,6 @@ def launch_setup(context, *args, **kwargs):
                 "Grid/CellSize": LaunchConfiguration('Grid/CellSize').perform(context),
                 "RGBD/CreateOccupancyGrid": LaunchConfiguration('RGBD/CreateOccupancyGrid').perform(context),
                 "Grid/3D": LaunchConfiguration('Grid/3D').perform(context),
-                "PyDetector/Cuda": LaunchConfiguration('PyDetector/Cuda').perform(context),
-                "PyMatcher/Cuda": LaunchConfiguration('PyMatcher/Cuda').perform(context),
-                "SuperPoint/Cuda": LaunchConfiguration('SuperPoint/Cuda').perform(context),
                 "Grid/RayTracing": LaunchConfiguration('Grid/RayTracing').perform(context),
                 "Grid/GroundIsObstacle": LaunchConfiguration('Grid/GroundIsObstacle').perform(context),
                 "Grid/FlatObstacleDetected": LaunchConfiguration('Grid/FlatObstacleDetected').perform(context),
@@ -372,13 +374,16 @@ def launch_setup(context, *args, **kwargs):
                 "Mem/ImagePreDecimation": LaunchConfiguration('Mem/ImagePreDecimation').perform(context),
                 "Grid/MapFrameProjection": LaunchConfiguration('Grid/MapFrameProjection').perform(context),
 
-                # & Paramters both in rgbd_odometry and rtabmap
+                # & Paramters both in rgbd_odometry and rtabmap_slam
                 "Vis/CorType": LaunchConfiguration('Vis/CorType').perform(context),
                 "Vis/MaxFeatures": LaunchConfiguration('Vis/MaxFeatures').perform(context),
                 "Vis/MinInliers": LaunchConfiguration('Vis/MinInliers').perform(context),
                 "Vis/Iterations": LaunchConfiguration('Vis/Iterations').perform(context),
                 "FAST/Threshold": LaunchConfiguration('FAST/Threshold').perform(context),
                 "Optimizer/Iterations": LaunchConfiguration('Optimizer/Iterations').perform(context),
+                "PyDetector/Cuda": LaunchConfiguration('PyDetector/Cuda').perform(context),
+                "PyMatcher/Cuda": LaunchConfiguration('PyMatcher/Cuda').perform(context),
+                "SuperPoint/Cuda": LaunchConfiguration('SuperPoint/Cuda').perform(context),
 
             }],
             remappings=[
@@ -429,7 +434,6 @@ def launch_setup(context, *args, **kwargs):
                 "qos_odom": LaunchConfiguration('qos_odom'),
                 "qos_camera_info": LaunchConfiguration('qos_camera_info'),
                 "qos_user_data": LaunchConfiguration('qos_user_data'),
-                "odometry_node_name": rtabmap_viz_odometry_node_name
             }],
             remappings=[
                 ("rgb/image", LaunchConfiguration('rgb_topic_relay')),
@@ -481,6 +485,10 @@ def generate_launch_description():
         get_package_share_directory('rtabmap_launch'), 'launch', 'config', 'rgbd.rviz'
     )
     
+    # config_rtab = os.path.join(
+    #     get_package_share_directory('nyurdt_slam'), 'launch', 'config', 'rtabmap.yaml'
+    # )
+
     return LaunchDescription([
         
         # Arguments
@@ -495,7 +503,7 @@ def generate_launch_description():
         DeclareLaunchArgument('log_level',    default_value='info', description="ROS logging level (debug, info, warn, error). For RTAB-Map\'s logger level, use \"args\" argument."),
 
         # Config files
-        DeclareLaunchArgument('cfg',      default_value='',                        description='To change RTAB-Map\'s parameters, set the path of config file (*.ini) generated by the standalone app.'),
+        DeclareLaunchArgument('cfg',      default_value="",               description='To change RTAB-Map\'s parameters, set the path of config file (*.ini) generated by the standalone app.'),
         DeclareLaunchArgument('gui_cfg',  default_value='~/.ros/rtabmap_gui.ini',  description='Configuration path of rtabmap_viz.'),
         DeclareLaunchArgument('rviz_cfg', default_value=config_rviz,               description='Configuration path of rviz2.'),
 
@@ -593,13 +601,16 @@ def generate_launch_description():
         
         # ! RTAB-Map parameters
 
-        # & Shared parameters in rtabmap and rgbd_odometry
+        # & Shared parameters in rtabmap_slam and rgbd_odometry
         DeclareLaunchArgument('Vis/CorType', default_value='0', description='Correspondences computation approach: 0 = Features Matching, 1=Optical Flow'),
         DeclareLaunchArgument('Vis/MaxFeatures', default_value='1000', description='TBD'),
         DeclareLaunchArgument('Vis/MinInliers', default_value='20', description='TBD'),
         DeclareLaunchArgument('Vis/Iterations', default_value='300', description='TBD'),
         DeclareLaunchArgument('FAST/Threshold', default_value='20', description='TBD'),
         DeclareLaunchArgument('Optimizer/Iterations', default_value='20', description='Optimization iterations.'),
+        DeclareLaunchArgument('PyDetector/Cuda', default_value='true', description='Use cuda'),
+        DeclareLaunchArgument('PyMatcher/Cuda', default_value='true', description='Used by SuperGlue'),
+        DeclareLaunchArgument('SuperPoint/Cuda', default_value='true', description='TBD'),
         
         # & Parameters only in rgbd_odometry
         DeclareLaunchArgument('Odom/Strategy', default_value='0', description='TBD'),
@@ -608,12 +619,15 @@ def generate_launch_description():
         DeclareLaunchArgument('OdomF2M/MaxSize', default_value='2000', description='Local map size: If > 0 (example 5000), the odometry will maintain a local map of X maximum words'),
         DeclareLaunchArgument('OdomF2M/BundleAdjustment', default_value='1', description='TBD'),
         DeclareLaunchArgument('Odom/ScanKeyFrameThr', default_value='.9', description='TBD'),
+        DeclareLaunchArgument('Odom/FilteringStrategy', default_value='0', description='0=No filtering 1=Kalman filtering 2=Particle filtering. This filter is used to smooth the odometry output.'),
+        DeclareLaunchArgument('Mem/NotLinkedNodesKept', default_value='true', description='Keep not linked nodes in db (rehearsed nodes and deleted nodes).'),
 
-        # & Parameters only in rtabmap
+        # & Parameters only in rtabmap_slam
         DeclareLaunchArgument('Rtabmap/DetectionRate', default_value='1', description='Detection rate. RTAB-Map will filter input images to satisfy this rate.'),
         DeclareLaunchArgument('Rtabmap/TimeThr', default_value='0', description='Maximum time allowed for the detector (ms) (0 means infinity).'),
         DeclareLaunchArgument('RGBD/LinearUpdate', default_value='0.1', description='Minimum linear displacement to update the map. Rehearsal is done prior to this, so weights are still updated'),
         DeclareLaunchArgument('RGBD/AngularUpdate', default_value='0.1', description='Minimum angular displacement to update the map. Rehearsal is done prior to this, so weights are still updated.'),
+        DeclareLaunchArgument('Rtabmap/MemoryThr', default_value='0', description='Maximum nodes in the Working Memory (0 means infinity). Similar to \"%s\", when the number of nodes in Working Memory (WM) exceeds this treshold, some nodes are transferred to Long-Term Memory to keep WM size fixed.'),
         DeclareLaunchArgument('Kp/MaxFeatures', default_value='500', description='0 no limits.'),
         DeclareLaunchArgument('Mem/STMSize', default_value='10', description='Short-term memory size.'),
         DeclareLaunchArgument('Mem/RecentWmRatio', default_value='0.2', description='Ratio of locations after the last loop closure in WM that cannot be transferred'),
@@ -621,9 +635,6 @@ def generate_launch_description():
         DeclareLaunchArgument('Grid/CellSize', default_value='0.05', description='Resolution of the occupancy grid'),
         DeclareLaunchArgument('RGBD/CreateOccupancyGrid', default_value='true', description='TBD'),
         DeclareLaunchArgument('Grid/3D', default_value='true', description='TBD'),
-        DeclareLaunchArgument('PyDetector/Cuda', default_value='true', description='Use cuda'),
-        DeclareLaunchArgument('PyMatcher/Cuda', default_value='true', description='Used by SuperGlue'),
-        DeclareLaunchArgument('SuperPoint/Cuda', default_value='true', description='TBD'),
         DeclareLaunchArgument('Grid/MapFrameProjection', default_value='false', description='Projection in map frame. On a 3D terrain and a fixed local camera transform (the cloud is created relative to ground), you may want to disable this to do the projection in robot frame instead'),
         DeclareLaunchArgument('Grid/RayTracing', default_value='false', description='TBD'),
         DeclareLaunchArgument('Grid/GroundIsObstacle', default_value='false', description='TBD'),
