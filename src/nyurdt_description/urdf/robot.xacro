@@ -58,12 +58,12 @@
 
 <!-- ── Frames ─────────────────────────────────────────────────────────── -->
 
-<link name="base_footprint"/>
+<!-- <link name="base_footprint"/>
 
 <joint name="base_footprint_joint" type="fixed">
     <parent link="base_footprint"/>
     <child link="base_link"/>
-</joint>
+</joint> -->
 
 <!-- base_link: Nav2 + RTAB-Map reference frame, at ground centre -->
 <link name="base_link"/>
