@@ -51,9 +51,9 @@ def generate_launch_description():
                 "enable_sync": "true",
 
                 # ── Depth / IR profiles ──────────────────────────────────────
-                "depth_module.depth_profile": "480x270x30",
-                "depth_module.infra_profile": "480x270x30",
-                "rgb_camera.color_profile":   "424x240x30",
+                "depth_module.depth_profile": "480x270x15",
+                "depth_module.infra_profile": "480x270x15",
+                "rgb_camera.color_profile":   "424x240x15",
 
                 # "unite_imu_method": "2",
 
