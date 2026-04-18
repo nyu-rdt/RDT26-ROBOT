@@ -1,209 +1,131 @@
 '''
-Detects AprilTag boards created for the 2023-2024 season
-Calculates the linear distances (x,y,z) & rotations (R, P, Y) between the tags and the cameras
+apriltag_detector.py
 '''
-
-from nyurdt_localization.tag_information import TAG_OBJECT_POINTS
-import time
 
 import cv2
 import numpy as np
-from scipy.spatial.transform import Rotation as R
-import apriltag
+from pupil_apriltags import Detector
 
-from typing import List, Tuple
+# === CAMERA INTRINSICS ===
+#Logitech c615 bad wire camera
+fx, fy = 473.8791885468119744, 473.6890399956254214
+cx, cy = 507.3397801369775948, 344.0735124444565827
+camera_matrix = np.array([[fx, 0, cx],
+                          [0, fy, cy],
+                          [0,  0,  1]])
+dist_coeffs = np.array([-6.040749085709139210e-03 ,-7.749846321697238414e-04, -4.293201829939494369e-04, 7.274042688794011939e-03, -1.841876380914878085e-03]) 
 
-class AprilTagDetector:
+# TAG SIZING
+tag_sizes = { #meters
+    18 : .069,
+    19 : .245,
+    20 : .196, 
+    21 : .069
+}
 
-    def __init__(self):
+def world_tag_corners(tag_size):
+    return np.array([[-tag_size/2, tag_size/2, 0], #top left 
+                     [tag_size/2, tag_size/2, 0], #top right
+                     [tag_size/2, -tag_size/2, 0], #bottom right
+                     [-tag_size/2, -tag_size/2, 0]]) #bottom left
 
-        # Video capture
-        self.cap = cv2.VideoCapture("/dev/video0")
-
-        # Calibration matrix
-        self.K = np.array([
-            [643.5364971797594, 0.0, 330.67767410964905],
-            [0.0, 644.1072230798435, 265.5947092030194],
-            [0.0, 0.0, 1.0]])
-
-        self.options = apriltag.DetectorOptions(families='tag36h11')
-        self.detector = apriltag.Detector(self.options)
-
-        self.BERM_POSITION_ONE_IDS = set([7,8,9,10,11,12])
-        self.BERM_POSITION_THREE_IDS = set([18,19,20,21])
+# === AXIS FOR VISUALIZATION ===
+def axis(tag_size):
+    return np.array([[0, 0 , 0],    #origin
+                    [tag_size/2, 0, 0],
+                    [0, tag_size/2, 0],
+                    [0, 0, -tag_size/2],
+                    ])
 
 
-    def get_pose(self, detections: List[apriltag.Detection]) -> Tuple[bool, np.ndarray, np.ndarray]:
-        """
-        Get the pose of detections relative to the camera
+# === DETECTOR INITIALIZATION ===
+detector = Detector(families='tag36h11', 
+                    nthreads=2, 
+                    quad_decimate=1.5, #higher -> faster, lower -> more accurate
+                    quad_sigma= 0.0, #edge detection blur, unnecessary for good quality webcam images
+                    refine_edges=True, 
+                    decode_sharpening=0.25) #contrast
 
-        :param detections: List of apriltag detections
-        :return: Tuple, first item indicated success, second is translation & third is rotation
-        """
-        # Lists for detection positions
-        berm_position_one_obj_points = []
-        berm_position_one_all_corners = []
+# === AXIS FOR VISUALIZATION ===
 
-        berm_position_three_obj_points = []
-        berm_position_three_all_corners = []
+# IMAGE CAPTURE
+# MAX_HEIGHT = 1000
+# MAX_WIDTH = 2000
+
+# print("loading image...")
+# image = cv2.imread("apriltag_images/apriltag.jpeg")
+
+# height, width = image.shape[:2]
+# scale = min(MAX_HEIGHT / height, MAX_WIDTH / width, 1) 
+# image = cv2.resize(image, (0,0), fx=scale,fy=scale) 
+# gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+# detections = detector.detect(gray)
+
+# for det in detections:
+#     tag_id = det.tag_id
+
+#     corners = np.array(det.corners, np.int32)
+#     cv2.polylines(image, [corners], True, (0, 255, 0), 2)
+#     cv2.putText(image, f"ID {tag_id}", tuple(corners[0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
     
-        # Filtering each detection into its appropriate list
-        for tag in detections:
-            # Get tag object & image points
-            tag_points = TAG_OBJECT_POINTS[tag.tag_id]
-            corners = np.array(tag.corners).astype(np.float32)
+#     tag_size = tag_sizes[tag_id]
+#     object_points = np.float32(world_tag_corners(tag_size))
+#     image_points = np.float32(corners)
+#     retval, rvec, tvec = cv2.solvePnP(object_points, image_points, camera_matrix, dist_coeffs)
 
-            # Check which board this detection belongs to
-            if tag.tag_id in self.BERM_POSITION_ONE_IDS:
-                berm_position_one_obj_points.extend(tag_points)
-                berm_position_one_all_corners.extend(corners)
-            elif tag.tag_id in self.BERM_POSITION_THREE_IDS:
-                berm_position_three_obj_points.extend(tag_points)
-                berm_position_three_all_corners.extend(corners)
+#     points_2d, _ = cv2.projectPoints(axis(tag_size), rvec, tvec, camera_matrix, dist_coeffs)
 
-        # Convert to numpy arrays
-        berm_position_one_obj_points = np.asarray(berm_position_one_obj_points)
-        berm_position_one_all_corners = np.asarray(berm_position_one_all_corners)
+#     #cv2.drawFrameAxes(axis(tag_size), camera_matrix, dist_coeffs, rvec, tvec, .5)
 
-        berm_position_three_obj_points = np.asarray(berm_position_three_obj_points)
-        berm_position_three_all_corners = np.asarray(berm_position_three_all_corners)
-
-        # Process positions of each board
-        pos_one_ret, pos_one_rvec, pos_one_tvec = self.process_points(
-            berm_position_one_obj_points,
-            berm_position_one_all_corners
-        )
-
-        pos_three_ret, pos_three_rvec, pos_three_tvec = self.process_points(
-            berm_position_three_obj_points,
-            berm_position_three_all_corners
-        )
-
-        # Get average pose between the two boards
-        rvec = np.zeros((3,))
-        tvec = np.zeros((3,))
-        num_boards = 0
-
-        if pos_one_ret:
-            rvec = rvec + pos_one_rvec
-            tvec = tvec + pos_one_tvec
-            num_boards += 1
-        if pos_three_ret:
-            rvec = rvec + pos_three_rvec
-            tvec = tvec + pos_three_tvec
-            num_boards += 1
-
-        # Terminate if no boards detected
-        if num_boards == 0:
-            return False, None, None
-
-        rvec /= num_boards
-        tvec /= num_boards
-
-        # Convert to euler angles
-        rmat, _ = cv2.Rodrigues(rvec)
-        euler = R.from_matrix(rmat).as_euler('xyz', degrees=True)
-
-        return True, tvec, euler
-    
-
-    def process_points(self, obj_points: np.ndarray, image_points: np.ndarray) -> Tuple[bool, np.ndarray, np.ndarray]:
-        """
-        Process two lists of corresponding points & get the translation & rotation
-
-        :param obj_points: Real world coordinates
-        :param image_points: Image points of apriltags in the image
-        :return: Tuple, first item indicated success, second is translation & third is rotation
-        """ 
-        # Terminate if no points
-        if obj_points.size <= 0:
-            return False, None, None
-        
-        # Solve for rotation & translation
-        ret, rvec, tvec = cv2.solvePnP(obj_points, image_points, self.K, None)
-        
-        if not ret:
-            return False, None, None
-
-        return True, rvec.flatten(), tvec.flatten()
+#     cv2.line(image, tuple(np.int32(points_2d[0].ravel())), tuple(np.int32(points_2d[1].ravel())), (0, 0 , 255), 3) #X -red
+#     cv2.line(image, tuple(np.int32(points_2d[0].ravel())), tuple(np.int32(points_2d[2].ravel())), (0, 255 , 0), 3) #Y -green
+#     cv2.line(image, tuple(np.int32(points_2d[0].ravel())), tuple(np.int32(points_2d[3].ravel())), (255, 0 , 0), 3) #X -blue
 
 
-    def draw_results(self, results: List[apriltag.Detection], image: np.ndarray) -> None:
-        """
-        Draw detections on an image
-        
-        :param results: List of apriltag detections
-        :param image: Image to be displayed & drawn on
-        :return: None
-        """
-        # For every detection...
-        for r in results:
-            # Get the corners in the image
-            (ptA, ptB, ptC, ptD) = r.corners
-            ptB = (int(ptB[0]), int(ptB[1]))
-            ptC = (int(ptC[0]), int(ptC[1]))
-            ptD = (int(ptD[0]), int(ptD[1]))
-            ptA = (int(ptA[0]), int(ptA[1]))
+# cv2.imshow("Displayed Apriltags", image)
+# cv2.waitKey(0)
 
-            # Draw a line between each corner
-            cv2.line(image, ptA, ptB, (0, 255, 0), 2)
-            cv2.line(image, ptB, ptC, (0, 255, 0), 2)
-            cv2.line(image, ptC, ptD, (0, 255, 0), 2)
-            cv2.line(image, ptD, ptA, (0, 255, 0), 2)
+# VIDEO FEED
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("can't open video")
+    exit()
 
-            # Draw a dot in the cnter
-            (cX, cY) = (int(r.center[0]), int(r.center[1]))
-            cv2.circle(image, (cX, cY), 5, (0, 0, 255), -1)
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        print("issue with frame!")
+        break
+    else:
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-        # Show the image
-        cv2.imshow("Apriltag Detection", image)
+        detections = detector.detect(gray)
+
+        for det in detections:
+            print(tag_id)
+            tag_id = det.tag_id
+
+            corners = np.array(det.corners, np.int32)
+            cv2.polylines(frame, [corners], True, (0, 255, 0), 2)
+            cv2.putText(frame, f"ID {tag_id}", tuple(corners[0]), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 255), 2)
+            
+            tag_size = tag_sizes[tag_id]
+            object_points = np.float32(world_tag_corners(tag_size))
+            image_points = np.float32(corners)
+            retval, rvec, tvec = cv2.solvePnP(object_points, image_points, camera_matrix, dist_coeffs)
+
+            points_2d, _ = cv2.projectPoints(axis(tag_size), rvec, tvec, camera_matrix, dist_coeffs)
+
+            #cv2.drawFrameAxes(frame, camera_matrix, dist_coeffs, rvec, tvec, .5) 
+
+            #DRAW AXIS
+            cv2.line(frame, tuple(np.int32(points_2d[0].ravel())), tuple(np.int32(points_2d[1].ravel())), (0, 0 , 255), 3) #X -red
+            cv2.line(frame, tuple(np.int32(points_2d[0].ravel())), tuple(np.int32(points_2d[2].ravel())), (0, 255 , 0), 3) #Y -green
+            cv2.line(frame, tuple(np.int32(points_2d[0].ravel())), tuple(np.int32(points_2d[3].ravel())), (255, 0 , 0), 3) #X -blue
+
+        cv2.imshow("Displayed frame", frame)
         cv2.waitKey(1)
-        time.sleep(0.1)
 
-
-    def get_frame(self) -> Tuple[bool, np.ndarray]:
-        """
-        Capture a single image frame
-
-        :return: Tuple, first item indicates success, second is the image frame
-        """
-        return self.cap.read()
-
-
-    def get_detections(self, raw_image: np.ndarray) -> List[apriltag.Detection]:
-        """
-        Get apriltag detections from raw image
-
-        :param raw_image: Image to be checked for detections
-        :return: List of apriltag detections
-        """
-        # Get all results
-        gray = cv2.cvtColor(raw_image, cv2.COLOR_BGR2GRAY)
-        results_raw  = self.detector.detect(gray)
-
-        # Filter out unused tags
-        results = [tag for tag in results_raw if tag.tag_id in TAG_OBJECT_POINTS]
-        return results
-
-
-def main():
-
-    aptag_node = AprilTagDetector()
-
-    while True:
-        ret, frame = aptag_node.get_frame()
-        if not ret: continue
-
-        detections = aptag_node.get_detections(frame)
-        aptag_node.draw_results(detections, frame)
-
-        if not detections: continue
-
-        _, tvec, euler = aptag_node.get_pose(detections)
-
-        print("Translation:", tvec)
-        print("Rotation:", euler)
-
-
-if __name__ == "__main__":
-    main()
+ 
+cv2.destroyAllWindows()
