@@ -173,14 +173,14 @@ def generate_launch_description():
                 "RGBD/AngularUpdate": ".3",
 
                 # ~ 
-                "Rtabmap/MemoryThr": "50",
+                "Rtabmap/MemoryThr": "0",
 
                 # ^ Use default for now (500)
                 # ~ GOOD PARAM, DO MORE TESTING, LOWER MEANS LESS POINTS TO REF, MORE MEANS MORE POINTS TO REF. MORE POINTS MEANS MORE COMPUTATION, BUT ALSO MORE ACCURATE
                 "Kp/MaxFeatures": "600",
 
                 # TODO: DO MORE TESTING, DID NOT SEE MUCH DIFFERENCE IN TESTING
-                "Mem/STMSize": "10",
+                "Mem/STMSize": "1000",
 
                 # TODO: DO MORE TESTING, DID NOT SEE MUCH DIFFERENCE IN TESTING
                 "Mem/RecentWmRatio": "0.2",
