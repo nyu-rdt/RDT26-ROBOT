@@ -29,6 +29,7 @@ class DepositionNode(Node):
         self._finished = False
 
         self.start_yaw = None      # set when stage_1 begins
+        self.depo_turn_time = 10
 
 
     def _telemetry_cb(self, msg: RobotStatus):
@@ -61,15 +62,24 @@ class DepositionNode(Node):
         if self.current_state != self.stage_1:
             self.get_logger().info("Deposition stage 1: Turn 180")
             self.current_state = self.stage_1
-        self.publish_msg(0x00)  # turn 180 command
-        # replace with real IMU yaw check from your pose topic
-        return 'stage_2'
+
+        self.publish_msg(0x50) # turn right at 25%
+        self.start_yaw = time.time()
+
+        # for now this is a timer but this should replaced with 
+        # real IMU yaw check from  realsense camera
+        if self.start_yaw - time.time() >= self.depo_turn_time:
+            return 'stage_2'
+        
+        return 'stage_1'
 
     def stage_2(self):
         # opening the hatch
         if self.current_state != self.stage_2:
             self.get_logger().info("Deposition stage 2: Open hatch")
             self.current_state = self.stage_2
+
+        # may need to insert check here that depo bin is actually open
 
         self.publish_msg(0x70)
         return 'stage_3'
