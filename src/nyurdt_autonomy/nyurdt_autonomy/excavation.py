@@ -58,7 +58,7 @@ class ExcavationNode(Node):
         ratio = current_draw / nominal
         if ratio > 2.0:
             self.get_logger().error("LADDER JAM RISK - Triggering Anti-Jam")
-            self.publish_msg(0x00)  # replace with real anti-jam byte
+            # self.publish_msg(0x00)  # replace with real anti-jam byte
         elif ratio < 0.4:
             self.get_logger().info("Low current - nothing being excavated")
 

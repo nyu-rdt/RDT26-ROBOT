@@ -55,7 +55,6 @@ class DepositionNode(Node):
         self.create_machine()
         self.machine.execute()
 
-
     # ── State Machines ───────────────────────────────
 
     def stage_1(self):
@@ -63,9 +62,11 @@ class DepositionNode(Node):
             self.get_logger().info("Deposition stage 1: Turn 180")
             self.current_state = self.stage_1
 
-        self.publish_msg(0x50) # turn right at 25%
-        self.start_yaw = time.time()
+        if not self.start_yaw:
+            self.start_yaw = time.time()  # placeholder for actual yaw reading
 
+        self.publish_msg(0x50) # turn right at 25%
+      
         # for now this is a timer but this should replaced with 
         # real IMU yaw check from  realsense camera
         if self.start_yaw - time.time() >= self.depo_turn_time:
