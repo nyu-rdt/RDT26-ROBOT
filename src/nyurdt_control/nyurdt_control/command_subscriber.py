@@ -1,23 +1,20 @@
 '''
 command_subscriber.py
-
-this file may be deleted or reconfigured in the future
 '''
 
 import rclpy
 from rclpy.node import Node
+import subprocess
+from .i2c_comms import i2c_init, send_HEX
 
-from .i2c_comms import send_HEX
 
 from std_msgs.msg import Byte, Int16
 from std_srvs.srv import Empty
 
-import subprocess
-
 class CommandSubscriber(Node):
     def __init__(self):
         super().__init__('command_subscriber')
-
+        i2c_init()
         # Subscibers for incoming commands
         self.subscription_manual = self.create_subscription(
             Byte, '/robotCmds/manual', self.manual_callback, 10)
@@ -27,7 +24,7 @@ class CommandSubscriber(Node):
 
         # Services for beginning autonomies
         self.excavation_srv = self.create_service(Empty, 'excavation_autonomy', self.excavation_auto)
-        self.deposition_srv = self.create_service(Empty, 'deposition_autonomy', self.deposition_auto)
+        self.construction_srv = self.create_service(Empty, 'construction_autonomy', self.construction_auto)
 
 
     def manual_callback(self, data: Byte) -> None:
@@ -40,12 +37,8 @@ class CommandSubscriber(Node):
         self.get_logger().info("Incoming manual control command: %s" % str(data.data))
         
         # Code from the i2c_comms
-        send_HEX(int.from_bytes(data.data, 'little'));
-        # send_HEX(data.data)
-        # if data.data == b'\x80':
-        #    dictionary = get_data_dictionary()
-        #    print(dictionary)
-        #  
+        send_HEX(int.from_bytes(data.data, 'little'))
+ 
 
     def autonomy_callback(self, data: Int16) -> None:
         """
@@ -66,19 +59,17 @@ class CommandSubscriber(Node):
         return response
     
 
-    def deposition_auto(self, request: Empty, response: Empty) -> Empty:
+    def construction_auto(self, request: Empty, response: Empty) -> Empty:
         """
-        Begin deposition autonomy
+        Begin construction autonomy
         """
-        subprocess.Popen(['ros2', 'run', 'nyurdt_autonomy', 'deposition'])
+        subprocess.Popen(['ros2', 'run', 'nyurdt_autonomy', 'construction'])
         return response
         
         
 def main(args=None):
     rclpy.init(args=args)
-
     subscriber = CommandSubscriber()
-
     rclpy.spin(subscriber)
 
     subscriber.destroy_node()
