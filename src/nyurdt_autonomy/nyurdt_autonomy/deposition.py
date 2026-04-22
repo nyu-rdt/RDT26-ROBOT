@@ -117,3 +117,15 @@ class DepositionNode(Node):
         self.publish_msg(0x71)
         self._finished = True
         return None
+    
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = DepositionNode()
+    node.execute()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()

@@ -145,3 +145,13 @@ class ExcavationNode(Node):
         return 'stage_5'
 
     
+def main(args=None):
+    rclpy.init(args=args)
+    node = ExcavationNode()
+    node.execute()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()
