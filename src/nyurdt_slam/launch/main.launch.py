@@ -208,6 +208,7 @@ def launch_setup(context, *args, **kwargs):
                 "OdomF2M/BundleAdjustment": LaunchConfiguration('OdomF2M/BundleAdjustment').perform(context),
                 "Odom/ScanKeyFrameThr": LaunchConfiguration('Odom/ScanKeyFrameThr').perform(context),
                 "Odom/FilteringStrategy": LaunchConfiguration('Odom/FilteringStrategy').perform(context),
+                # "Odom/Holonomic": LaunchConfiguration('Odom/Holonomic').perform(context),
                 "Mem/NotLinkedNodesKept": LaunchConfiguration('Mem/NotLinkedNodesKept').perform(context),
                 
                 # & Paramters both in rgbd_odometry and rtabmap
@@ -217,6 +218,9 @@ def launch_setup(context, *args, **kwargs):
                 "Vis/Iterations": LaunchConfiguration('Vis/Iterations').perform(context),
                 "FAST/Threshold": LaunchConfiguration('FAST/Threshold').perform(context),
                 "Optimizer/Iterations": LaunchConfiguration('Optimizer/Iterations').perform(context),
+                "Optimizer/Strategy": LaunchConfiguration('Optimizer/Strategy').perform(context),
+                "Optimizer/Robust": LaunchConfiguration('Optimizer/Robust').perform(context),
+                "Optimizer/GravitySigma": LaunchConfiguration('Optimizer/GravitySigma').perform(context),
                 "PyDetector/Cuda": LaunchConfiguration('PyDetector/Cuda').perform(context),
                 "PyMatcher/Cuda": LaunchConfiguration('PyMatcher/Cuda').perform(context),
                 "SuperPoint/Cuda": LaunchConfiguration('SuperPoint/Cuda').perform(context),
@@ -359,6 +363,7 @@ def launch_setup(context, *args, **kwargs):
                 "Grid/DepthDecimation": LaunchConfiguration('Grid/DepthDecimation').perform(context),
                 "Grid/CellSize": LaunchConfiguration('Grid/CellSize').perform(context),
                 "RGBD/CreateOccupancyGrid": LaunchConfiguration('RGBD/CreateOccupancyGrid').perform(context),
+                "RGBD/OptimizeMaxError": LaunchConfiguration('RGBD/OptimizeMaxError').perform(context),
                 "Grid/3D": LaunchConfiguration('Grid/3D').perform(context),
                 "Grid/RayTracing": LaunchConfiguration('Grid/RayTracing').perform(context),
                 "Grid/GroundIsObstacle": LaunchConfiguration('Grid/GroundIsObstacle').perform(context),
@@ -381,6 +386,9 @@ def launch_setup(context, *args, **kwargs):
                 "Vis/Iterations": LaunchConfiguration('Vis/Iterations').perform(context),
                 "FAST/Threshold": LaunchConfiguration('FAST/Threshold').perform(context),
                 "Optimizer/Iterations": LaunchConfiguration('Optimizer/Iterations').perform(context),
+                "Optimizer/Strategy": LaunchConfiguration('Optimizer/Strategy').perform(context),
+                "Optimizer/Robust": LaunchConfiguration('Optimizer/Robust').perform(context),
+                "Optimizer/GravitySigma": LaunchConfiguration('Optimizer/GravitySigma').perform(context),
                 "PyDetector/Cuda": LaunchConfiguration('PyDetector/Cuda').perform(context),
                 "PyMatcher/Cuda": LaunchConfiguration('PyMatcher/Cuda').perform(context),
                 "SuperPoint/Cuda": LaunchConfiguration('SuperPoint/Cuda').perform(context),
@@ -477,6 +485,21 @@ def launch_setup(context, *args, **kwargs):
                 ('rgb/camera_info', LaunchConfiguration('camera_info_topic')),
                 ('rgbd_image', LaunchConfiguration('rgbd_topic_relay')),
                 ('cloud', 'voxel_cloud')]),
+        
+        # Node(
+        #     package='imu_filter_madgwick',
+        #     executable='imu_filter_madgwick_node',
+        #     name='imu_filter',
+        #     parameters=[{
+        #         'use_mag': False,
+        #         'publish_tf': False,
+        #         'world_frame': 'enu'
+        #     }],
+        #     remappings=[
+        #         ('imu/data_raw', '/camera/camera/imu'),
+        #         ('imu/data', '/camera/camera/imu/filtered')
+        #     ]
+        # ),
         ]
 
 def generate_launch_description():
@@ -608,6 +631,9 @@ def generate_launch_description():
         DeclareLaunchArgument('Vis/Iterations', default_value='300', description='TBD'),
         DeclareLaunchArgument('FAST/Threshold', default_value='20', description='TBD'),
         DeclareLaunchArgument('Optimizer/Iterations', default_value='20', description='Optimization iterations.'),
+        DeclareLaunchArgument('Optimizer/Strategy', default_value='0', description='Graph optimization strategy: 0=TORO, 1=g2o, and 2=GTSAM.'),
+        DeclareLaunchArgument('Optimizer/Robust', default_value='false', description='Robust graph optimization using Vertigo (only work for g2o and GTSAM optimization strategies). Not compatible with \"RGBD/OptimizeMaxError\" if enabled.'),
+        DeclareLaunchArgument('Optimizer/GravitySigma', default_value='0.3', description='Gravity sigma value (>=0, typically between 0.1 and 0.3). Optimization is done while preserving gravity orientation of the poses. This should be used only with visual/lidar inertial odometry approaches, for which we assume that all odometry poses are aligned with gravity. Set to 0 to disable gravity constraints. Currently supported only with g2o and GTSAM optimization strategies'),
         DeclareLaunchArgument('PyDetector/Cuda', default_value='true', description='Use cuda'),
         DeclareLaunchArgument('PyMatcher/Cuda', default_value='true', description='Used by SuperGlue'),
         DeclareLaunchArgument('SuperPoint/Cuda', default_value='true', description='TBD'),
@@ -620,6 +646,7 @@ def generate_launch_description():
         DeclareLaunchArgument('OdomF2M/BundleAdjustment', default_value='1', description='TBD'),
         DeclareLaunchArgument('Odom/ScanKeyFrameThr', default_value='.9', description='TBD'),
         DeclareLaunchArgument('Odom/FilteringStrategy', default_value='0', description='0=No filtering 1=Kalman filtering 2=Particle filtering. This filter is used to smooth the odometry output.'),
+        DeclareLaunchArgument('Odom/GuessMotion', default_value='true', description='If the robot is holonomic (strafing commands can be issued). If not, y value will be estimated from x and yaw values.'),
         DeclareLaunchArgument('Mem/NotLinkedNodesKept', default_value='true', description='Keep not linked nodes in db (rehearsed nodes and deleted nodes).'),
 
         # & Parameters only in rtabmap_slam
@@ -627,6 +654,7 @@ def generate_launch_description():
         DeclareLaunchArgument('Rtabmap/TimeThr', default_value='0', description='Maximum time allowed for the detector (ms) (0 means infinity).'),
         DeclareLaunchArgument('RGBD/LinearUpdate', default_value='0.1', description='Minimum linear displacement to update the map. Rehearsal is done prior to this, so weights are still updated'),
         DeclareLaunchArgument('RGBD/AngularUpdate', default_value='0.1', description='Minimum angular displacement to update the map. Rehearsal is done prior to this, so weights are still updated.'),
+        DeclareLaunchArgument('RGBD/OptimizeMaxError', default_value='0.1', description='Reject loop closures if optimization error is greater than this value (0=disabled). This will help to detect when a wrong loop closure is added to the graph. Not compatible with \"Optimizer/Robust\" if enabled.'),
         DeclareLaunchArgument('Rtabmap/MemoryThr', default_value='0', description='Maximum nodes in the Working Memory (0 means infinity). Similar to \"%s\", when the number of nodes in Working Memory (WM) exceeds this treshold, some nodes are transferred to Long-Term Memory to keep WM size fixed.'),
         DeclareLaunchArgument('Kp/MaxFeatures', default_value='500', description='0 no limits.'),
         DeclareLaunchArgument('Mem/STMSize', default_value='10', description='Short-term memory size.'),

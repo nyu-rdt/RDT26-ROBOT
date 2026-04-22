@@ -178,14 +178,13 @@
 
 <!-- ── RealSense D435 ──────────────────────────────────────────────────── -->
 <!-- mounted at front face centre, ~33cm off ground -->
-<xacro:sensor_d435 parent="base_link" name="camera" use_nominal_extrinsics="true">
-    <origin xyz="0.37 0.0 0.33" rpy="0 0.56024 0"/>
+<xacro:sensor_d435 parent="base_link" name="camera0" use_nominal_extrinsics="true">
+    <origin xyz="0.37 0.0 0.33" rpy="0 0.42 0"/>
 </xacro:sensor_d435>
 
-<gazebo reference="camera_link">
+<gazebo reference="camera0_link">
     <sensor name="realsense_d435" type="rgbd_camera">
-        <topic>realsense</topic>
-        <camera>
+        <topic>realsense/image_raw</topic> <camera>
             <horizontal_fov>1.047</horizontal_fov>
             <image>
                 <width>640</width>
