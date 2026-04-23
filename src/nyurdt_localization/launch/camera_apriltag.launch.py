@@ -16,6 +16,7 @@ def generate_launch_description():
     device2 = LaunchConfiguration('right_cam')
     device3 = LaunchConfiguration('back_cam')
 
+    # USE LogitechC615c.yaml for all logitechs for now, most accurate
     apriltag_cfg = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'tags_36h11.yaml')
     camera_cfg_a = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC615.yaml')
     camera_cfg_b = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'Innomaker.yaml')
