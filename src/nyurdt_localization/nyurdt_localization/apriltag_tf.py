@@ -103,14 +103,14 @@ class AprilTagLocalizationNode(Node):
                     Time()
                 )
 
-                t = tag_to_cam_tf.transform.translation
-                q = tag_to_cam_tf.transform.rotation
-                self.get_logger().info(f"{tag_id}-> {camera_frame} dist =  {self.distance(t.x, t.y, t.z)}m", throttle_duration_sec=0.5)
+                tc_t = tag_to_cam_tf.transform.translation
+                tc_q = tag_to_cam_tf.transform.rotation
+                self.get_logger().info(f"{tag_id}-> {camera_frame} dist =  {self.distance(tc_t.x, tc_t.y, tc_t.z)}m", throttle_duration_sec=0.5)
 
-                trans = ts.translation_matrix([t.x, t.y, t.z])
-                rot = ts.quaternion_matrix([q.x, q.y, q.z, q.w])
+                tc_trans = ts.translation_matrix([tc_t.x, tc_t.y, tc_t.z])
+                tc_rot = ts.quaternion_matrix([tc_q.x, tc_q.y, tc_q.z, tc_q.w])
 
-                T_tag_to_cam = ts.concatenate_matrices(trans, rot)
+                T_tag_to_cam = ts.concatenate_matrices(tc_trans, tc_rot)
 
                 # ── map→tag (from known arena layout) ───────────────────────
                 x, y, z, roll, pitch, yaw = TAG_POSES_IN_MAP[tag_id]
@@ -119,13 +119,21 @@ class AprilTagLocalizationNode(Node):
                 ts.euler_matrix(roll, pitch, yaw)
                 )
 
-                # ── camera→base_link (from your URDF, fixed offset) ─────────
-                # adjust these to match where camera sits on the robot
-                cam_x, cam_y, cam_z, cam_r, cam_p, cam_yaw = 0, 0, 0, 0, 0, 0   # metres forward, left, up
-                T_cam_to_base = ts.concatenate_matrices(
-                    ts.translation_matrix([-cam_x, -cam_y, -cam_z]),
-                    ts.euler_matrix(cam_r, cam_p, cam_yaw)
+                # ── camera→base_link (from robot.xacro) ─────────
+
+                cam_to_base_tf = self.tf_buffer.lookup_transform(
+                    'base_link',
+                    camera_frame,
+                    Time()
                 )
+
+                cb_t = cam_to_base_tf.transform.translation
+                cb_q = cam_to_base_tf.transform.rotation
+
+                cb_trans = ts.translation_matrix([cb_t.x, cb_t.y, cb_t.z])
+                cb_rot = ts.quaternion_matrix([cb_q.x, cb_q.y, cb_q.z, cb_q.w])
+
+                T_cam_to_base = ts.concatenate_matrices(cb_trans, cb_rot)
 
 
                 # ── full chain: map → base_link ──────────────────────────────

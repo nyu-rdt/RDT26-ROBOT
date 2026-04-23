@@ -106,6 +106,7 @@ def calibrate(frames: List[np.ndarray]) -> None:
 
    # # Print output if calibration successful
    if ret:
+      print("RMS Reprojection Error:", ret)
       print("DISTORTION COEFFICIENTS:")
       print(dist.tolist())
 
