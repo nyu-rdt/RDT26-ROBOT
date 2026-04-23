@@ -131,7 +131,9 @@ def generate_launch_description():
 
 
                 # ! HORRIBLE PARAMETER SETTING, DO MORE TESTING
-                # "Odom/Strategy": "1",
+                #"Odom/Strategy": "1",
+
+                #"Reg/Force3DoF" : "true",
 
                 # * GOOD PARAM, DO NOT TOUCH!
                 # "Vis/CorType": "1",

@@ -201,6 +201,7 @@ def launch_setup(context, *args, **kwargs):
                 "always_process_most_recent_frame": LaunchConfiguration('odom_always_process_most_recent_frame'),
                 
                 # & Parameters only in rgbd_odometry
+                #"Reg/Force3DoF" : LaunchConfiguration('Reg/Force3DoF').perform(context),
                 "Odom/Strategy": LaunchConfiguration('Odom/Strategy').perform(context),
                 "Odom/ImageDecimation": LaunchConfiguration('Odom/ImageDecimation').perform(context),
                 "Odom/VisKeyFrameThr": LaunchConfiguration('Odom/VisKeyFrameThr').perform(context),
@@ -308,6 +309,7 @@ def launch_setup(context, *args, **kwargs):
             package='rtabmap_slam', executable='rtabmap', name="rtabmap_slam", output="screen",
             emulate_tty=True,
             parameters=[{
+                #"Reg/Force3DoF" : LaunchConfiguration('Reg/Force3DoF').perform(context),
                 "subscribe_depth": LaunchConfiguration('depth'),
                 "subscribe_rgbd": LaunchConfiguration('subscribe_rgbd'),
                 "subscribe_rgb": LaunchConfiguration('subscribe_rgb'),
@@ -613,6 +615,7 @@ def generate_launch_description():
         DeclareLaunchArgument('SuperPoint/Cuda', default_value='true', description='TBD'),
         
         # & Parameters only in rgbd_odometry
+        DeclareLaunchArgument('Reg/Force3DoF', default_value='false', description='force 3 degrees-of-freedom transform (3Dof: x,y and yaw). Parameters z, roll and pitch will be set to 0.'),
         DeclareLaunchArgument('Odom/Strategy', default_value='0', description='TBD'),
         DeclareLaunchArgument('Odom/ImageDecimation', default_value='1', description='TBD'),
         DeclareLaunchArgument('Odom/VisKeyFrameThr', default_value='150', description='Create a new keyframe when the number of inliers drops under this threshold. Setting the value to 0 means that a keyframe is created for each processed frame'),
