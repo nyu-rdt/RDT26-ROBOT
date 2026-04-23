@@ -27,8 +27,8 @@ def read_camera_feed(source: Union[int, str] = 0) -> List[np.ndarray]:
    if not cap.isOpened():
       return []
    
-   cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1600)
-   cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 896)
+   cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+   cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
    print(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
    print(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))

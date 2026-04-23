@@ -1,0 +1,26 @@
+# camera w/ velcro on wire
+#calibrated by Calista 
+image_width: 640
+image_height: 480
+camera_name: Logitech_2
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [623.5383886014736, 0.0, 322.3542438052796,
+    0.0, 624.7591290485207, 233.37690136524094,
+    0.0, 0.0, 1.0]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [-0.03301019671648192, -0.6777293417974447, -0.002517291093321374, -0.0005175213525226809, 1.848829366971877]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1,0,0,0,1,0,0,0,1]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [623.5383886014736, 0.0, 322.3542438052796,0,
+    0.0, 624.7591290485207, 233.37690136524094,0,
+    0.0, 0.0, 1.0,0]
