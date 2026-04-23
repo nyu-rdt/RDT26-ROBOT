@@ -8,16 +8,16 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
-    device_arg1 = DeclareLaunchArgument('front_cam', default_value='0')
+    device_arg1 = DeclareLaunchArgument('front_cam', default_value='1')
     device_arg2 = DeclareLaunchArgument('right_cam', default_value='2')
-    device_arg3 = DeclareLaunchArgument('back_cam', default_value='1')
+    device_arg3 = DeclareLaunchArgument('back_cam', default_value='0')
 
     device1 = LaunchConfiguration('front_cam')
     device2 = LaunchConfiguration('right_cam')
     device3 = LaunchConfiguration('back_cam')
 
     apriltag_cfg = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'tags_36h11.yaml')
-    camera_cfg_a = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC6151.yaml')
+    camera_cfg_a = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC6153.yaml')
     camera_cfg_b = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'Innomaker.yaml')
     camera_cfg_c = os.path.join(get_package_share_directory('nyurdt_localization'), 'config', 'LogitechC615c.yaml')
 
@@ -34,10 +34,10 @@ def generate_launch_description():
                 namespace='front_cam',
                 parameters=[
                     {'camera': device1},
-                    {'width': 1280},
-                    {'height': 720},
+                    {'width': 640},
+                    {'height': 360},
                     {'format': 'MJPEG'},
-                    {'camera_info_url': 'file://' + camera_cfg_a},
+                    {'camera_info_url': 'file://' + camera_cfg_b},
                     {'frame_id': 'front_camera_optical_frame_link'}
                 ],
                 extra_arguments=[{'use_intra_process_comms': True}],
