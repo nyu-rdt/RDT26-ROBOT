@@ -96,12 +96,12 @@ class ExcavationNode(Node):
 
         tel = self.latest_telemetry
 
-        if tel.exc_pos_err == True:
+        if tel.exc_pos_error == True:
             self.publish_msg(0x61)
             sleep(4)
             self.publish_msg(0x62)
         
-        if tel.exc_pos_err == False:
+        if tel.exc_pos_error == False:
             return 'stage_3'
         
         return 'stage_2'
