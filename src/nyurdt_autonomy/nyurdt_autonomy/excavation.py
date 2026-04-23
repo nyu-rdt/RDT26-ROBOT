@@ -96,6 +96,9 @@ class ExcavationNode(Node):
 
         tel = self.latest_telemetry
 
+        if tel is None:
+            return 'stage_2'
+
         if tel.exc_pos_error == True:
             self.publish_msg(0x61)
             sleep(4)
@@ -115,7 +118,7 @@ class ExcavationNode(Node):
         self.check_ladder_health()
 
         tel = self.latest_telemetry
-        if tel is not None and tel.bin_mass >= self.goal_mass:
+        if tel is not None and tel.total_mass >= self.goal_mass:
             return 'stage_4'
         if time.time() - self.dig_start_time > self.dig_time:
             return 'stage_4'
