@@ -90,12 +90,12 @@ class CmdVelBridge(Node):
 
         self.create_subscription(
             Twist,
-            '/cmd_vel',          # Nav2 output topic
+            '/cmd_vel_nav',          # Nav2 output topic (from /cmd_vel)
             self._cmd_vel_cb,
             10,
         )
 
-        self._pub = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
+        self._pub = self.create_publisher(Byte, '/robotCmds/manual', 10) # changed to /robotCmds/manual
 
         self.get_logger().info("CmdVelBridge ready — listening on /cmd_vel")
 

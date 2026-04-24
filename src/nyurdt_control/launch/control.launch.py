@@ -34,12 +34,19 @@ def generate_launch_description():
         remappings=[('/cmd_vel', '/cmd_vel_joy')]
     )
 
+    teensy_bridge_node = Node(
+        package='nyurdt_control',
+        executable='cmd_vel_bridge',
+        output='screen'
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument(
             'use_sim_time',
             default_value='false',
             description='Use sim time if true'),
-        manual_control_node,
+        # manual_control_node,
         joy_node,
-        teleop_node
+        teleop_node,
+        teensy_bridge_node
     ])

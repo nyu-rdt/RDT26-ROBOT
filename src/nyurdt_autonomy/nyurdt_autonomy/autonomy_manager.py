@@ -84,7 +84,7 @@ class AutonomyManager(Node):
             10,
         )
 
-        self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
+        # self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
 
         self.task_pub = self.create_publisher(String, "/autonomy/current_task", 10)
 
@@ -92,7 +92,7 @@ class AutonomyManager(Node):
 
         self._nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
 
-        self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
+        self.publisher = self.create_publisher(Byte, '/robotCmds/manual', 10)
 
         self.get_logger().info("AutonomyManager started - state: INIT_LOCALIZING")
 

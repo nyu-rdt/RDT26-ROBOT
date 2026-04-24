@@ -26,6 +26,7 @@ setup(
         'console_scripts': [
             'command_subscriber=nyurdt_control.command_subscriber:main',
             'i2c_reader=nyurdt_control.i2c_reader:main',
+            'cmd_vel_bridge=nyurdt_control.cmd_vel_bridge:main'
         ],
     },
 )
