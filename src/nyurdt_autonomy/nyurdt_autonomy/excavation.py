@@ -18,7 +18,7 @@ class ExcavationNode(Node):
     def __init__(self):
         super().__init__('excavation_node')
 
-        self.publisher = self.create_publisher(Byte, '/robotCmdsM', 10)
+        self.publisher = self.create_publisher(Byte, '/robotCmds/manual', 10)
         self.conveyor_target_pub = self.create_publisher(Float32, '/robot/target_conveyor_pos', 10)
 
         # Telemetry — stored as data, not the subscription object
