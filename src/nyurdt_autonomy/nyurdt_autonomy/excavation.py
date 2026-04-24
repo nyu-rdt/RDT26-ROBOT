@@ -49,7 +49,8 @@ class ExcavationNode(Node):
         msg = Byte()
         # msg.data = data.to_bytes(1, 'little')
         self.publisher.publish(msg)
-        self.get_logger().info(f"Publishing: {msg} with data {msg.data}")
+        data = msg.data
+        self.get_logger().info(f"Publishing: {msg} with data 0x{int.from_bytes(data, 'little'):02x}")
 
     def check_ladder_health(self):
         if self.latest_telemetry is None:
