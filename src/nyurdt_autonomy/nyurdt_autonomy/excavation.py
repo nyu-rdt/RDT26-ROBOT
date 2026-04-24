@@ -86,7 +86,7 @@ class ExcavationNode(Node):
             self._set_conveyor_target(0.0)
 
         self.get_logger().info("Publishing excavation start command")
-        self.publish_msg(0x65)
+        self.publish_msg(b"\x65") 
         return 'stage_2'
 
     def stage_2(self):
