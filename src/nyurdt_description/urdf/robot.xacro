@@ -179,6 +179,7 @@
 <!-- ── RealSense D435 ──────────────────────────────────────────────────── -->
 <!-- mounted at front face centre, ~33cm off ground -->
 <xacro:sensor_d435 parent="base_link" name="camera" use_nominal_extrinsics="true">
+    <!-- <origin xyz="0.37 0.0 1.12" rpy="0 0 0"/> -->
     <origin xyz="0.37 0.0 0.33" rpy="0 0.767945 0"/>
 </xacro:sensor_d435>
 

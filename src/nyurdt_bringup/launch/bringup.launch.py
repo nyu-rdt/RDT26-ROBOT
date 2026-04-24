@@ -119,6 +119,7 @@ def generate_launch_description():
                 "frame_id": "base_link",
                 "sync_queue_size": "10",
                 "topic_queue_size": "10",
+                "stereo": "true",
 
                 # * BEST PARAM, DO NOT TOUCH, FAST AND ACCURATE!!!
                 "PyDetector/Cuda": "false",
