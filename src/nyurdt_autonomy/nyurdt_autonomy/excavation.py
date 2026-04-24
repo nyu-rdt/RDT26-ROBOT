@@ -84,6 +84,8 @@ class ExcavationNode(Node):
             self.get_logger().info("Excavation stage 1: Start conveyor belt")
             self.current_state = self.stage_1
             self._set_conveyor_target(0.0)
+
+        self.get_logger().info("Publishing excavation start command")
         self.publish_msg(0x65)
         return 'stage_2'
 
@@ -93,6 +95,8 @@ class ExcavationNode(Node):
             self.get_logger().info("Excavation stage 2: Move to excavation position")
             self.current_state = self.stage_2
             self._set_conveyor_target(1.0)   # adjust real target
+
+        self.get_logger().info("Publishing excavation position command")
         self.publish_msg(0x62)
         sleep(5)
 
@@ -102,11 +106,13 @@ class ExcavationNode(Node):
             return 'stage_2'
 
         if tel.exc_pos_error == True:
+            self.get_logger().warn("Excavation position error detected, attempting to correct")
             self.publish_msg(0x61)
             sleep(4)
             self.publish_msg(0x62)
         
         if tel.exc_pos_error == False:
+            self.get_logger().info("Excavation position reached successfully")
             return 'stage_3'
         
         return 'stage_2'
@@ -121,8 +127,10 @@ class ExcavationNode(Node):
 
         tel = self.latest_telemetry
         if tel is not None and tel.total_mass >= self.goal_mass:
+            self.get_logger().info("Excavation goal mass reached")
             return 'stage_4'
         if time.time() - self.dig_start_time > self.dig_time:
+            self.get_logger().info("Excavation time limit exceeded")
             return 'stage_4'
         if self.dist_traveled >= self.dig_length:
             return 'stage_4'
