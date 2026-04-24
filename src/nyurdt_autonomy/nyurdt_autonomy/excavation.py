@@ -45,10 +45,11 @@ class ExcavationNode(Node):
     def is_done(self) -> bool:
         return self._finished
 
-    def publish_msg(self, data: int):
+    def publish_msg(self, msg: bytes):
         msg = Byte()
-        msg.data = data.to_bytes(1, 'little')
+        # msg.data = data.to_bytes(1, 'little')
         self.publisher.publish(msg)
+        self.get_logger().info(f"Publishing: {msg}")
 
     def check_ladder_health(self):
         if self.latest_telemetry is None:
