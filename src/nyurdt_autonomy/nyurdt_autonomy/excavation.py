@@ -45,12 +45,11 @@ class ExcavationNode(Node):
     def is_done(self) -> bool:
         return self._finished
 
-    def publish_msg(self, msg: bytes):
+    def publish_msg(self, data: bytes):
         msg = Byte()
-        # msg.data = data.to_bytes(1, 'little')
+        msg.data = data
         self.publisher.publish(msg)
-        data = msg.data
-        self.get_logger().info(f"Publishing: {msg} with data 0x{int.from_bytes(data, 'little'):02x}")
+        self.get_logger().info(f"Publishing 0x{int.from_bytes(data, 'little'):02x}")
 
     def check_ladder_health(self):
         if self.latest_telemetry is None:
@@ -97,7 +96,7 @@ class ExcavationNode(Node):
             self._set_conveyor_target(1.0)   # adjust real target
 
         self.get_logger().info("Publishing excavation position command")
-        self.publish_msg(0x62)
+        self.publish_msg(b"\x62")
         sleep(5)
 
         tel = self.latest_telemetry
@@ -107,9 +106,9 @@ class ExcavationNode(Node):
 
         if tel.exc_pos_error == True:
             self.get_logger().warn("Excavation position error detected, attempting to correct")
-            self.publish_msg(0x61)
+            self.publish_msg(b"\x61")
             sleep(4)
-            self.publish_msg(0x62)
+            self.publish_msg(b"\x62")
         
         if tel.exc_pos_error == False:
             self.get_logger().info("Excavation position reached successfully")
@@ -135,14 +134,14 @@ class ExcavationNode(Node):
         if self.dist_traveled >= self.dig_length:
             return 'stage_4'
 
-        self.publish_msg(0x20)  # drive forward
+        self.publish_msg(b"\x20")  # drive forward
         return 'stage_3'
 
     def stage_4(self):
         if self.current_state != self.stage_4:
             self.get_logger().info("Excavation stage 4: Stop conveyor")
             self.current_state = self.stage_4
-        self.publish_msg(0x63)  # stop belt
+        self.publish_msg(b"\x63")  # stop belt
         return 'stage_5'
     
     def stage_5(self):
@@ -151,7 +150,7 @@ class ExcavationNode(Node):
             self.get_logger().info("Excavation stage 5: Return to locomotion position")
             self.current_state = self.stage_5
             self._set_conveyor_target(0.0)
-        self.publish_msg(0x61)
+        self.publish_msg(b"\x61")
         if self.latest_telemetry is not None and self.latest_telemetry.conveyor_pos < 0.05:
             self._finished = True
             return None
