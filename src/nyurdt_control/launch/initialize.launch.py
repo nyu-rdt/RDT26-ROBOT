@@ -38,9 +38,16 @@ def generate_launch_description():
     #     output='screen'
     # )
 
+    excavation = Node(
+        package='nyurdt_autonomy',
+        executable='excavation_node',
+        output='screen'
+    )
+
     return LaunchDescription([
         command_subscriber,
         i2c_reader,
         # sensor_service,
         # autonomy_destroyer,
+        excavation
     ])
