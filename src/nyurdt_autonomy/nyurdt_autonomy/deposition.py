@@ -38,7 +38,7 @@ class DepositionNode(Node):
     def is_done(self) -> bool:
         return self._finished
 
-    def publish_msg(self, data: int):
+    def publish_msg(self, data: bytes):
         msg = Byte()
         msg.data = data.to_bytes(1, 'little')
         self.publisher.publish(msg)
@@ -65,7 +65,7 @@ class DepositionNode(Node):
         if not self.start_yaw:
             self.start_yaw = time.time()  # placeholder for actual yaw reading
 
-        self.publish_msg(0x50) # turn right at 25%
+        self.publish_msg(b"\x50") # turn right at 25%
       
         # for now this is a timer but this should replaced with 
         # real IMU yaw check from  realsense camera
@@ -82,7 +82,7 @@ class DepositionNode(Node):
 
         # may need to insert check here that depo bin is actually open
 
-        self.publish_msg(0x70)
+        self.publish_msg(b"\x70")
         return 'stage_3'
 
     def stage_3(self):
@@ -91,7 +91,7 @@ class DepositionNode(Node):
             self.current_state = self.stage_3
             self.depo_start_time = time.time()
 
-        self.publish_msg(0x72)  # vibrate
+        self.publish_msg(b"\x72")  # vibrate
 
         tel = self.latest_telemetry
         if tel is not None and tel.total_mass <= self.goal_mass:
@@ -105,7 +105,7 @@ class DepositionNode(Node):
             self.get_logger().info("Deposition stage 4: Stop vibrating")
             self.current_state = self.stage_4
         
-        self.publish_msg(0x73)  # stop vibrate
+        self.publish_msg(b"\x73")  # stop vibrate
         return 'stage_5'
 
     def stage_5(self):
@@ -114,7 +114,7 @@ class DepositionNode(Node):
             self.get_logger().info("Deposition stage 5: Close hatch")
             self.current_state = self.stage_5
 
-        self.publish_msg(0x71)
+        self.publish_msg(b"\x71")
         self._finished = True
         return None
     
