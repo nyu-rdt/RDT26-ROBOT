@@ -22,7 +22,7 @@ class DepositionNode(Node):
         self.latest_telemetry = None
         self.create_subscription(RobotStatus, 'robot/telemetry', self._telemetry_cb, 10)
 
-        self.depo_start_time = 0
+        self.depo_start_time = None
         self.depo_time = 30
         self.goal_mass = 0.05      # kg remaining in bin = "empty enough"
         self.current_state = None
@@ -83,21 +83,33 @@ class DepositionNode(Node):
 
         # may need to insert check here that depo bin is actually open
 
+        if not self.depo_start_time:
+            self.depo_start_time=time.time()
+
+        if time.time() - self.depo_start_time >= 5: 
+            self.depo_start_time = None
+            return 'stage_3'
+        
         self.publish_msg(b"\x70")
-        return 'stage_3'
+
+        return 'stage_2'
 
     def stage_3(self):
         if self.current_state != self.stage_3:
             self.get_logger().info("Deposition stage 3: Vibrating")
             self.current_state = self.stage_3
+        
+        if not self.depo_start_time:
             self.depo_start_time = time.time()
-
+        
         self.publish_msg(b"\x72")  # vibrate
 
         tel = self.latest_telemetry
         if tel is not None and tel.total_mass <= self.goal_mass:
+            self.depo_start_time = None
             return 'stage_4'
-        if time.time() - self.depo_start_time > self.depo_time:
+        if time.time() - self.depo_start_time > 5:
+            self.depo_start_time = None
             return 'stage_4'
         return 'stage_3'
 
@@ -105,19 +117,32 @@ class DepositionNode(Node):
         if self.current_state != self.stage_4:
             self.get_logger().info("Deposition stage 4: Stop vibrating")
             self.current_state = self.stage_4
+
+        if not self.depo_start_time:
+            self.depo_start_time = time.time()
+        
+        if time.time() - self.depo_start_time >= 5:  # stop vibrate after 5 seconds of stage 3 ending
+            self.depo_start_time = None
+            return 'stage_5'
         
         self.publish_msg(b"\x73")  # stop vibrate
-        return 'stage_5'
+        return 'stage_4'
 
     def stage_5(self):
         # closing the hatch
         if self.current_state != self.stage_5:
             self.get_logger().info("Deposition stage 5: Close hatch")
             self.current_state = self.stage_5
+        
+        if not self.depo_start_time:
+            self.depo_start_time = time.time()
+
+        if time.time() - self.depo_start_time >= 5: 
+            return None
 
         self.publish_msg(b"\x71")
         self._finished = True
-        return None
+        return 'stage_5'
     
 
 def main(args=None):
