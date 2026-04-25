@@ -51,6 +51,7 @@ class DepositionNode(Node):
         self.machine.add_state('stage_3', self.stage_3)
         self.machine.add_state('stage_4', self.stage_4)
         self.machine.add_state('stage_5', self.stage_5)
+        self.machine.add_state('stage_6', self.stage_6)
 
     def execute(self):
         self.create_machine()
