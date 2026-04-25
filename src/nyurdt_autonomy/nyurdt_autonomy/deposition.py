@@ -71,7 +71,7 @@ class DepositionNode(Node):
         # for now this is a timer but this should replaced with 
         # real IMU yaw check from  realsense camera
         if time.time() - self.start_yaw >= self.depo_turn_time:
-            return 'stage_2'
+            return 'stage_6'
         
         return 'stage_1'
 
@@ -144,6 +144,19 @@ class DepositionNode(Node):
         self._finished = True
         return 'stage_5'
     
+    def stage_6(self):
+        if self.current_state != self.stage_6:
+            self.get_logger().info("Deposition stage 6: Finished")
+            self.current_state = self.stage_6
+        
+        if not self.depo_start_time:
+            self.depo_start_time = time.time()
+
+        if time.time() - self.depo_start_time >= 5:
+            self.depo_start_time = None
+            return 'stage_2'
+        
+        return 'stage_6'
 
 def main(args=None):
     rclpy.init(args=args)
