@@ -13,6 +13,7 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time')
     joy_params = os.path.join(package_name, 'config', 'joy_config.yaml')
+    twist_params = os.path.join(package_name, 'config', 'twist_mux.yaml')
 
     manual_control_node = Node(
         package='nyurdt_control',
@@ -34,6 +35,17 @@ def generate_launch_description():
         remappings=[('/cmd_vel', '/cmd_vel_joy')]
     )
 
+    twist_mux_node = Node(
+        package='twist_mux',
+        executable='twist_mux',
+        name='twist_mux',
+        parameters=[twist_params],
+        remappings=[
+            ('/cmd_vel_out', '/robot/cmd_vel')
+        ],
+        output='screen',
+    )
+
     teensy_bridge_node = Node(
         package='nyurdt_control',
         executable='cmd_vel_bridge',
@@ -48,5 +60,6 @@ def generate_launch_description():
         # manual_control_node,
         joy_node,
         teleop_node,
-        teensy_bridge_node
+        twist_mux_node,
+        teensy_bridge_node,
     ])

@@ -8,10 +8,10 @@ published on /robot/mcu_cmd.
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import Twist
+from geometry_msgs.msg import TwistStamped
 from std_msgs.msg import Byte
 from enum import Enum
-
+from .i2c_comms import i2c_init, send_HEX
 
 class LocomotionHex(Enum):
     LOCOMOTION_STOP        = 0x10
@@ -84,35 +84,34 @@ def velocity_to_hex(linear_x: float, angular_z: float) -> int:
 class CmdVelBridge(Node):
     def __init__(self):
         super().__init__('cmd_vel_bridge')
+        i2c_init()
 
         # How many identical commands to skip before re-publishing (reduces chatter)
         self._last_cmd = None
 
         self.create_subscription(
-            Twist,
-            '/cmd_vel_nav',          # Nav2 output topic (from /cmd_vel)
+            TwistStamped,
+            '/robot/cmd_vel',          # Twistmux Output Topic
             self._cmd_vel_cb,
             10,
         )
 
-        self._pub = self.create_publisher(Byte, '/robotCmds/manual', 10) # changed to /robotCmds/manual
+        # self._pub = self.create_publisher(Byte, '/robotCmds/manual', 10) # changed to /robotCmds/manual
 
-        self.get_logger().info("CmdVelBridge ready — listening on /cmd_vel")
+        self.get_logger().info("CmdVelBridge ready — listening on /robot/cmd_vel")
 
-    def _cmd_vel_cb(self, msg: Twist):
-        hex_cmd = velocity_to_hex(msg.linear.x, msg.angular.z)
+    def _cmd_vel_cb(self, msg: TwistStamped):
+        hex_cmd = velocity_to_hex(msg.twist.linear.x, msg.twist.angular.z)
 
         # Only publish on change (avoids hammering the MCU)
         if hex_cmd == self._last_cmd:
             return
         self._last_cmd = hex_cmd
 
-        out = Byte()
-        out.data = hex_cmd.to_bytes(1, 'little')
-        self._pub.publish(out)
+        send_HEX(hex_cmd)
 
         self.get_logger().debug(
-            f"cmd_vel lin={msg.linear.x:.3f} ang={msg.angular.z:.3f} "
+            f"cmd_vel lin={msg.twist.linear.x:.3f} ang={msg.twist.angular.z:.3f} "
             f"→ 0x{hex_cmd:02X}"
         )
 
