@@ -17,7 +17,7 @@ class DepositionNode(Node):
     def __init__(self):                          
         super().__init__('deposition_node')
 
-        self.publisher = self.create_publisher(Byte, '/robot/mcu_cmd', 10)
+        self.publisher = self.create_publisher(Byte, '/robotCmds/manual', 10)
 
         self.latest_telemetry = None
         self.create_subscription(RobotStatus, 'robot/telemetry', self._telemetry_cb, 10)
