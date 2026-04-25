@@ -70,7 +70,7 @@ class DepositionNode(Node):
       
         # for now this is a timer but this should replaced with 
         # real IMU yaw check from  realsense camera
-        if self.start_yaw - time.time() >= self.depo_turn_time:
+        if time.time() - self.start_yaw >= self.depo_turn_time:
             return 'stage_2'
         
         return 'stage_1'
