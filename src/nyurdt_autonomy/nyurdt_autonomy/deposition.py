@@ -90,7 +90,7 @@ class DepositionNode(Node):
             self.depo_start_time = None
             return 'stage_3'
         
-        self.publish_msg(b"\x70")
+        self.publish_msg(b"\x71")
 
         return 'stage_2'
 
@@ -140,7 +140,7 @@ class DepositionNode(Node):
         if time.time() - self.depo_start_time >= 5: 
             return None
 
-        self.publish_msg(b"\x71")
+        self.publish_msg(b"\x70")
         self._finished = True
         return 'stage_5'
     
