@@ -40,8 +40,9 @@ class DepositionNode(Node):
 
     def publish_msg(self, data: bytes):
         msg = Byte()
-        msg.data = data.to_bytes(1, 'little')
+        msg.data = data
         self.publisher.publish(msg)
+        self.get_logger().info(f"Publishing 0x{int.from_bytes(data, 'little'):02x}")
 
     def create_machine(self):
         self.machine = StateMachine('deposition_machine')
