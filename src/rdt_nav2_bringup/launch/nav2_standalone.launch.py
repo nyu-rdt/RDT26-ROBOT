@@ -13,6 +13,7 @@ def generate_launch_description():
     # Arguments
     params_file = LaunchConfiguration('params_file')
     use_sim_time = LaunchConfiguration('use_sim_time')
+    map_file = LaunchConfiguration('map')
     
     declare_params_file = DeclareLaunchArgument(
         'params_file',
@@ -24,15 +25,23 @@ def generate_launch_description():
         default_value='False', # Change to 'True' ONLY if running Gazebo
         description='Use simulation (Gazebo) clock if true')
 
+    declare_map_file = DeclareLaunchArgument(
+        'map',
+        default_value=os.path.join(pkg_rdt, 'maps', 'your_map.yaml'),
+        description='Full path to the real robot map yaml file'
+    )
+
     # Include the standard Nav2 bringup
     nav2_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(os.path.join(pkg_nav2, 'launch', 'bringup_launch.py')),
+        PythonLaunchDescriptionSource(
+            os.path.join(pkg_nav2, 'launch', 'bringup_launch.py')
+        ),
         launch_arguments={
             'params_file': params_file,
-            # POINT THIS TO A REAL MAP FILE (.yaml), NOT nav2_params.yaml
-            # 'map': os.path.join(pkg_rdt, 'maps', 'your_map.yaml'), 
+            'map': map_file,
             'use_sim_time': use_sim_time,
-            'autostart': 'True'
+            'autostart': 'True',
+            'slam': 'False'
         }.items()
     )
 
@@ -50,6 +59,7 @@ def generate_launch_description():
     return LaunchDescription([
         declare_params_file,
         declare_use_sim_time,
+        declare_map_file,
         nav2_launch,
         rviz_node
     ])
