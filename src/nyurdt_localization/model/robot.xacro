@@ -221,11 +221,11 @@
 <xacro:property name="z" value=".04"/>
 
 <xacro:camera parent="base_link" pos="front" size_x="${x}" size_y="${y}" size_z="${z}">
-    <origin xyz="${a/2} 0 ${c}" rpy="0 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
 </xacro:camera>
 
 <xacro:camera parent="base_link" pos="right" size_x="${x}" size_y="${y}" size_z="${z}">
-    <origin xyz="${a/2} 0 ${c}" rpy="0 0 0"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
 </xacro:camera>
 
 
