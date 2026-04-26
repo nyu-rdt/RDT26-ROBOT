@@ -6,7 +6,7 @@ from ament_index_python.packages import get_package_share_directory
 import xacro
 
 def generate_launch_description():
-    robot_xacro = os.path.join(get_package_share_directory('nyurdt_localization'), 'model', 'robot1.xacro')
+    robot_xacro = os.path.join(get_package_share_directory('nyurdt_localization'), 'model', 'robot.xacro')
     robot_desc = xacro.process_file(robot_xacro).toxml()
 
     robot_state_publisher = Node(
