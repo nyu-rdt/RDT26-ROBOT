@@ -220,7 +220,9 @@ def generate_launch_description():
                         plugin='nav2_velocity_smoother::VelocitySmoother',
                         name='velocity_smoother',
                         parameters=[configured_params],
-                        remappings=remappings + [('cmd_vel', 'cmd_vel_nav')],
+                        remappings=remappings + [
+                            ('/cmd_vel', '/cmd_vel_nav'),       # Input from Nav2
+                            ('/cmd_vel_smoothed', '/cmd_vel')]
                     ),
                     ComposableNode(
                         package='nav2_lifecycle_manager',
