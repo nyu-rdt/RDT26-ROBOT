@@ -24,12 +24,12 @@ class DepositionNode(Node):
 
         self.depo_start_time = None
         self.depo_time = 30
-        self.goal_mass = 0.05      # kg remaining in bin = "empty enough"
+        self.goal_mass = 500      # kg remaining in bin = "empty enough"
         self.current_state = None
         self._finished = False
 
         self.start_yaw = None      # set when stage_1 begins
-        self.depo_turn_time = 10
+        self.depo_turn_time = 3
 
 
     def _telemetry_cb(self, msg: RobotStatus):
@@ -71,7 +71,7 @@ class DepositionNode(Node):
       
         # for now this is a timer but this should replaced with 
         # real IMU yaw check from  realsense camera
-        if time.time() - self.start_yaw >= self.depo_turn_time:
+        if time.time() - self.start_yaw >= 3:
             return 'stage_6'
         
         return 'stage_1'
@@ -88,8 +88,8 @@ class DepositionNode(Node):
             self.depo_start_time=time.time()
 
         if time.time() - self.depo_start_time >= 5: 
-            self.depo_start_time = None
-            return 'stage_3'
+           self.depo_start_time = None
+           return 'stage_3'
         
         self.publish_msg(b"\x71")
 
@@ -106,12 +106,15 @@ class DepositionNode(Node):
         self.publish_msg(b"\x72")  # vibrate
 
         tel = self.latest_telemetry
-        if tel is not None and tel.total_mass <= self.goal_mass:
-            self.depo_start_time = None
-            return 'stage_4'
+        self.get_logger().info(f"TELEMETRY DATA:{tel}")
+        # if tel is not None and tel.total_mass <= self.goal_mass:
+        #     self.get_logger().info(f"Total mass: {tel.total_mass}")
+        #     self.depo_start_time = None
+        #     return 'stage_4'
         if time.time() - self.depo_start_time > 5:
             self.depo_start_time = None
             return 'stage_4'
+
         return 'stage_3'
 
     def stage_4(self):
@@ -120,13 +123,14 @@ class DepositionNode(Node):
             self.current_state = self.stage_4
 
         if not self.depo_start_time:
-            self.depo_start_time = time.time()
+           self.depo_start_time = time.time()
         
-        if time.time() - self.depo_start_time >= 5:  # stop vibrate after 5 seconds of stage 3 ending
-            self.depo_start_time = None
-            return 'stage_5'
         
-        self.publish_msg(b"\x73")  # stop vibrate
+        if time.time() - self.depo_start_time >= 2:  # stop vibrate after 5 seconds of stage 3 ending
+           self.depo_start_time = None
+           return 'stage_5'
+        
+        self.publish_msg(b"\x73") # stop vibrate
         return 'stage_4'
 
     def stage_5(self):
@@ -136,10 +140,10 @@ class DepositionNode(Node):
             self.current_state = self.stage_5
         
         if not self.depo_start_time:
-            self.depo_start_time = time.time()
+           self.depo_start_time = time.time()
 
         if time.time() - self.depo_start_time >= 5: 
-            return None
+           return None
 
         self.publish_msg(b"\x70")
         self._finished = True
@@ -153,10 +157,11 @@ class DepositionNode(Node):
         if not self.depo_start_time:
             self.depo_start_time = time.time()
 
-        if time.time() - self.depo_start_time >= 5:
+        if time.time() - self.depo_start_time >= 3:
             self.depo_start_time = None
             return 'stage_2'
         
+        self.publish_msg(b"\x10")
         return 'stage_6'
 
 def main(args=None):

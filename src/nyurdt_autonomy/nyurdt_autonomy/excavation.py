@@ -26,12 +26,13 @@ class ExcavationNode(Node):
         self.create_subscription(RobotStatus, 'robot/telemetry', self._telemetry_cb, 10)
 
         self.dig_start_time = 0
-        self.dig_time = 120
+        self.dig_time = 15
         self.dig_length = 0.5
         self.goal_mass = 0.4        # kg — set real value
         self.dist_traveled = 0.0   # update this from encoder odometry
         self.current_state = None
         self._finished = False
+        self.dig_start = None
 
     def _set_conveyor_target(self, pos: float):
         """Call this whenever you command a new conveyor position."""
@@ -83,10 +84,16 @@ class ExcavationNode(Node):
             self.get_logger().info("Excavation stage 1: Start conveyor belt")
             self.current_state = self.stage_1
             self._set_conveyor_target(0.0)
+        
+        if not self.dig_start:
+            self.dig_start = time.time()
+        if time.time() - self.dig_start > 10:
+            return 'stage_2'
 
         self.get_logger().info("Publishing excavation start command")
-        self.publish_msg(b"\x65") 
-        return 'stage_2'
+        self.publish_msg(b"\x65")
+
+        return 'stage_1'
 
     def stage_2(self):
         # moving to excavation position — target is fully lowered (1.0 = down)
@@ -97,12 +104,11 @@ class ExcavationNode(Node):
 
         self.get_logger().info("Publishing excavation position command")
         self.publish_msg(b"\x62")
-        sleep(5)
 
         tel = self.latest_telemetry
 
         if tel is None:
-            return 'stage_2'
+            return 'stage_3'
 
         if tel.exc_pos_error == True:
             self.get_logger().warn("Excavation position error detected, attempting to correct")

@@ -40,7 +40,7 @@ def generate_launch_description():
 
     excavation = Node(
         package='nyurdt_autonomy',
-        executable='excavation_node',
+        executable='deposition_node',
         output='screen'
     )
 
