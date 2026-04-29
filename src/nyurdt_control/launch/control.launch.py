@@ -1,6 +1,8 @@
 # Author: Gad Major & Chris Jin
 
 from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from launch.substitutions import LaunchConfiguration
 from launch.actions import DeclareLaunchArgument
@@ -10,10 +12,12 @@ import os
 
 def generate_launch_description():
     package_name = get_package_share_directory('nyurdt_control')
+    twist_mux_pkg = get_package_share_directory('twist_mux')
 
     use_sim_time = LaunchConfiguration('use_sim_time')
     joy_params = os.path.join(package_name, 'config', 'joy_config.yaml')
-    twist_params = os.path.join(package_name, 'config', 'twist_mux.yaml')
+    twist_topics = os.path.join(package_name, 'config', 'twist_mux.yaml')
+    twist_locks = os.path.join(package_name, 'config', 'twist_mux_locks.yaml')
 
     manual_control_node = Node(
         package='nyurdt_control',
@@ -39,12 +43,17 @@ def generate_launch_description():
         package='twist_mux',
         executable='twist_mux',
         name='twist_mux',
-        parameters=[twist_params],
+        parameters=[
+            {'use_sim_time': use_sim_time},
+            twist_locks,
+            twist_topics,
+        ],
         remappings=[
             ('/cmd_vel_out', '/robot/cmd_vel')
         ],
         output='screen',
     )
+
 
     teensy_bridge_node = Node(
         package='nyurdt_control',

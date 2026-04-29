@@ -8,7 +8,7 @@ published on /robot/mcu_cmd.
 
 import rclpy
 from rclpy.node import Node
-from geometry_msgs.msg import TwistStamped
+from geometry_msgs.msg import Twist
 from std_msgs.msg import Byte
 from enum import Enum
 from .i2c_comms import i2c_init, send_HEX
@@ -90,7 +90,7 @@ class CmdVelBridge(Node):
         self._last_cmd = None
 
         self.create_subscription(
-            TwistStamped,
+            Twist,
             '/robot/cmd_vel',          # Twistmux Output Topic
             self._cmd_vel_cb,
             10,
@@ -100,8 +100,8 @@ class CmdVelBridge(Node):
 
         self.get_logger().info("CmdVelBridge ready — listening on /robot/cmd_vel")
 
-    def _cmd_vel_cb(self, msg: TwistStamped):
-        hex_cmd = velocity_to_hex(msg.twist.linear.x, msg.twist.angular.z)
+    def _cmd_vel_cb(self, msg: Twist):
+        hex_cmd = velocity_to_hex(msg.linear.x, msg.angular.z)
 
         # Only publish on change (avoids hammering the MCU)
         if hex_cmd == self._last_cmd:
@@ -111,7 +111,7 @@ class CmdVelBridge(Node):
         send_HEX(hex_cmd)
 
         self.get_logger().debug(
-            f"cmd_vel lin={msg.twist.linear.x:.3f} ang={msg.twist.angular.z:.3f} "
+            f"cmd_vel lin={msg.linear.x:.3f} ang={msg.angular.z:.3f} "
             f"→ 0x{hex_cmd:02X}"
         )
 
