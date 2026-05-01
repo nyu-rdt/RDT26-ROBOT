@@ -1,3 +1,3 @@
 {
-    "cmake.sourceDirectory": "/home/nyu-rdt/Desktop/RDT26-ROBOT/src/nyurdt_navigation"
+    "cmake.sourceDirectory": "/home/nyu-rdt/bringup_ws/src/RDT26-ROBOT/src/nyurdt_interfaces"
 }

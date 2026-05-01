@@ -87,26 +87,33 @@ class CmdVelBridge(Node):
         i2c_init()
 
         # How many identical commands to skip before re-publishing (reduces chatter)
-        self._last_cmd = None
+        self._last_loco_cmd = None
+        self._last_system_cmd = None
 
         self.create_subscription(
             Twist,
             '/robot/cmd_vel',          # Twistmux Output Topic
-            self._cmd_vel_cb,
+            self._loco_cb,
+            10,
+        )
+        self.get_logger().info("CmdVelBridge ready — listening on /robot/cmd_vel")
+
+        self.create_subscription(
+            Byte,
+            '/robotCmds/manual',      # main_manual_control.py (GCS) Topic
+            self._excav_depo_cb,
             10,
         )
 
-        # self._pub = self.create_publisher(Byte, '/robotCmds/manual', 10) # changed to /robotCmds/manual
+        self.get_logger().info("CmdVelBridge ready — listening on /robotCmds/manual")
 
-        self.get_logger().info("CmdVelBridge ready — listening on /robot/cmd_vel")
-
-    def _cmd_vel_cb(self, msg: Twist):
+    def _loco_cb(self, msg: Twist):
         hex_cmd = velocity_to_hex(msg.linear.x, msg.angular.z)
 
         # Only publish on change (avoids hammering the MCU)
-        if hex_cmd == self._last_cmd:
+        if hex_cmd == self._last_loco_cmd:
             return
-        self._last_cmd = hex_cmd
+        self._last_loco_cmd = hex_cmd
 
         send_HEX(hex_cmd)
 
@@ -115,6 +122,15 @@ class CmdVelBridge(Node):
             f"→ 0x{hex_cmd:02X}"
         )
 
+    def _excav_depo_cb(self, msg: Byte):
+        hex_cmd = msg.data
+        if hex_cmd == self._last_system_cmd:
+            return
+        self._last_system_cmd = hex_cmd
+
+        send_HEX(hex_cmd)
+        hex_val = int.from_bytes(hex_cmd, 'little')
+        self.get_logger().debug(f"system_cmd → 0x{hex_val:02X}")
 
 def main(args=None):
     rclpy.init(args=args)
