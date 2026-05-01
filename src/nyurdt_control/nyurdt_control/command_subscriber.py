@@ -17,36 +17,25 @@ class CommandSubscriber(Node):
         i2c_init()
         # Subscibers for incoming commands
         self.subscription_manual = self.create_subscription(
-            Byte, '/robotCmds', self.manual_callback, 10)
+            Byte, '/robotCmds', self._cmd_cb, 10)
         
         # Services for beginning autonomies
         self.excavation_srv = self.create_service(Empty, 'excavation_autonomy', self.excavation_auto)
         self.construction_srv = self.create_service(Empty, 'construction_autonomy', self.construction_auto)
 
 
-    def manual_callback(self, data: Byte) -> None:
+    def _cmd_cb(self, data: Byte) -> None:
         """
-        Handle incoming manual control commands
+        Handle incoming commands
 
         :param data: Byte message to be parsed & sent to Teensy
         :return: None
         """
-        self.get_logger().info("Incoming manual control command: %s" % str(data.data))
+        self.get_logger().info("Incoming command: %s" % str(data.data))
         
         # Code from the i2c_comms
         send_HEX(int.from_bytes(data.data, 'little'))
  
-
-    def autonomy_callback(self, data: Int16) -> None:
-        """
-        Handle incoming autonomy commands
-
-        :param data: Int16 message to be parsed & sent to the Teensy
-        :return: None
-        """
-        self.get_logger().info("Incoming autonomy command: %s" % str(data.data))
-        pass
-    
 
     def excavation_auto(self, request: Empty, response: Empty) -> Empty:
         """

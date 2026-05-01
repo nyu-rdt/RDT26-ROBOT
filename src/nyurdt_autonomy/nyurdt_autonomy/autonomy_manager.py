@@ -96,7 +96,6 @@ class AutonomyManager(Node):
             10,
         )
 
-        # self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
 
         self.task_pub = self.create_publisher(String, "/autonomy/current_task", 10)
 
@@ -108,13 +107,6 @@ class AutonomyManager(Node):
 
         self.get_logger().info("AutonomyManager started - state: INIT_LOCALIZING")
 
-
-    def manual_callback(self, msg):
-        """
-        Manual callback to stop the node if a manual control command is sent
-        """
-
-        sys.exit()
 
     def create_machine(self):
         """
