@@ -23,8 +23,7 @@ from .deposition import DepositionNode
 import math
 
 from .nyurdt_state_machine import StateMachine
-
-
+import threading
 
 
 # KSC
@@ -64,6 +63,8 @@ TASK_QUEUE = [
     {"zone": "deposition", "action": "deposit"},
 ]
 
+threads = list()
+
 class AutonomyManager(Node):
     def __init__(self):
         super().__init__('autonomy_manager')
@@ -81,6 +82,8 @@ class AutonomyManager(Node):
         self.bin_mass = None
         self.goal_bin_mass = 0.4 # REPLACE WITH GOAL MASS 
         self.last_apriltag_correction = None
+        self._task_thread = None
+        self._localization_start_time = None
 
         self.create_subscription(
             PoseWithCovarianceStamped,
@@ -96,7 +99,6 @@ class AutonomyManager(Node):
             10,
         )
 
-        # self.create_subscription(Byte, 'robot/cmd_manual', self.manual_callback, 10)
 
         self.task_pub = self.create_publisher(String, "/autonomy/current_task", 10)
 
@@ -104,17 +106,10 @@ class AutonomyManager(Node):
 
         self._nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
 
-        self.publisher = self.create_publisher(Byte, '/robotCmds/manual', 10)
+        self.publisher = self.create_publisher(Byte, '/robotCmds', 10)
 
         self.get_logger().info("AutonomyManager started - state: INIT_LOCALIZING")
 
-
-    def manual_callback(self, msg):
-        """
-        Manual callback to stop the node if a manual control command is sent
-        """
-
-        sys.exit()
 
     def create_machine(self):
         """
@@ -129,8 +124,9 @@ class AutonomyManager(Node):
         self.machine.add_state('stage_3', self.stage_3)
         self.machine.add_state('stage_4', self.stage_4)
         self.machine.add_state('stage_5', self.stage_5)
+        self.machine.add_state('stage_6', self.stage_6)
     
-    def execute_machine(self):
+    def execute(self):
         """
         Begin execution of the machine
         """
@@ -219,7 +215,6 @@ class AutonomyManager(Node):
                 return name
         return None
  
- 
     def _publish_status(self):
         task_name = (
             TASK_QUEUE[self.task_index]["zone"]
@@ -246,10 +241,17 @@ class AutonomyManager(Node):
         if self.current_state != self.stage_1:
             self.get_logger().info("Stage 1: Initial Localization")
             self.current_state = self.stage_1
+            
+        if not self._localization_start_time:
+            self._localization_start_time = self.get_clock().now()
 
         # turn until an apriltag is spotted
         self.publish_msg(0x50) # turn right at 25%
-        
+
+        # timer for testing
+        if self.get_clock().now() - self._localization_start_time > Duration(seconds=3):
+            return 'stage_2'
+    
         if self._covariance_ok():
             self.get_logger().info("Initial Localization aquired")
             return 'stage_2'
@@ -267,7 +269,7 @@ class AutonomyManager(Node):
         if self.task_index >= len(TASK_QUEUE):
             return 'stage_6' # finished with autonomy
  
-        # Check for drift mid-navigation
+        # # Check for drift mid-navigation
         if not self._covariance_ok():
             self.get_logger().warn("Drift detected while navigating — relocalizing.")
             self._cancel_nav_goal()
@@ -287,7 +289,9 @@ class AutonomyManager(Node):
         if self._nav_goal_succeeded():
             self.get_logger().info(f"Arrived near {TASK_QUEUE[self.task_index]['zone']}.")
             self.nav_in_flight = False
-            return 'stage_4'
+            return 'stage_5'
+
+        return 'stage_2'
         
     def stage_3(self):  
         if self.current_state != self.stage_3:
@@ -358,19 +362,28 @@ class AutonomyManager(Node):
             self.get_logger().info("Stage 5: Executing task")
             self.current_state = self.stage_5
             task = TASK_QUEUE[self.task_index]["action"]
-            if task == "excavate":
-                self._task_node = ExcavationNode()
-            elif task == "deposit":
-                self._task_node = DepositionNode()
-            self._task_node.execute()
 
-        if self._task_node.is_done():
-            self._task_node = None
-            self.task_index += 1
-            self.nav_in_flight = False
-            return 'stage_2'
+        if task == "excavate":
+            self.get_logger().info("Starting excavation task thread")
+            task_node = ExcavationNode()
 
-        return 'stage_5'
+        elif task == "deposit":
+            self.get_logger().info("Starting deposition task thread")
+            task_node = DepositionNode()
+        
+        self._task_thread = threading.Thread(
+            target=task_node.execute, daemon=True
+        )
+        
+        self._task_thread.start()
+        threads.append(self._task_thread)
+        self._task_thread.join()  # blocks this state machine thread, not the spin thread
+        self.get_logger().info(f"Finished {task} task")
+
+        self._task_thread = None
+        self.task_index += 1
+        self.nav_in_flight = False
+        return 'stage_2'
     
     def stage_6(self):
         """
@@ -385,8 +398,13 @@ class AutonomyManager(Node):
 def main(args=None):
     rclpy.init(args=args)
     node = AutonomyManager()
+    
+    autonomy = threading.Thread(target=node.execute, daemon=True)
+    threads.append(autonomy)
+    autonomy.start()
+
     try:
-        node.execute_machine()
+        rclpy.spin(node)
     except KeyboardInterrupt:
         pass
     finally:

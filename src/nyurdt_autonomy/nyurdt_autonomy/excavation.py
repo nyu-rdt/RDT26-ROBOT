@@ -18,7 +18,7 @@ class ExcavationNode(Node):
     def __init__(self):
         super().__init__('excavation_node')
 
-        self.publisher = self.create_publisher(Byte, '/robotCmds/manual', 10)
+        self.publisher = self.create_publisher(Byte, '/robotCmds', 10)
         self.conveyor_target_pub = self.create_publisher(Float32, '/robot/target_conveyor_pos', 10)
 
         # Telemetry — stored as data, not the subscription object
@@ -136,6 +136,7 @@ class ExcavationNode(Node):
             return 'stage_4'
         if time.time() - self.dig_start_time > self.dig_time:
             self.get_logger().info("Excavation time limit exceeded")
+            self.dig_start_time = None
             return 'stage_4'
         if self.dist_traveled >= self.dig_length:
             return 'stage_4'
@@ -156,7 +157,13 @@ class ExcavationNode(Node):
             self.get_logger().info("Excavation stage 5: Return to locomotion position")
             self.current_state = self.stage_5
             self._set_conveyor_target(0.0)
+            self.dig_start_time = time.time()
         self.publish_msg(b"\x61")
+
+        # for testing
+        if time.time() - self.dig_start_time > 10:
+            return None
+        
         if self.latest_telemetry is not None and self.latest_telemetry.conveyor_pos < 0.05:
             self._finished = True
             return None
