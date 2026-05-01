@@ -25,14 +25,26 @@ import math
 from .nyurdt_state_machine import StateMachine
 
 
+
+
+# KSC
+# ZONES = {
+#     "excavation":   {"x": (-4.5720, 9.14 - 4.5720), "y": (0.00, 4.00)},
+#     "deposition": {"x": (4.5720 - 2.00, 4.5720), "y": (5.50, 8.10)},
+#     "obstacle":     {"x": (-4.5720, 4.5720 - 2.00), "y": (4.00, 8.10)},
+#     "starting":     {"x": (-2.00, 2.00), "y": (0.00, 2.00)},
+# }
+
+# ORIGIN IS AT THE CENTER OF THE FIDUCIAL RAIL
+# UCF
 ZONES = {
-    "excavation":   {"x": (-4.5720, 9.14 - 4.5720), "y": (0.00, 4.00)},
-    "deposition": {"x": (4.5720 - 2.00, 4.5720), "y": (5.50, 8.10)},
-    "obstacle":     {"x": (-4.5720, 4.5720 - 2.00), "y": (4.00, 8.10)},
-    "starting":     {"x": (-2.00, 2.00), "y": (0.00, 2.00)},
+    "excavation":   {"x": (0.00, 4.00), "y": (-3.570, 1.570)},
+    "deposition": {"x": (6.10, 8.10), "y": (-3.570, -1.570)},
+    "obstacle":     {"x": (4.10, 8.10), "y": (-3.750, 1.570)},
+    "starting":     {"x": (0.00, 2.00), "y": (-1.00, 1.00)},
 }
 
-# pose where robot can see the Apriltag 
+# pose where robot can see the Apriltag
 RELOCALIZE_POSE = {"x": 0.0, "y": 0.0, "yaw": 0.0}
 
 # covariance thresholds
