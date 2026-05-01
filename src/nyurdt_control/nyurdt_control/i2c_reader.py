@@ -46,6 +46,8 @@ class I2CReader(Node):
     def _read_and_publish(self):
         if self.i2c is None:
             return
+        
+        self.get_logger().info("Attempting I2C read...")
 
         try:
             buf = bytearray(PACKET_SIZE)
@@ -104,7 +106,9 @@ class I2CReader(Node):
         if not msg.heartbeat:
             self.get_logger().warn("No heartbeat — dropping packet")
             return
-
+        
+        self.get_logger().info(f"Publishing telemetry: {msg}")
+        
         self.pub.publish(msg)
         
  

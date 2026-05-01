@@ -27,6 +27,9 @@ setup(
         'console_scripts': [
             'telemetry_processor = nyurdt_autonomy.telemetry_processor:main',
             'autonomy_manager = nyurdt_autonomy.autonomy_manager:main',
+            'excavation_node = nyurdt_autonomy.excavation:main',
+            'deposition_node = nyurdt_autonomy.deposition:main',
+            ''
         ],
     },
 )
