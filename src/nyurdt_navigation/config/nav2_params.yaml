@@ -22,8 +22,8 @@ controller_server:
       use_cost_regulated_linear_velocity_scaling: false
       regulated_linear_scaling_min_radius: 0.9
       regulated_linear_scaling_min_speed: 0.25
-      allow_reversing: false   # set true if your robot can reverse
-      use_rotate_to_heading: false   # false for skid steer
+      allow_reversing: true   # set true if your robot can reverse
+      use_rotate_to_heading: true   # false for skid steer
       max_robot_pose_search_dist: 10.0
 
 planner_server:

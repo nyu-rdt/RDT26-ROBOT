@@ -14,6 +14,7 @@ setup(
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
         (os.path.join('share', package_name), glob("launch/*.launch.py")),
+        (os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -27,6 +28,7 @@ setup(
             'command_subscriber=nyurdt_control.command_subscriber:main',
             'i2c_reader=nyurdt_control.i2c_reader:main',
             'cmd_vel_bridge=nyurdt_control.cmd_vel_bridge:main'
+            
         ],
     },
 )

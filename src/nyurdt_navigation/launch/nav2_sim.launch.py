@@ -119,6 +119,10 @@ def generate_launch_description():
             # Cmd Vel
             "/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist",
         ],
+        remappings=[
+            # Bridge subscribes on ROS /cmd_vel_nav while Gazebo still uses cmd_vel.
+            ("/cmd_vel", "/cmd_vel_nav"),
+        ],
         output="screen",
     )
 
