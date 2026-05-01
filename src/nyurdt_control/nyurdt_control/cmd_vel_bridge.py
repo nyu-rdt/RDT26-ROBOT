@@ -100,12 +100,12 @@ class CmdVelBridge(Node):
 
         self.create_subscription(
             Byte,
-            '/robotCmds/manual',      # main_manual_control.py (GCS) Topic
+            '/robotCmds',      # main_manual_control.py (GCS) Topic
             self._excav_depo_cb,
             10,
         )
 
-        self.get_logger().info("CmdVelBridge ready — listening on /robotCmds/manual")
+        self.get_logger().info("CmdVelBridge ready — listening on /robotCmds")
 
     def _loco_cb(self, msg: Twist):
         hex_cmd = velocity_to_hex(msg.linear.x, msg.angular.z)

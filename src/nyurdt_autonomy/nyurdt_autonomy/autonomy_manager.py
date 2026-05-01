@@ -104,7 +104,7 @@ class AutonomyManager(Node):
 
         self._nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
 
-        self.publisher = self.create_publisher(Byte, '/robotCmds/manual', 10)
+        self.publisher = self.create_publisher(Byte, '/robotCmds', 10)
 
         self.get_logger().info("AutonomyManager started - state: INIT_LOCALIZING")
 

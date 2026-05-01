@@ -17,11 +17,8 @@ class CommandSubscriber(Node):
         i2c_init()
         # Subscibers for incoming commands
         self.subscription_manual = self.create_subscription(
-            Byte, '/robotCmds/manual', self.manual_callback, 10)
-        self.subscription_auto = self.create_subscription(
-            Int16, '/robotCmds/autonomy', self.autonomy_callback, 10
-        )
-
+            Byte, '/robotCmds', self.manual_callback, 10)
+        
         # Services for beginning autonomies
         self.excavation_srv = self.create_service(Empty, 'excavation_autonomy', self.excavation_auto)
         self.construction_srv = self.create_service(Empty, 'construction_autonomy', self.construction_auto)
@@ -43,12 +40,6 @@ class CommandSubscriber(Node):
     def autonomy_callback(self, data: Int16) -> None:
         """
         Handle incoming autonomy commands
-
-
-
-
-
-        ---
 
         :param data: Int16 message to be parsed & sent to the Teensy
         :return: None
