@@ -9,7 +9,7 @@
 <xacro:property name="c" value="0.660" />   <!-- height -->
 
 <!-- Wheel dimensions — measure and confirm these -->
-<xacro:property name="r" value="0.15" />    <!-- wheel radius -->
+<xacro:property name="r" value="0.17" />    <!-- wheel radius -->
 <xacro:property name="d" value="0.1"  />    <!-- wheel width  -->
 
 <xacro:property name="s1" value="${c/2}"         />   <!-- body centre height -->
@@ -57,13 +57,6 @@
 <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro"/>
 
 <!-- ── Frames ─────────────────────────────────────────────────────────── -->
-
-<!-- <link name="base_footprint"/>
-
-<joint name="base_footprint_joint" type="fixed">
-    <parent link="base_footprint"/>
-    <child link="base_link"/>
-</joint> -->
 
 <!-- base_link: Nav2 + RTAB-Map reference frame, at ground centre -->
 <link name="base_link"/>
