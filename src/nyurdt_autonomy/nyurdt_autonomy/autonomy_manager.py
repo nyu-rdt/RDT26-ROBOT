@@ -15,12 +15,14 @@ import sys
 from geometry_msgs.msg import PoseWithCovarianceStamped, PoseStamped
 from nav2_msgs.action import NavigateToPose
 from action_msgs.msg import GoalStatus
+from lifecycle_msgs.srv import GetState
 from std_msgs.msg import String, Byte
 
 from .excavation import ExcavationNode
 from .deposition import DepositionNode
 
 import math
+import time
 
 from .nyurdt_state_machine import StateMachine
 import threading
@@ -37,14 +39,13 @@ import threading
 # ORIGIN IS AT THE CENTER OF THE FIDUCIAL RAIL
 # UCF
 ZONES = {
-    "excavation":   {"x": (0.00, 4.00), "y": (-3.570, 1.570)},
-    "deposition": {"x": (6.10, 8.10), "y": (-3.570, -1.570)},
-    "obstacle":     {"x": (4.10, 8.10), "y": (-3.750, 1.570)},
-    "starting":     {"x": (0.00, 2.00), "y": (-1.00, 1.00)},
+    "excavation": {"x": (0.00, 4.00), "y": (-0.10,  5.04)},
+    "deposition": {"x": (6.10, 8.10), "y": (-0.10,  1.90)},
+    "obstacle":   {"x": (4.10, 8.10), "y": (-0.28,  5.04)},
+    "starting":   {"x": (0.00, 2.00), "y": ( 2.47,  4.47)},
 }
-
 # pose where robot can see the Apriltag
-RELOCALIZE_POSE = {"x": 0.0, "y": 0.0, "yaw": 0.0}
+RELOCALIZE_POSE = {"x": -0.5, "y": 0.5, "yaw": 0.0} 
 
 # covariance thresholds
 COV_X_THRESH = 0.05
@@ -74,9 +75,11 @@ class AutonomyManager(Node):
         self.task_index = 0
         self.current_zone = None
         self.pose = None
-        self.covariance = [999.0] * 36
+        self.covariance = [.03] * 36 #CHANGE TO HIGH VALUE INITIALLY
         self.nav_goal_handle = None
         self.nav_in_flight = False
+        self._nav_result_ready = False
+        self._nav_result = None
         self.relocalize_after = None
         self.cov_ok_since = None
         self.bin_mass = None
@@ -105,6 +108,8 @@ class AutonomyManager(Node):
         self.status_pub = self.create_publisher(String, "/autonomy/status", 10)
 
         self._nav_client = ActionClient(self, NavigateToPose, "navigate_to_pose")
+
+        self._bt_state_client = self.create_client(GetState, '/bt_navigator/get_state')
 
         self.publisher = self.create_publisher(Byte, '/robotCmds', 10)
 
@@ -141,12 +146,37 @@ class AutonomyManager(Node):
         self.last_apriltag_correction = self.get_clock().now()
 
     # Nav2 helpers
- 
+    def _wait_for_nav2_active(self, timeout_sec=30.0):
+        """Block until bt_navigator is active or timeout."""
+        import time
+        deadline = time.time() + timeout_sec
+        while time.time() < deadline:
+            try:
+                future = self._bt_state_client.call_async(GetState.Request())
+                # Busy-wait on the future without spinning
+                start = time.time()
+                while not future.done() and time.time() - start < 2.0:
+                    time.sleep(0.05)
+                if future.done() and future.result():
+                    state = future.result().current_state.label
+                    if state == 'active':
+                        self.get_logger().info('Nav2 is active.')
+                        return True
+                    self.get_logger().info(f'Nav2 state: {state}, waiting...')
+            except Exception as e:
+                self.get_logger().warn(f'State check failed: {e}')
+            time.sleep(1.0)
+        return False
+
     def _send_nav_goal(self, x: float, y: float, yaw: float = 0.0):
-        if not self._nav_client.wait_for_server(timeout_sec=2.0):
+        if not self._nav_client.wait_for_server(timeout_sec=10.0):
             self.get_logger().error("Nav2 action server not available.")
             return
- 
+
+        if not self._wait_for_nav2_active(timeout_sec=30.0):
+            self.get_logger().error("Nav2 never became active, aborting.")
+            return
+
         goal = NavigateToPose.Goal()
         goal.pose.header.frame_id = "map"
         goal.pose.header.stamp    = self.get_clock().now().to_msg()
@@ -154,12 +184,11 @@ class AutonomyManager(Node):
         goal.pose.pose.position.y = y
         goal.pose.pose.orientation.z = math.sin(yaw / 2.0)
         goal.pose.pose.orientation.w = math.cos(yaw / 2.0)
- 
+
         send_future = self._nav_client.send_goal_async(goal)
         send_future.add_done_callback(self._nav_goal_response_cb)
-        self.nav_in_flight = True
         self._nav_result_ready = False
- 
+
     def _nav_goal_response_cb(self, future):
         handle = future.result()
         if not handle.accepted:
@@ -233,7 +262,6 @@ class AutonomyManager(Node):
     
     # ── State Machines ───────────────────────────────
 
-
     def stage_1(self):
         """
         Stage 1: Initial Localization
@@ -282,6 +310,7 @@ class AutonomyManager(Node):
             zone = ZONES[task["zone"]]
             target_x = (zone["x"][0] + zone["x"][1]) / 2.0
             target_y = (zone["y"][0] + zone["y"][1]) / 2.0
+            self.nav_in_flight = True
             self._send_nav_goal(target_x, target_y)
             return 'stage_2'
  
@@ -301,10 +330,12 @@ class AutonomyManager(Node):
         if not self.nav_in_flight:
             p = RELOCALIZE_POSE
             self._send_nav_goal(p["x"], p["y"], yaw=p["yaw"])
+            self.nav_in_flight = True
             return 'stage_3'
 
         if self._nav_goal_succeeded():
             self.nav_in_flight = False
+            return self.relocalize_after # for testing w/o apriltag
 
         # Wait for BOTH covariance to drop AND a fresh tag correction
         tag_seen_recently = (
@@ -316,7 +347,7 @@ class AutonomyManager(Node):
             self.get_logger().info("Relocalization confirmed by AprilTag.")
             self.last_apriltag_correction = None
             return self.relocalize_after or 'stage_2'
-
+        
         return 'stage_3'
     
     def stage_4(self):
@@ -361,7 +392,8 @@ class AutonomyManager(Node):
         if self.current_state != self.stage_5:
             self.get_logger().info("Stage 5: Executing task")
             self.current_state = self.stage_5
-            task = TASK_QUEUE[self.task_index]["action"]
+        
+        task = TASK_QUEUE[self.task_index]["action"]
 
         if task == "excavate":
             self.get_logger().info("Starting excavation task thread")
