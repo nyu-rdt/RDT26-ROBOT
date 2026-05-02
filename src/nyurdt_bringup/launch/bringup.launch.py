@@ -4,7 +4,8 @@ from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
-from launch.substitutions import LaunchConfiguration 
+from launch.substitutions import LaunchConfiguration
+from launch.conditions import IfCondition
 
 def generate_launch_description():
 
@@ -19,9 +20,17 @@ def generate_launch_description():
 
     
     nav2_params = os.path.join(navigation, 'config', 'nav2_params.yaml')
-    realsense_params = os.path.join(slam, 'config', 'realsense.yaml')
+    launch_rviz = LaunchConfiguration('rviz', default='false')
+    map_yaml = LaunchConfiguration('map', default=os.path.join(
+    get_package_share_directory('nyurdt_navigation'), 'config', 'arena_map.yaml'))
 
     return LaunchDescription([
+
+        # Add to LaunchDescription
+        DeclareLaunchArgument('map', 
+            default_value=os.path.join(navigation, 'config', 'arena_map.yaml'),
+            description='Full path to map yaml'),
+
         
         DeclareLaunchArgument(
             'use_sim_time',
@@ -95,13 +104,12 @@ def generate_launch_description():
             }.items()
         ),
 
-        # ── Apriltag ────────────────────────────────────────────────────
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(localization, 'launch', 'camera_apriltag.launch.py'),
-            ),
-            launch_arguments={'device2': '0'}.items() 
-        ),
+        # # ── Apriltag ────────────────────────────────────────────────────
+        # IncludeLaunchDescription(
+        #     PythonLaunchDescriptionSource(
+        #         os.path.join(localization, 'launch', 'camera_apriltag.launch.py'),
+        #     ),
+        # ),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -238,16 +246,24 @@ def generate_launch_description():
         # ── Nav2 (from nyurdt_navigation) ─────────────────────────────────
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                os.path.join(navigation, 'launch', 'nav2_standalone.launch.py')
+                os.path.join(navigation, 'launch', 'nav2_sim.launch.py')
             ),
             launch_arguments={
                 'params_file': nav2_params,
                 'use_sim_time': use_sim_time,
+                 'map': map_yaml,  
             }.items()
+        ),
+
+        Node(
+            package='rviz2',
+            executable='rviz2',
+            condition=IfCondition(launch_rviz)
         ),
 
         # ── Autonomy Nodes ───────────────────────────────────────────────
         Node(package='nyurdt_control', executable='i2c_reader', name='i2c_reader'),
-        # Node(package='nyurdt_autonomy', executable='telemetry_processor', name='telemetry_processor'),
-        # Node(package='nyurdt_autonomy', executable='autonomy_manager', name='autonomy_manager'),
+        Node(package='nyurdt_autonomy', executable='telemetry_processor', name='telemetry_processor'),
+        Node(package='nyurdt_autonomy', executable='autonomy_manager', name='autonomy_manager'),
+        
     ])
