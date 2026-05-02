@@ -46,7 +46,7 @@ def generate_launch_description():
 
     declare_map = DeclareLaunchArgument(
         "map",
-        default_value=os.path.join(pkg_navigation, "config", "my_map.yaml"),
+        default_value=os.path.join(pkg_navigation, "config", "arena_map.yaml"),
         description="Full path to map.yaml. Leave empty if using SLAM.",
     )
 
@@ -180,6 +180,7 @@ def generate_launch_description():
             "params_file": params_file,
             "autostart": "True",
             "use_composition": "False",
+            "namespace": "",
         }.items(),
     )
 
@@ -203,21 +204,21 @@ def generate_launch_description():
     return LaunchDescription([
         declare_use_sim_time,
         declare_params_file,
-        declare_world,
+        # declare_world,
         declare_map,
         declare_slam,
-        declare_robot_name,
-        declare_rviz_config,
+        # declare_robot_name,
+        # declare_rviz_config,
         warn_no_map_no_slam,
-        rsp,
+        # rsp,
         joint_state_publisher,
-        gazebo,
-        spawn_entity,
-        bridge,
+        # gazebo,
+        # spawn_entity,
+        # bridge,
         map_server,
         lifecycle_manager_map,
-        map_to_odom,
+        # map_to_odom,
         slam_launch,
         navigation_launch,
-        rviz_node,
+        # rviz_node,
     ])
