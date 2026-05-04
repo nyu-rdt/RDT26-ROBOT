@@ -12,14 +12,15 @@ from apriltag_msgs.msg import AprilTagDetectionArray
 
 # Known tag poses in MAP frame: (map origin is at center of starting zone)
 # (x, y, z, roll, pitch, yaw) in metres/radians
+#bottom left starting zone
 TAG_POSES_IN_MAP = {
-    'tag_0': (1.0, 0.3932, 0.1524, 0.0, 1.57, 0.0),
-    'tag_1': (1.0, 0.1998, 0.24695, 0.0, 1.57, 0.0),
-    'tag_2': (1.0, 0.1998, 0.05725, 0.0, 1.57, 0.0),
-    'tag_18': (1.0, 0, 1.0, 0.1524, 1.57, 0.0),
-    'tag_19': (1.0, -0.1998, 0.24695, 0.0, 1.57, 0.0),
-    'tag_20': (1.0, -0.1998, 0.05725, 0.0, 1.57, 0.0),
-    'tag_21': (1.0, -0.3932, 0.1524, 0.0, 1.57, 0.0),
+    'tag_0': (-1.0, -0.4441, .43, 0.0, 1.57, 1.57),
+    'tag_1': (-1.0, -0.1998, .5316, 0.0, 1.57, 1.57),
+    'tag_2': (-1.0, -0.1998, 0.3729, 0.0, 1.57, 1.57),
+    'tag_18': (-1.0, 0, .43,0, 1.57, 1.57),
+    'tag_19': (-1.0, 0.1998, .5316, 0.0, 1.57, 1.57),
+    'tag_20': (-1.0, 0.1998, .3729, 0.0, 1.57, 1.57),
+    'tag_21': (-1.0, 0.4441, .43, 0.0, 1.57, 1.57),
     # 'tag_0': (0, 0,0, 0.0, 1.57, 0.0),
     # 'tag_1': (0, 0, 0.0, 0.0, 1.57, 0.0),
     # 'tag_2': (0, 0, 0.0, 0.0, 1.57, 0.0),
@@ -28,6 +29,24 @@ TAG_POSES_IN_MAP = {
     # 'tag_20': (0, 0.0,0.0, 0.0, 1.57, 0.0),
     # 'tag_21': (0, 0.0,0.0,0.0, 1.57, 0.0),
 }
+
+#bottom right starting zone
+# TAG_POSES_IN_MAP = {
+#     'tag_0': (-1.0, 0.4441, .43, 0.0, 1.57, 1.57),
+#     'tag_1': (-1.0, 0.1998, .5316, 0.0, 1.57, 1.57),
+#     'tag_2': (-1.0, 0.1998, 0.3729, 0.0, 1.57, 1.57),
+#     'tag_18': (-1.0, 0, .43,0, 1.57, 1.57),
+#     'tag_19': (-1.0, -0.1998, .5316, 0.0, 1.57, 1.57),
+#     'tag_20': (-1.0, -0.1998, .3729, 0.0, 1.57, 1.57),
+#     'tag_21': (-1.0, -0.4441, .43, 0.0, 1.57, 1.57),
+#     # 'tag_0': (0, 0,0, 0.0, 1.57, 0.0),
+#     # 'tag_1': (0, 0, 0.0, 0.0, 1.57, 0.0),
+#     # 'tag_2': (0, 0, 0.0, 0.0, 1.57, 0.0),
+#     # 'tag_18': (0, 0.0, 0.0, 0.0, 1.57, 0.0),
+#     # 'tag_19': (0, 0.0,0, 0.0, 1.57, 0.0),
+#     # 'tag_20': (0, 0.0,0.0, 0.0, 1.57, 0.0),
+#     # 'tag_21': (0, 0.0,0.0,0.0, 1.57, 0.0),
+# }
 
 class AprilTagLocalizationNode(Node):
     def __init__(self):
@@ -45,19 +64,26 @@ class AprilTagLocalizationNode(Node):
             10
         )
 
-        self.right_sub = self.create_subscription(
+        self.left_sub = self.create_subscription(
             AprilTagDetectionArray,
-            '/right_cam/detections',
-            self._process_right,
+            '/left_cam/detections',
+            self._process_left,
             10
         )
-    
-        # self.back_sub = self.create_subscription(
+
+        # self.right_sub = self.create_subscription(
         #     AprilTagDetectionArray,
-        #     '/back_cam/detections',
-        #     self._process_back,
+        #     '/right_cam/detections',
+        #     self._process_right,
         #     10
         # )
+    
+        self.back_sub = self.create_subscription(
+            AprilTagDetectionArray,
+            '/back_cam/detections',
+            self._process_back,
+            10
+        )
 
         self.pose_pub = self.create_publisher(
             PoseWithCovarianceStamped,
@@ -72,11 +98,14 @@ class AprilTagLocalizationNode(Node):
     def _process_front(self, msg):
         self._process_frames(msg, 'front_camera_optical_frame_link')
 
-    def _process_right(self, msg):
-        self._process_frames(msg, 'right_camera_optical_frame_link')
+    def _process_left(self, msg):
+        self._process_frames(msg, 'left_camera_optical_frame_link')
 
-    # def _process_back(self, msg):
-    #     self._process_frames(msg, 'back_camera_optical_frame_link')
+    # def _process_right(self, msg):
+    #     self._process_frames(msg, 'right_camera_optical_frame_link')
+
+    def _process_back(self, msg):
+        self._process_frames(msg, 'back_camera_optical_frame_link')
 
     def _process_frames(self, msg, camera_frame):
         if not msg.detections:

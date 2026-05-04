@@ -205,4 +205,34 @@
     </sensor>
 </gazebo>
 
+
+<!-- ── Logitech C615 ──────────────────────────────────────────────────── -->
+<xacro:include filename="camera.xacro" />
+<xacro:property name="x" value=".017"/>
+<xacro:property name="y" value=".07"/>
+<xacro:property name="z" value=".04"/>
+
+<!-- need numbers -->
+<xacro:camera parent="base_link" pos="front" size_x="${x}" size_y="${y}" size_z="${z}">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+</xacro:camera>
+
+<xacro:camera parent="base_link" pos="back" size_x="${x}" size_y="${y}" size_z="${z}">
+    <origin xyz="-.2799208 -.195 .45" rpy="0 0 -${pi_const}"/>
+</xacro:camera>
+
+
+<!-- ── Innomaker ──────────────────────────────────────────────────── -->
+<xacro:include filename="camera.xacro" />
+<xacro:property name="x" value=".037"/>
+<xacro:property name="y" value=".037"/>
+<xacro:property name="z" value=".04"/>
+
+<xacro:camera parent="base_link" pos="right" size_x="${x}" size_y="${y}" size_z="${z}">
+    <origin xyz="0.00792 -0.195 0.45" rpy="0 0 -1.57"/>
+</xacro:camera>
+
+<xacro:camera parent="base_link" pos="left" size_x="${x}" size_y="${y}" size_z="${z}">
+    <origin xyz="0.00792 0.195 0.45" rpy="0 0 1.57"/>
+</xacro:camera>
 </robot>

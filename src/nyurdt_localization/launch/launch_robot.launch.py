@@ -17,15 +17,14 @@ def generate_launch_description():
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 PathJoinSubstitution([
-                    FindPackageShare('realsense2_camera'), 'launch', 'rs_launch.py'
+                    FindPackageShare('nyurdt_description'), 'launch', 'rsp.launch.py'
                 ])
-            ),
-            launch_arguments={
-                'align_depth.enable': 'true',
-                'pointcloud.enable' : 'true',
-            }.items()
+            )
         ),
-        IncludeLaunchDescription(
-            PathJoinSubstitution([launch_dir, 'tf.launch.py'])
-        ),
+        Node(
+            package='nyurdt_localization',
+            executable='april_tf',
+            name='apriltag_tf',
+            output='screen'
+        )
     ])
