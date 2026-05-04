@@ -45,7 +45,7 @@ ZONES = {
     "starting":   {"x": (0.00, 2.00), "y": ( 2.47,  4.47)},
 }
 # pose where robot can see the Apriltag
-RELOCALIZE_POSE = {"x": -0.5, "y": 0.5, "yaw": 0.0} 
+RELOCALIZE_POSE = {"x": -1.0, "y": 1.0, "yaw": 0.0} 
 
 # covariance thresholds
 COV_X_THRESH = 0.05
@@ -56,7 +56,7 @@ ZONE_ENTRY_MARGIN = 0.12
 
 # queue for 3 cycles of autonomy
 TASK_QUEUE = [
-    {"zone": "excavation", "action": "excavate"},
+    # {"zone": "excavation", "action": "excavate"},
     {"zone": "deposition", "action": "deposit"},
     {"zone": "excavation", "action": "excavate"},
     {"zone": "deposition", "action": "deposit"},
@@ -75,7 +75,7 @@ class AutonomyManager(Node):
         self.task_index = 0
         self.current_zone = None
         self.pose = None
-        self.covariance = [.03] * 36 #CHANGE TO HIGH VALUE INITIALLY
+        self.covariance = [.01] * 36 #CHANGE TO HIGH VALUE INITIALLY
         self.nav_goal_handle = None
         self.nav_in_flight = False
         self._nav_result_ready = False
@@ -312,10 +312,13 @@ class AutonomyManager(Node):
             target_y = (zone["y"][0] + zone["y"][1]) / 2.0
             self.nav_in_flight = True
             self._send_nav_goal(target_x, target_y)
+            self.get_logger().info("Sent goal!!")   
+            
             return 'stage_2'
+
  
         # Check if we've arrived (Nav2 goal succeeded)
-        if self._nav_goal_succeeded():
+        if self._nav_goal_succeeded():  
             self.get_logger().info(f"Arrived near {TASK_QUEUE[self.task_index]['zone']}.")
             self.nav_in_flight = False
             return 'stage_5'

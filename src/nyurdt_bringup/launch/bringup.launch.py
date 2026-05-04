@@ -17,6 +17,7 @@ def generate_launch_description():
     realsense    = get_package_share_directory('realsense2_camera')
     localization = get_package_share_directory('nyurdt_localization')
     slam         = get_package_share_directory('nyurdt_slam')
+    control      = get_package_share_directory('nyurdt_control')
 
     
     nav2_params = os.path.join(navigation, 'config', 'nav2_params.yaml')
@@ -254,6 +255,13 @@ def generate_launch_description():
                  'map': map_yaml,  
             }.items()
         ),
+
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(control, 'launch', 'control.launch.py')
+            ),
+        ),
+
 
         Node(
             package='rviz2',
