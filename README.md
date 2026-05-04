@@ -91,3 +91,7 @@ git push origin feature/<story>
 * `main` must always build cleanly
 
 
+sudo ip addr flush dev wlp0s20f3
+
+sudo ip addr add 192.168.1.103/24 dev wlp0s20f3
+sudo ip link set wlp0s20f3 up
