@@ -86,9 +86,7 @@ class CmdVelBridge(Node):
         super().__init__('cmd_vel_bridge')
         i2c_init()
 
-        # How many identical commands to skip before re-publishing (reduces chatter)
-        self._last_loco_cmd = None
-        self._last_system_cmd = None
+        self._last_cmd_time = self.get_clock().now()
 
         self.create_subscription(
             Twist,
@@ -107,15 +105,17 @@ class CmdVelBridge(Node):
 
         self.get_logger().info("CmdVelBridge ready — listening on /robotCmds")
 
-    def _loco_cb(self, msg: Twist):
-        hex_cmd = velocity_to_hex(msg.linear.x, msg.angular.z)
+        self.create_timer(0.5, self._heartbeat_cb) 
+
         
+    def _heartbeat_cb(self):
+        elapsed = (self.get_clock().now() - self._last_cmd_time).nanoseconds / 1e9
+        if elapsed > 0.5:
+            send_HEX(LocomotionHex.LOCOMOTION_STOP.value)
 
-
-        # Only publish on change (avoids hammering the MCU)
-        # if hex_cmd == self._last_loco_cmd:
-        #     return
-        # self._last_loco_cmd = hex_cmd
+    def _loco_cb(self, msg: Twist):
+        self._last_cmd_time = self.get_clock().now()
+        hex_cmd = velocity_to_hex(msg.linear.x, msg.angular.z)
 
         send_HEX(hex_cmd)
 
@@ -126,9 +126,6 @@ class CmdVelBridge(Node):
 
     def _excav_depo_cb(self, msg: Byte):
         hex_cmd = msg.data
-        # if hex_cmd == self._last_system_cmd:
-        #     return
-        # self._last_system_cmd = hex_cmd
 
         hex_val = int.from_bytes(hex_cmd, 'little')
         send_HEX(hex_val)
