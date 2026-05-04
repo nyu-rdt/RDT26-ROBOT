@@ -109,11 +109,13 @@ class CmdVelBridge(Node):
 
     def _loco_cb(self, msg: Twist):
         hex_cmd = velocity_to_hex(msg.linear.x, msg.angular.z)
+        
+
 
         # Only publish on change (avoids hammering the MCU)
-        if hex_cmd == self._last_loco_cmd:
-            return
-        self._last_loco_cmd = hex_cmd
+        # if hex_cmd == self._last_loco_cmd:
+        #     return
+        # self._last_loco_cmd = hex_cmd
 
         send_HEX(hex_cmd)
 
@@ -124,12 +126,12 @@ class CmdVelBridge(Node):
 
     def _excav_depo_cb(self, msg: Byte):
         hex_cmd = msg.data
-        if hex_cmd == self._last_system_cmd:
-            return
-        self._last_system_cmd = hex_cmd
+        # if hex_cmd == self._last_system_cmd:
+        #     return
+        # self._last_system_cmd = hex_cmd
 
-        send_HEX(hex_cmd)
         hex_val = int.from_bytes(hex_cmd, 'little')
+        send_HEX(hex_val)
         self.get_logger().debug(f"system_cmd → 0x{hex_val:02X}")
 
 def main(args=None):

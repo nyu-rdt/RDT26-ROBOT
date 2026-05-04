@@ -32,6 +32,7 @@ def i2c_init():
             _backend = None
 def send_HEX(hexcode: int) -> int:
     try:
+
         if _backend == "smbus":
             _smbus.write_byte(teensy_address, hexcode & 0xFF)  # type: ignore[union-attr]
             return 0
