@@ -18,8 +18,12 @@
 
         pose_estimation_method: "pnp"   # method for estimating the tag pose
 
-        # optional list of tags
+            # tag:
+        #     ids: [0, 1, 2, 18, 19, 20, 21]            # tag ID
+        #     frames: [tag_18, tag_19, tag_20, tag_21]  # optional frame name
+        #     sizes: [0.069, .245, .196, .069]   # optional tag-specific edge size
+
         tag:
-            ids: [18, 19, 20, 21]            # tag ID
-            frames: [tag_18, tag_19, tag_20, tag_21]  # optional frame name
-            sizes: [0.069, .245, .196, .069]   # optional tag-specific edge size
+            ids: [0, 1, 2, 18, 19, 20, 21]            # tag ID
+            frames: [tag_0, tag_1, tag_2,tag_18, tag_19, tag_20, tag_21]  # optional frame name
+            sizes: [0.3048, 0.1017,0.1017,0.2159, 0.1017, 0.1017, .3048]   # optional tag-specific edge size

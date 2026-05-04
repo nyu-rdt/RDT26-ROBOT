@@ -13,7 +13,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/config', glob('config/*.yaml')),
         ('share/' + package_name + '/launch', glob('launch/*.launch.py')),
-        ('share/' + package_name + '/model',glob('model/*.xacro')),
+        ('share/' + package_name + '/model',glob('model/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -28,7 +28,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            "april_tf=april.apriltag_tf:main",
+            "april_tf=nyurdt_localization.apriltag_tf:main",
         ],
     },
 )

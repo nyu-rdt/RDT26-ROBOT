@@ -1,0 +1,25 @@
+#usb 3.0 camera
+image_width: 800
+image_height: 600
+camera_name: Innomaker
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [433.94042341412194, 0.0, 411.4329132141334,
+    0.0, 434.1604206832811, 316.75760939654543,
+    0.0, 0.0, 1.0]
+distortion_model: plumb_bob
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [0.002732908427858184, -0.07219744894608127, -0.0012269814328175204, -5.6596676072608626e-06, 0.025273151358599626]
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1,0,0,0,1,0,0,0,1]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [433.94042341412194, 0.0, 411.4329132141334, 0,
+    0.0, 434.1604206832811, 316.75760939654543, 0,
+    0.0, 0.0, 1.0, 0]

@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<robot name="test_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<link name="base_link">
+
+<visual>
+    <origin xyz="-0.21971 -0.18098 0" rpy="0 0 0"/>
+    <geometry>
+    <mesh filename="package://nyurdt_localization/model/robot.stl"
+    scale="0.001 0.001 0.001"/>
+    </geometry>
+</visual>
+
+<collision>
+    <origin xyz="-0.21971 -0.18098 0" rpy="0 0 0"/>
+    <geometry>
+    
+    <box size="0.74784 0.60788 0.5"/>
+    </geometry>
+</collision>
+
+<inertial>
+    <origin xyz="0 0 0"/>
+    <mass value="20"/>
+    <inertia ixx="1" ixy="0" ixz="0"
+    iyy="1" iyz="0"
+    izz="1"/>
+</inertial>
+
+</link>
+
+<!-- camera file -->
+<xacro:include filename="camera.xacro" />
+<xacro:property name="x" value=".017"/>
+<xacro:property name="y" value=".07"/>
+<xacro:property name="z" value=".04"/>
+
+<xacro:camera parent="base_link" pos="left" size_x="${x}" size_y="${y}" size_z="${z}">
+    <origin xyz="0.00792 0.195 0.26" rpy="0 0 0"/>
+</xacro:camera>
+
+<xacro:camera parent="base_link" pos="right" size_x="${x}" size_y="${y}" size_z="${z}">
+    <origin xyz="0.00792 -0.195 0.26" rpy="0 0 0"/>
+</xacro:camera>
+
+<!-- camera file -->
+<xacro:include filename="camera.xacro" />
+<xacro:property name="x" value=".037"/>
+<xacro:property name="y" value=".037"/>
+<xacro:property name="z" value=".04"/>
+
+<xacro:camera parent="base_link" pos="front" size_x="${x}" size_y="${y}" size_z="${z}">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+</xacro:camera>
+
+<xacro:camera parent="base_link" pos="back" size_x="${x}" size_y="${y}" size_z="${z}">
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+</xacro:camera>
+
+</robot>
