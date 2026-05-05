@@ -8,12 +8,11 @@ from ament_index_python.packages import get_package_share_directory
 import os
 
 def generate_launch_description():
-    # NEED TO SWITCH INDEX NAMES BASED ON JETSON
     #WAITING ON FOURTH CAMERA
-    device_arg1 = DeclareLaunchArgument('front_cam', default_value='\_SB_.PCI0.XHC_.RHUB.HS01-1:1.2-046d:082c') #new camera
-    device_arg2 = DeclareLaunchArgument('left_cam', default_value='\_SB_.PCI0.XHC_.RHUB.SS02-2:1.0-0bda:5883') #innomaker
+    device_arg1 = DeclareLaunchArgument('front_cam', default_value='/base/bus@0/usb@3610000-2.4:1.2-046d:082c') #jetson bottom right dp logitech cam w/ velcro
+    device_arg2 = DeclareLaunchArgument('left_cam', default_value='/base/bus@0/usb@3610000-1.1:1.0-0bda:5883') #top left port innomaker
     # device_arg3 = DeclareLaunchArgument('right_cam', default_value='\_SB_.PCI0.XHC_.RHUB.SS02-2:1.0-0bda:5883') #innomaker
-    device_arg4 = DeclareLaunchArgument('back_cam', default_value='\_SB_.PCI0.XHC_.RHUB.HS02-2:1.2-046d:082c') #camera with velcro
+    device_arg4 = DeclareLaunchArgument('back_cam', default_value='/base/bus@0/usb@3610000-2.2:1.2-046d:082c') #bottom left logitech camera plastic 
 
     device1 = LaunchConfiguration('front_cam')
     device2 = LaunchConfiguration('left_cam')
@@ -148,7 +147,7 @@ def generate_launch_description():
             name='camera4',
             namespace='back_cam',
             parameters=[
-                {'camera': device1},
+                {'camera': device4},
                 {'width': 640},
                 {'height': 480},
                 {'format': 'MJPEG'},
