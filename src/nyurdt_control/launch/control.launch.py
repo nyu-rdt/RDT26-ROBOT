@@ -31,14 +31,6 @@ def generate_launch_description():
         output='screen',
     )
 
-    teleop_node = Node(
-        package='teleop_twist_joy',
-        executable='teleop_node',
-        name='teleop_node',
-        parameters=[joy_params, {'use_sim_time': use_sim_time}],
-        remappings=[('/cmd_vel', '/cmd_vel_joy')]
-    )
-
     twist_mux_node = Node(
         package='twist_mux',
         executable='twist_mux',
@@ -68,7 +60,7 @@ def generate_launch_description():
             description='Use sim time if true'),
         # manual_control_node,
         joy_node,
-        teleop_node,
+        # teleop_node,
         twist_mux_node,
         teensy_bridge_node,
     ])

@@ -411,54 +411,54 @@ def launch_setup(context, *args, **kwargs):
             prefix=LaunchConfiguration('launch_prefix'),
             namespace=LaunchConfiguration('namespace')),
 
-        Node(
-            package='rtabmap_viz', executable='rtabmap_viz', name="rtabmap_viz", output='screen',
-            emulate_tty=True,
-            parameters=[{
-                "subscribe_depth": LaunchConfiguration('depth'),
-                "subscribe_rgbd": LaunchConfiguration('subscribe_rgbd'),
-                "subscribe_rgb": LaunchConfiguration('subscribe_rgb'),
-                "subscribe_stereo": LaunchConfiguration('stereo'),
-                "subscribe_scan": LaunchConfiguration('subscribe_scan'),
-                "subscribe_scan_cloud": LaunchConfiguration('subscribe_scan_cloud'),
-                "subscribe_user_data": LaunchConfiguration('subscribe_user_data'),
-                "subscribe_odom_info": ConditionalBool(True, False, IfCondition(PythonExpression(["'", LaunchConfiguration('icp_odometry'), "' == 'true' or '", LaunchConfiguration('visual_odometry'), "' == 'true'"]))._predicate_func(context)).perform(context),
-                "frame_id": LaunchConfiguration('frame_id'),
-                "odom_frame_id": LaunchConfiguration('odom_frame_id').perform(context),
-                "wait_for_transform": LaunchConfiguration('wait_for_transform'),
-                "approx_sync": LaunchConfiguration('approx_sync'),
-                "topic_queue_size": LaunchConfiguration('topic_queue_size'),
-                "sync_queue_size": LaunchConfiguration('sync_queue_size'),
-                "qos_image": LaunchConfiguration('qos_image'),
-                "qos_scan": LaunchConfiguration('qos_scan'),
-                "qos_odom": LaunchConfiguration('qos_odom'),
-                "qos_camera_info": LaunchConfiguration('qos_camera_info'),
-                "qos_user_data": LaunchConfiguration('qos_user_data'),
-            }],
-            remappings=[
-                ("rgb/image", LaunchConfiguration('rgb_topic_relay')),
-                ("depth/image", LaunchConfiguration('depth_topic_relay')),
-                ("rgb/camera_info", LaunchConfiguration('camera_info_topic')),
-                ("rgbd_image", LaunchConfiguration('rgbd_topic_relay')),
-                ("left/image_rect", LaunchConfiguration('left_image_topic_relay')),
-                ("right/image_rect", LaunchConfiguration('right_image_topic_relay')),
-                ("left/camera_info", LaunchConfiguration('left_camera_info_topic')),
-                ("right/camera_info", LaunchConfiguration('right_camera_info_topic')),
-                ("scan", LaunchConfiguration('scan_topic')),
-                ("scan_cloud", LaunchConfiguration('scan_cloud_topic')),
-                ("odom", LaunchConfiguration('odom_topic'))],
-            condition=IfCondition(LaunchConfiguration("rtabmap_viz")),
-            arguments=[LaunchConfiguration("gui_cfg"), "--ros-args", "--log-level", [LaunchConfiguration('namespace'), '.rtabmap_viz:=', LaunchConfiguration('log_level')], "--log-level", ['rtabmap_viz:=', LaunchConfiguration('log_level')]],
-            prefix=LaunchConfiguration('launch_prefix'),
-            namespace=LaunchConfiguration('namespace')),
-        Node(
-            package='rviz2', executable='rviz2', name="rviz2", output='screen',
-            condition=IfCondition(LaunchConfiguration("rviz")),
-            arguments=[["-d"], [LaunchConfiguration("rviz_cfg")]]),
+        # Node(
+        #     package='rtabmap_viz', executable='rtabmap_viz', name="rtabmap_viz", output='screen',
+        #     emulate_tty=True,
+        #     parameters=[{
+        #         "subscribe_depth": LaunchConfiguration('depth'),
+        #         "subscribe_rgbd": LaunchConfiguration('subscribe_rgbd'),
+        #         "subscribe_rgb": LaunchConfiguration('subscribe_rgb'),
+        #         "subscribe_stereo": LaunchConfiguration('stereo'),
+        #         "subscribe_scan": LaunchConfiguration('subscribe_scan'),
+        #         "subscribe_scan_cloud": LaunchConfiguration('subscribe_scan_cloud'),
+        #         "subscribe_user_data": LaunchConfiguration('subscribe_user_data'),
+        #         "subscribe_odom_info": ConditionalBool(True, False, IfCondition(PythonExpression(["'", LaunchConfiguration('icp_odometry'), "' == 'true' or '", LaunchConfiguration('visual_odometry'), "' == 'true'"]))._predicate_func(context)).perform(context),
+        #         "frame_id": LaunchConfiguration('frame_id'),
+        #         "odom_frame_id": LaunchConfiguration('odom_frame_id').perform(context),
+        #         "wait_for_transform": LaunchConfiguration('wait_for_transform'),
+        #         "approx_sync": LaunchConfiguration('approx_sync'),
+        #         "topic_queue_size": LaunchConfiguration('topic_queue_size'),
+        #         "sync_queue_size": LaunchConfiguration('sync_queue_size'),
+        #         "qos_image": LaunchConfiguration('qos_image'),
+        #         "qos_scan": LaunchConfiguration('qos_scan'),
+        #         "qos_odom": LaunchConfiguration('qos_odom'),
+        #         "qos_camera_info": LaunchConfiguration('qos_camera_info'),
+        #         "qos_user_data": LaunchConfiguration('qos_user_data'),
+        #     }],
+        #     remappings=[
+        #         ("rgb/image", LaunchConfiguration('rgb_topic_relay')),
+        #         ("depth/image", LaunchConfiguration('depth_topic_relay')),
+        #         ("rgb/camera_info", LaunchConfiguration('camera_info_topic')),
+        #         ("rgbd_image", LaunchConfiguration('rgbd_topic_relay')),
+        #         ("left/image_rect", LaunchConfiguration('left_image_topic_relay')),
+        #         ("right/image_rect", LaunchConfiguration('right_image_topic_relay')),
+        #         ("left/camera_info", LaunchConfiguration('left_camera_info_topic')),
+        #         ("right/camera_info", LaunchConfiguration('right_camera_info_topic')),
+        #         ("scan", LaunchConfiguration('scan_topic')),
+        #         ("scan_cloud", LaunchConfiguration('scan_cloud_topic')),
+        #         ("odom", LaunchConfiguration('odom_topic'))],
+        #     condition=IfCondition(LaunchConfiguration("rtabmap_viz")),
+        #     arguments=[LaunchConfiguration("gui_cfg"), "--ros-args", "--log-level", [LaunchConfiguration('namespace'), '.rtabmap_viz:=', LaunchConfiguration('log_level')], "--log-level", ['rtabmap_viz:=', LaunchConfiguration('log_level')]],
+        #     prefix=LaunchConfiguration('launch_prefix'),
+        #     namespace=LaunchConfiguration('namespace')),
+        # Node(
+        #     package='rviz2', executable='rviz2', name="rviz2", output='screen',
+        #     condition=IfCondition(LaunchConfiguration("rviz")),
+        #     arguments=[["-d"], [LaunchConfiguration("rviz_cfg")]]),
         Node(
             package='rtabmap_util', executable='point_cloud_xyzrgb', name="point_cloud_xyzrgb", output='screen',
             emulate_tty=True,
-            condition=IfCondition(LaunchConfiguration("rviz")),
+            # condition=IfCondition(LaunchConfiguration("rviz")),
             parameters=[{
                 "decimation": 4,
                 "voxel_size": 0.0,
@@ -481,9 +481,9 @@ def launch_setup(context, *args, **kwargs):
 
 def generate_launch_description():
     
-    config_rviz = os.path.join(
-        get_package_share_directory('rtabmap_launch'), 'launch', 'config', 'rgbd.rviz'
-    )
+    # config_rviz = os.path.join(
+    #     get_package_share_directory('rtabmap_launch'), 'launch', 'config', 'rgbd.rviz'
+    # )
     
     # config_rtab = os.path.join(
     #     get_package_share_directory('nyurdt_slam'), 'launch', 'config', 'rtabmap.yaml'
@@ -495,8 +495,8 @@ def generate_launch_description():
         DeclareLaunchArgument('stereo', default_value='false', description='Use stereo input instead of RGB-D.'),
 
         DeclareLaunchArgument('localization', default_value='false', description='Launch in localization mode.'),
-        DeclareLaunchArgument('rtabmap_viz',  default_value='true',  description='Launch RTAB-Map UI (optional).'),
-        DeclareLaunchArgument('rviz',         default_value='false', description='Launch RVIZ (optional).'),
+        # DeclareLaunchArgument('rtabmap_viz',  default_value='true',  description='Launch RTAB-Map UI (optional).'),
+        # DeclareLaunchArgument('rviz',         default_value='false', description='Launch RVIZ (optional).'),
 
         DeclareLaunchArgument('use_sim_time', default_value='false', description='Use simulation (Gazebo) clock if true'),
 
@@ -504,8 +504,8 @@ def generate_launch_description():
 
         # Config files
         DeclareLaunchArgument('cfg',      default_value="",               description='To change RTAB-Map\'s parameters, set the path of config file (*.ini) generated by the standalone app.'),
-        DeclareLaunchArgument('gui_cfg',  default_value='~/.ros/rtabmap_gui.ini',  description='Configuration path of rtabmap_viz.'),
-        DeclareLaunchArgument('rviz_cfg', default_value=config_rviz,               description='Configuration path of rviz2.'),
+        # DeclareLaunchArgument('gui_cfg',  default_value='~/.ros/rtabmap_gui.ini',  description='Configuration path of rtabmap_viz.'),
+        # # DeclareLaunchArgument('rviz_cfg', default_value=config_rviz,               description='Configuration path of rviz2.'),
 
         DeclareLaunchArgument('frame_id',       default_value='base_link',          description='Fixed frame id of the robot (base frame), you may set "base_link" or "base_footprint" if they are published. For camera-only config, this could be "camera_link".'),
         DeclareLaunchArgument('odom_frame_id',  default_value='',                   description='If set, TF is used to get odometry instead of the topic.'),

@@ -7,9 +7,13 @@ _bus_num = int(os.environ.get("NYURDT_TEENSY_I2C_BUS", "7"))
 _backend = None
 _i2c = None
 _smbus = None
+FAKE_TEENSY = os.environ.get("FAKE_TEENSY", "0") == "1"
 
 # initialize I2C backend (try smbus2 first, then busio)
 def i2c_init():
+    if FAKE_TEENSY:
+        print("[FAKE TEENSY] I2C init skipped")
+
     global _backend, _smbus, _i2c
     try:
         from smbus2 import SMBus  # type: ignore
@@ -30,8 +34,14 @@ def i2c_init():
         except Exception:
             _i2c = None
             _backend = None
+
 def send_HEX(hexcode: int) -> int:
+    if FAKE_TEENSY:
+        print(f"[FAKE TEENSY] → 0x{hexcode:02X}", flush=True)
+        return 0
+    
     try:
+
         if _backend == "smbus":
             _smbus.write_byte(teensy_address, hexcode & 0xFF)  # type: ignore[union-attr]
             return 0
