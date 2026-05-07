@@ -6,11 +6,10 @@ File for running through the full excavation cycle autonomously.
 
 import rclpy
 from rclpy.node import Node
-import time
+from rclpy.duration import Duration
 from std_msgs.msg import Byte, Float32
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
 from nyurdt_interfaces.msg import RobotStatus
-from time import sleep
 
 
 class ExcavationNode(Node):
@@ -86,8 +85,8 @@ class ExcavationNode(Node):
             self._set_conveyor_target(0.0)
         
         if not self.dig_start:
-            self.dig_start = time.time()
-        if time.time() - self.dig_start > 10:
+            self.dig_start = self.get_clock().now()
+        if self.get_clock().now() - self.dig_start >= Duration(seconds=5):
             return 'stage_2'
 
         self.get_logger().info("Publishing excavation start command")
@@ -113,7 +112,7 @@ class ExcavationNode(Node):
         if tel.exc_pos_error == True:
             self.get_logger().warn("Excavation position error detected, attempting to correct")
             self.publish_msg(b"\x61")
-            sleep(4)
+            self.get_clock().sleep_for(Duration(seconds=3))
             self.publish_msg(b"\x62")
         
         if tel.exc_pos_error == False:
@@ -126,7 +125,7 @@ class ExcavationNode(Node):
         if self.current_state != self.stage_3:
             self.get_logger().info("Excavation stage 3: Digging")
             self.current_state = self.stage_3
-            self.dig_start_time = time.time()
+            self.dig_start_time = self.get_clock().now()
 
         self.check_ladder_health()
 
@@ -134,7 +133,7 @@ class ExcavationNode(Node):
         if tel is not None and tel.total_mass >= self.goal_mass:
             self.get_logger().info("Excavation goal mass reached")
             return 'stage_4'
-        if time.time() - self.dig_start_time > self.dig_time:
+        if self.get_clock().now() - self.dig_start_time >= Duration(seconds=self.dig_time):
             self.get_logger().info("Excavation time limit exceeded")
             self.dig_start_time = None
             return 'stage_4'
@@ -157,11 +156,11 @@ class ExcavationNode(Node):
             self.get_logger().info("Excavation stage 5: Return to locomotion position")
             self.current_state = self.stage_5
             self._set_conveyor_target(0.0)
-            self.dig_start_time = time.time()
+            self.dig_start_time = self.get_clock().now()
         self.publish_msg(b"\x61")
 
         # for testing
-        if time.time() - self.dig_start_time > 10:
+        if self.get_clock().now()- self.dig_start_time >= Duration(seconds=10):
             return None
         
         if self.latest_telemetry is not None and self.latest_telemetry.conveyor_pos < 0.05:
