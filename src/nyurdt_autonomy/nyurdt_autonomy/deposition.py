@@ -6,7 +6,7 @@ File for running through the full deposition cycle of autonomy.
 
 import rclpy
 from rclpy.node import Node
-import time
+from rclpy.duration import Duration
 from std_msgs.msg import Byte, Bool
 from nyurdt_autonomy.nyurdt_state_machine import StateMachine
 from nyurdt_interfaces.msg import RobotStatus
@@ -65,13 +65,13 @@ class DepositionNode(Node):
             self.current_state = self.stage_1
 
         if not self.start_yaw:
-            self.start_yaw = time.time()  # placeholder for actual yaw reading
+            self.start_yaw = self.get_clock().now()  # placeholder for actual yaw reading
 
         self.publish_msg(b"\x50") # turn right at 25%
       
         # for now this is a timer but this should replaced with 
         # real IMU yaw check from  realsense camera
-        if time.time() - self.start_yaw >= 3:
+        if self.get_clock().now() - self.start_yaw >= Duration(seconds=3):
             return 'stage_6'
         
         return 'stage_1'
@@ -85,9 +85,9 @@ class DepositionNode(Node):
         # may need to insert check here that depo bin is actually open
 
         if not self.depo_start_time:
-            self.depo_start_time=time.time()
+            self.depo_start_time=self.get_clock().now()
 
-        if time.time() - self.depo_start_time >= 5: 
+        if self.get_clock().now() - self.depo_start_time >= Duration(seconds=5): 
            self.depo_start_time = None
            return 'stage_3'
         
@@ -101,7 +101,7 @@ class DepositionNode(Node):
             self.current_state = self.stage_3
         
         if not self.depo_start_time:
-            self.depo_start_time = time.time()
+            self.depo_start_time = self.get_clock().now()
         
         self.publish_msg(b"\x72")  # vibrate
 
@@ -111,7 +111,7 @@ class DepositionNode(Node):
         #     self.get_logger().info(f"Total mass: {tel.total_mass}")
         #     self.depo_start_time = None
         #     return 'stage_4'
-        if time.time() - self.depo_start_time > 5:
+        if self.get_clock().now()- self.depo_start_time >= Duration(seconds=5):
             self.depo_start_time = None
             return 'stage_4'
 
@@ -123,10 +123,10 @@ class DepositionNode(Node):
             self.current_state = self.stage_4
 
         if not self.depo_start_time:
-           self.depo_start_time = time.time()
+           self.depo_start_time = self.get_clock().now()
         
         
-        if time.time() - self.depo_start_time >= 2:  # stop vibrate after 5 seconds of stage 3 ending
+        if self.get_clock().now()- self.depo_start_time >= Duration(seconds=2):  # stop vibrate after 5 seconds of stage 3 ending
            self.depo_start_time = None
            return 'stage_5'
         
@@ -140,9 +140,9 @@ class DepositionNode(Node):
             self.current_state = self.stage_5
         
         if not self.depo_start_time:
-           self.depo_start_time = time.time()
+           self.depo_start_time = self.get_clock().now()
 
-        if time.time() - self.depo_start_time >= 5: 
+        if self.get_clock().now() - self.depo_start_time >= Duration(seconds=5): 
            return None
 
         self.publish_msg(b"\x70")
@@ -155,9 +155,9 @@ class DepositionNode(Node):
             self.current_state = self.stage_6
         
         if not self.depo_start_time:
-            self.depo_start_time = time.time()
+            self.depo_start_time = self.get_clock().now()
 
-        if time.time() - self.depo_start_time >= 3:
+        if self.get_clock().now() - self.depo_start_time >= Duration(seconds=3):
             self.depo_start_time = None
             return 'stage_2'
         
