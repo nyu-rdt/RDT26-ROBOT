@@ -5,29 +5,31 @@ import math
 import rclpy
 from rclpy.node import Node
 from rclpy.time import Time
+from rclpy.duration import Duration
 from geometry_msgs.msg import TransformStamped, PoseWithCovarianceStamped
 from tf2_ros import Buffer, TransformListener, TransformBroadcaster, LookupException, ConnectivityException, ExtrapolationException
 import tf_transformations as ts
 from apriltag_msgs.msg import AprilTagDetectionArray
 
-# Known tag poses in MAP frame: (map origin is at center of starting zone)
-# (x, y, z, roll, pitch, yaw) in metres/radians
-#bottom left starting zone
+# Known tag poses in MAP frame.
+# Coordinate system: X=0 (construction/left wall) → X=8.10 (fiducial/right wall).
+#   Y: −2.275 → +2.275 m    Z: 0 = ground
+# Format: (x, y, z, roll, pitch, yaw)  [metres / radians]
+# Tags are on the RIGHT wall (x=8.10), face normal toward −X (into the arena).
+# Orientation: roll=π/2, pitch=0, yaw=−π/2  →  tag Z-axis = −X world axis.
+_R = math.pi / 2
+# Map origin = centre of 2×2m starting zone (SDF world 7.10, 1.28).
+# All positions = SDF world position − (7.10, 1.28).
+# Tags on right wall: SDF x=8.10 → map x=1.00 (1m right of map origin).
 TAG_POSES_IN_MAP = {
-    'tag_0': (-1.0, -0.4441, .43, 0.0, 1.57, 1.57),
-    'tag_1': (-1.0, -0.1998, .5316, 0.0, 1.57, 1.57),
-    'tag_2': (-1.0, -0.1998, 0.3729, 0.0, 1.57, 1.57),
-    'tag_18': (-1.0, 0, .43,0, 1.57, 1.57),
-    'tag_19': (-1.0, 0.1998, .5316, 0.0, 1.57, 1.57),
-    'tag_20': (-1.0, 0.1998, .3729, 0.0, 1.57, 1.57),
-    'tag_21': (-1.0, 0.4441, .43, 0.0, 1.57, 1.57),
-    # 'tag_0': (0, 0,0, 0.0, 1.57, 0.0),
-    # 'tag_1': (0, 0, 0.0, 0.0, 1.57, 0.0),
-    # 'tag_2': (0, 0, 0.0, 0.0, 1.57, 0.0),
-    # 'tag_18': (0, 0.0, 0.0, 0.0, 1.57, 0.0),
-    # 'tag_19': (0, 0.0,0, 0.0, 1.57, 0.0),
-    # 'tag_20': (0, 0.0,0.0, 0.0, 1.57, 0.0),
-    # 'tag_21': (0, 0.0,0.0,0.0, 1.57, 0.0),
+    # Fiducial rail on right wall, y values in map frame (SDF y − 1.28)
+    'tag_0':  (1.00, 0.056, 0.43,   _R, 0.0, -_R),
+    'tag_1':  (1.00, 0.300, 0.5316, _R, 0.0, -_R),
+    'tag_2':  (1.00, 0.300, 0.3729, _R, 0.0, -_R),
+    'tag_18': (1.00, 0.500, 0.43,   _R, 0.0, -_R),
+    'tag_19': (1.00, 0.700, 0.5316, _R, 0.0, -_R),
+    'tag_20': (1.00, 0.700, 0.3729, _R, 0.0, -_R),
+    'tag_21': (1.00, 0.944, 0.43,   _R, 0.0, -_R),
 }
 
 #bottom right starting zone
@@ -57,6 +59,7 @@ class AprilTagLocalizationNode(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.broadcaster = TransformBroadcaster(self)
 
+        # Real robot: physical USB cameras on all 4 sides
         self.front_sub = self.create_subscription(
             AprilTagDetectionArray,
             '/front_cam/detections',
@@ -77,11 +80,22 @@ class AprilTagLocalizationNode(Node):
         #     self._process_right,
         #     10
         # )
-    
+
         self.back_sub = self.create_subscription(
             AprilTagDetectionArray,
             '/back_cam/detections',
             self._process_back,
+            10
+        )
+
+        # Sim: RealSense detections on /sim_cam/detections → _process_sim uses camera_link.
+        # apriltag_back_rtabmap independently feeds /rtabmap/apriltag for RTAB-Map
+        # landmarks — they must NOT share this subscription or back-cam detections
+        # get computed through the wrong camera frame (RealSense vs back cam).
+        self.sim_sub = self.create_subscription(
+            AprilTagDetectionArray,
+            '/sim_cam/detections',
+            self._process_sim,
             10
         )
 
@@ -106,6 +120,12 @@ class AprilTagLocalizationNode(Node):
 
     def _process_back(self, msg):
         self._process_frames(msg, 'back_camera_optical_frame_link')
+
+    def _process_sim(self, msg):
+        # camera_link is the RealSense TF root; camera_frame_alias bridges it to
+        # the Gazebo sensor frame (rdt26_robot/base_link/realsense_d435) so the
+        # TF lookup tag→camera_link→base_link resolves correctly in sim.
+        self._process_frames(msg, 'camera_link')
 
     def _process_frames(self, msg, camera_frame):
         if not msg.detections:
@@ -199,14 +219,13 @@ class AprilTagLocalizationNode(Node):
             ts.euler_matrix(0, 0, avg_yaw)
         )
         
-        # ── broadcast TF: map → base_link ───────────────────────────
-        self._broadcast_tf(
-            Tavg_map_to_base,
-            'map',
-            'base_link'
-        )
-
-        # ── publish as PoseWithCovarianceStamped for RTAB-Map ────────
+        # ── publish as PoseWithCovarianceStamped ─────────────────────
+        # For simulation purposes:
+        # Broadcasting a direct map→base_link TF conflicts with the proper chain
+        # map→odom→base_link (from Gazebo/wheel-odom), causing RViz to flash as
+        # TF alternates between the two paths.
+        # RTAB-Map receives the tag detections via /rtabmap/apriltag (landmarks).
+        # autonomy_manager reads /apriltag/robot_pose only for the timestamp.
         self._publish_pose(Tavg_map_to_base)
         avg_t = ts.translation_from_matrix(Tavg_map_to_base)
         self.get_logger().info(f'averaged map->base dist = {self.distance(avg_t[0], avg_t[1], avg_t[2])}m', throttle_duration_sec=0.5)

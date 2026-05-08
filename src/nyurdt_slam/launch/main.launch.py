@@ -458,7 +458,7 @@ def launch_setup(context, *args, **kwargs):
         Node(
             package='rtabmap_util', executable='point_cloud_xyzrgb', name="point_cloud_xyzrgb", output='screen',
             emulate_tty=True,
-            # condition=IfCondition(LaunchConfiguration("rviz")),
+            condition=IfCondition(LaunchConfiguration('rviz')),
             parameters=[{
                 "decimation": 4,
                 "voxel_size": 0.0,
@@ -496,7 +496,7 @@ def generate_launch_description():
 
         DeclareLaunchArgument('localization', default_value='false', description='Launch in localization mode.'),
         # DeclareLaunchArgument('rtabmap_viz',  default_value='true',  description='Launch RTAB-Map UI (optional).'),
-        # DeclareLaunchArgument('rviz',         default_value='false', description='Launch RVIZ (optional).'),
+        DeclareLaunchArgument('rviz',         default_value='false', description='Launch RVIZ (optional).'),
 
         DeclareLaunchArgument('use_sim_time', default_value='false', description='Use simulation (Gazebo) clock if true'),
 

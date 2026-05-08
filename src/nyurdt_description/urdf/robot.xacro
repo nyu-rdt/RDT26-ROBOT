@@ -172,29 +172,45 @@
 <!-- ── RealSense D435 ──────────────────────────────────────────────────── -->
 <!-- mounted at front face centre, ~33cm off ground -->
 <xacro:sensor_d435 parent="base_link" name="camera" use_nominal_extrinsics="true">
-    <origin xyz="0.37 0.0 0.33" rpy="0 0.767945 0"/>
+    <origin xyz="0.37 0.0 0.78" rpy="0 0.767945 0"/>
 </xacro:sensor_d435>
 
 <gazebo reference="camera_link">
+    <!--
+      Simulated RealSense D435 (rgbd_camera).
+      Gazebo publishes on topic prefix "realsense":
+        /realsense/image          → color image (bridged to /camera/camera/color/image_raw)
+        /realsense/depth_image    → depth image (bridged to /camera/camera/depth/image_rect_raw)
+        /realsense/camera_info    → camera info (bridged to /camera/camera/color/camera_info)
+        /realsense/points         → point cloud (bridged to /camera/camera/depth/points)
+    -->
     <sensor name="realsense_d435" type="rgbd_camera">
         <topic>realsense</topic>
         <camera>
             <horizontal_fov>1.047</horizontal_fov>
             <image>
-                <width>640</width>
-                <height>480</height>
+                <width>424</width>
+                <height>240</height>
                 <format>R8G8B8</format>
             </image>
-            <clip><near>0.1</near><far>100</far></clip>
+            <depth_camera>
+                <output>depths</output>
+                <clip>
+                    <near>0.1</near>
+                    <far>5.0</far>
+                </clip>
+            </depth_camera>
+            <clip><near>0.1</near><far>5.0</far></clip>
             <noise>
                 <type>gaussian</type>
                 <mean>0.0</mean>
-                <stddev>0.007</stddev>
+                <stddev>0.005</stddev>
             </noise>
         </camera>
         <always_on>1</always_on>
-        <update_rate>30</update_rate>
-        <visualize>true</visualize>
+        <update_rate>15</update_rate>
+        <visualize>false</visualize>
+        <enable_metrics>false</enable_metrics>
     </sensor>
 </gazebo>
 

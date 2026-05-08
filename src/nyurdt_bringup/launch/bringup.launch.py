@@ -127,8 +127,6 @@ def generate_launch_description():
                 "frame_id": "base_link",
                 "sync_queue_size": "10",
                 "topic_queue_size": "10",
-                "subscribe_occupancy_grid": "true",
-                "map_topic": "/static_map",
                 # * BEST PARAM, DO NOT TOUCH, FAST AND ACCURATE!!!
                 "PyDetector/Cuda": "false",
                 # * BEST PARAM, DO NOT TOUCH, FAST AND ACCURATE!!!

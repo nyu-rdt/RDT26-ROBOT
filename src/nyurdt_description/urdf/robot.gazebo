@@ -5,6 +5,8 @@
     <mu1>0.8</mu1>
     <mu2>0.8</mu2>
     <material>Gazebo/Red</material>
+    <!-- Cameras inside the body see through it via sensor near-clip (0.1 m):
+         back wall is 0.09 m from back_cam origin → within clip distance → invisible to sensor. -->
 </gazebo>
 
 <gazebo reference="wheel1_link">
