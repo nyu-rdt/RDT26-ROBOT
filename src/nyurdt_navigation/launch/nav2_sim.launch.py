@@ -97,7 +97,14 @@ def generate_launch_description():
     spawn_entity = Node(
         package="ros_gz_sim",
         executable="create",
-        arguments=["-topic", "robot_description", "-name", robot_name, "-z", "0.5"],
+        arguments=[
+            "-topic", "robot_description",
+            "-name", robot_name,
+            "-x", "8.10",
+            "-y", "3.57",
+            "-z", "0.17",
+            "-Y", "3.14159"
+        ],
         output="screen",
     )
 
@@ -125,7 +132,30 @@ def generate_launch_description():
         ],
         output="screen",
     )
-
+       
+    camera_bridge = Node(
+        package="ros_gz_bridge",
+        executable="parameter_bridge",
+        name="camera_bridge",
+        arguments=[
+            # Color image: Gazebo → ROS
+            "/realsense/image@sensor_msgs/msg/Image[gz.msgs.Image",
+            # Depth image: Gazebo → ROS
+            "/realsense/depth_image@sensor_msgs/msg/Image[gz.msgs.Image",
+            # Camera info: Gazebo → ROS
+            "/realsense/camera_info@sensor_msgs/msg/CameraInfo[gz.msgs.CameraInfo",
+            # Point cloud: Gazebo → ROS
+            "/realsense/points@sensor_msgs/msg/PointCloud2[gz.msgs.PointCloudPacked",
+        ],
+        remappings=[
+            # Remap to what RTABMap expects
+            ("/realsense/image",       "/camera/camera/color/image_raw"),
+            ("/realsense/depth_image", "/camera/camera/aligned_depth_to_color/image_raw"),
+            ("/realsense/camera_info", "/camera/camera/color/camera_info"),
+            ("/realsense/points",      "/camera/camera/depth/color/points"),
+        ],
+        output="screen",
+    )
     # -------------------------
     # Nav2 bringup
     # -------------------------
@@ -147,7 +177,12 @@ def generate_launch_description():
         condition=IfCondition(PythonExpression(['not ', slam])),
         parameters=[
             params_file,
-            {"yaml_filename": map_yaml, "use_sim_time": use_sim_time},
+            {
+                "yaml_filename": map_yaml,
+                "use_sim_time": use_sim_time,
+                "topic_name": "static_map",   
+                "frame_id": "map",
+            },
         ],
     )
 
@@ -170,7 +205,7 @@ def generate_launch_description():
         name="map_to_odom_static_tf",
         output="screen",
         condition=IfCondition(PythonExpression(['not ', slam])),
-        arguments=["1.00", "1.00", "0", "0", "0", "0", "map", "odom"],
+        arguments=["8.10", "3.57", "0", "0", "0", "0", "map", "odom"],
     )
 
     navigation_launch = IncludeLaunchDescription(
@@ -210,14 +245,15 @@ def generate_launch_description():
         declare_robot_name,
         declare_rviz_config,
         warn_no_map_no_slam,
-        rsp,
-        joint_state_publisher,
+        # rsp,
+        # joint_state_publisher,
         gazebo,
         spawn_entity,
         bridge,
+        # camera_bridge,
         map_server,
         lifecycle_manager_map,
-        map_to_odom,
+        # map_to_odom,
         slam_launch,
         navigation_launch,
         rviz_node,

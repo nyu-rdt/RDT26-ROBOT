@@ -45,7 +45,7 @@ ZONES = {
     "starting":   {"x": (0.00, 2.00), "y": ( 2.47,  4.47)},
 }
 # pose where robot can see the Apriltag
-RELOCALIZE_POSE = {"x": 8.5, "y": 3.47, "yaw": 0.0} 
+RELOCALIZE_POSE = {"x": -8.5, "y": -3.47, "yaw": 0.0} 
 
 # covariance thresholds
 COV_X_THRESH = 0.05
