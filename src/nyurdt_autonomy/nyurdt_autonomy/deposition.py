@@ -14,7 +14,7 @@ from nyurdt_interfaces.msg import RobotStatus
 
 class DepositionNode(Node):
 
-    def __init__(self):                          
+    def __init__(self):
         super().__init__('deposition_node')
 
         self.publisher = self.create_publisher(Byte, '/robotCmds', 10)
@@ -22,14 +22,12 @@ class DepositionNode(Node):
         self.latest_telemetry = None
         self.create_subscription(RobotStatus, 'robot/telemetry', self._telemetry_cb, 10)
 
+        
+        # self.dist_traveled = 0.0   # update this from encoder odometry
         self.depo_start_time = None
-        self.depo_time = 30
-        self.goal_mass = 500      # kg remaining in bin = "empty enough"
+        self.depo_time = 30 # how long should vibration motor vibrate
         self.current_state = None
         self._finished = False
-
-        self.start_yaw = None      # set when stage_1 begins
-        self.depo_turn_time = 3
 
 
     def _telemetry_cb(self, msg: RobotStatus):
@@ -51,7 +49,6 @@ class DepositionNode(Node):
         self.machine.add_state('stage_3', self.stage_3)
         self.machine.add_state('stage_4', self.stage_4)
         self.machine.add_state('stage_5', self.stage_5)
-        self.machine.add_state('stage_6', self.stage_6)
 
     def execute(self):
         self.create_machine()
@@ -60,20 +57,21 @@ class DepositionNode(Node):
     # ── State Machines ───────────────────────────────
 
     def stage_1(self):
+        # robot already turned 180° outside zone; reverse (back end first) into zone
         if self.current_state != self.stage_1:
-            self.get_logger().info("Deposition stage 1: Turn 180")
+            self.get_logger().info("Deposition stage 1: Enter zone")
             self.current_state = self.stage_1
 
-        if not self.start_yaw:
-            self.start_yaw = time.time()  # placeholder for actual yaw reading
+        if not self.depo_start_time:
+            self.depo_start_time = time.time()
 
-        self.publish_msg(b"\x50") # turn right at 25%
-      
-        # for now this is a timer but this should replaced with 
-        # real IMU yaw check from  realsense camera
-        if time.time() - self.start_yaw >= 3:
-            return 'stage_6'
-        
+        self.publish_msg(b"\x30")  # backward at 25%
+
+        if time.time() - self.depo_start_time >= 4: #move backwards for however many seconds (adjust if needed)
+            self.publish_msg(b"\x10")  # stop
+            self.depo_start_time = None
+            return 'stage_2'
+
         return 'stage_1'
 
     def stage_2(self):
@@ -85,12 +83,12 @@ class DepositionNode(Node):
         # may need to insert check here that depo bin is actually open
 
         if not self.depo_start_time:
-            self.depo_start_time=time.time()
+            self.depo_start_time = time.time()
 
-        if time.time() - self.depo_start_time >= 5: 
+        if time.time() - self.depo_start_time >= 5:
            self.depo_start_time = None
            return 'stage_3'
-        
+
         self.publish_msg(b"\x71")
 
         return 'stage_2'
@@ -99,19 +97,18 @@ class DepositionNode(Node):
         if self.current_state != self.stage_3:
             self.get_logger().info("Deposition stage 3: Vibrating")
             self.current_state = self.stage_3
-        
+
         if not self.depo_start_time:
             self.depo_start_time = time.time()
-        
-        self.publish_msg(b"\x72")  # vibrate
 
-        tel = self.latest_telemetry
-        self.get_logger().info(f"TELEMETRY DATA:{tel}")
-        # if tel is not None and tel.total_mass <= self.goal_mass:
-        #     self.get_logger().info(f"Total mass: {tel.total_mass}")
-        #     self.depo_start_time = None
-        #     return 'stage_4'
-        if time.time() - self.depo_start_time > 5:
+        # alternate vibrate while robot moves slightly backward each cycle to help material fall (requested by meche)
+        phase = (time.time() - self.depo_start_time) % 3.5
+        if phase < 3.0:
+            self.publish_msg(b"\x72")  # vibrate
+        else:
+            self.publish_msg(b"\x20")  # slight forward 
+
+        if time.time() - self.depo_start_time > self.depo_time:
             self.depo_start_time = None
             return 'stage_4'
 
@@ -124,13 +121,12 @@ class DepositionNode(Node):
 
         if not self.depo_start_time:
            self.depo_start_time = time.time()
-        
-        
+
         if time.time() - self.depo_start_time >= 2:  # stop vibrate after 5 seconds of stage 3 ending
            self.depo_start_time = None
            return 'stage_5'
-        
-        self.publish_msg(b"\x73") # stop vibrate
+
+        self.publish_msg(b"\x73")  # stop vibrate
         return 'stage_4'
 
     def stage_5(self):
@@ -138,31 +134,17 @@ class DepositionNode(Node):
         if self.current_state != self.stage_5:
             self.get_logger().info("Deposition stage 5: Close hatch")
             self.current_state = self.stage_5
-        
+
         if not self.depo_start_time:
            self.depo_start_time = time.time()
 
-        if time.time() - self.depo_start_time >= 5: 
+        if time.time() - self.depo_start_time >= 5:
            return None
 
         self.publish_msg(b"\x70")
         self._finished = True
         return 'stage_5'
-    
-    def stage_6(self):
-        if self.current_state != self.stage_6:
-            self.get_logger().info("Deposition stage 6: Finished")
-            self.current_state = self.stage_6
-        
-        if not self.depo_start_time:
-            self.depo_start_time = time.time()
 
-        if time.time() - self.depo_start_time >= 3:
-            self.depo_start_time = None
-            return 'stage_2'
-        
-        self.publish_msg(b"\x10")
-        return 'stage_6'
 
 def main(args=None):
     rclpy.init(args=args)

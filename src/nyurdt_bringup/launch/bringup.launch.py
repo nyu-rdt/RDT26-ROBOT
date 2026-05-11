@@ -105,12 +105,19 @@ def generate_launch_description():
             }.items()
         ),
 
-        # # ── Apriltag ────────────────────────────────────────────────────
-        # IncludeLaunchDescription(
-        #     PythonLaunchDescriptionSource(
-        #         os.path.join(localization, 'launch', 'camera_apriltag.launch.py'),
-        #     ),
-        # ),
+        # ── Apriltag ────────────────────────────────────────────────────
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(localization, 'launch', 'camera_apriltag.launch.py'),
+            ),
+        ),
+
+        Node(
+            package='nyurdt_localization',
+            executable='apriltag_tf',
+            name='apriltag_localization',
+            output='screen',
+        ),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -270,6 +277,7 @@ def generate_launch_description():
         # ── Autonomy Nodes ───────────────────────────────────────────────
         Node(package='nyurdt_control', executable='i2c_reader', name='i2c_reader'),
         Node(package='nyurdt_autonomy', executable='telemetry_processor', name='telemetry_processor'),
-        Node(package='nyurdt_autonomy', executable='autonomy_manager', name='autonomy_manager'),
+        Node(package='nyurdt_autonomy', executable='single_cycle', name='single_cycle_autonomy'),
+        # Node(package='nyurdt_autonomy', executable='autonomy_manager', name='autonomy_manager'),
         
     ])

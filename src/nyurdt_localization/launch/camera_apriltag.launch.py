@@ -162,8 +162,8 @@ def generate_launch_description():
             name='apriltag',
             namespace='back_cam',
             remappings=[
-                ('image_rect', '/back_cam/camera/image_raw'),
-                ('camera_info', '/back_cam/camera/camera_info'),
+                ('image_rect', '/back_cam/camera4/image_raw'),
+                ('camera_info', '/back_cam/camera4/camera_info'),
             ],
             parameters=[apriltag_cfg],
             extra_arguments=[{'use_intra_process_comms': True}],
