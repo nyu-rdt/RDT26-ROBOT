@@ -46,7 +46,6 @@ class DepositionNode(Node):
 
     def create_machine(self):
         self.machine = StateMachine('deposition_machine')
-        self.machine.add_state('stage_0', self.stage_0)
         self.machine.add_state('stage_1', self.stage_1)
         self.machine.add_state('stage_2', self.stage_2)
         self.machine.add_state('stage_3', self.stage_3)
@@ -80,6 +79,9 @@ class DepositionNode(Node):
         if self.current_state != self.stage_2:
             self.get_logger().info("Deposition stage 2: Stop moving backwards")
             self.current_state = self.stage_2
+        
+        if not self.depo_start_time:
+            self.depo_start_time = self.get_clock().now()
 
         self.publish_msg(b"\x10") # stop moving backwards
 
@@ -116,13 +118,14 @@ class DepositionNode(Node):
         if not self.depo_start_time:
             self.depo_start_time = self.get_clock().now()
 
-        phase = (self.get_clock().now() - self.depo_start_time) % 3.5
-        if phase < 3.0:
+        elapsed_seconds = (self.get_clock().now() - self.depo_start_time).nanoseconds / 1e9
+        phase = elapsed_seconds % 3.0
+        if phase < 2.5:
             self.publish_msg(b"\x72")  # vibrate
         else:
             self.publish_msg(b"\x20")  # slight forward 
         
-        if self.get_clock().now()- self.depo_start_time >= self.depo_time:
+        if self.get_clock().now()- self.depo_start_time >= Duration(seconds=self.depo_time):
             self.depo_start_time = None
             return 'stage_5'
 
