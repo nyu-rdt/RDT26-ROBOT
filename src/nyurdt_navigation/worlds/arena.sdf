@@ -20,6 +20,21 @@
 -->
 <sdf version="1.10">
   <world name="ucf_lunabotics_2026_arena">
+    <!--
+      AprilTag board — left wall (x≈0), tags centered at y=3.47
+      (robot spawn centre, so the board is directly behind the robot at start).
+
+      Tag layout (y increases north):
+        tag_0  (0.3048 m)  y=3.026  — bottom landmark
+        tag_1  (0.1017 m)  y=3.270  — small flanking pair (upper)
+        tag_2  (0.1017 m)  y=3.270  — small flanking pair (lower)
+        tag_18 (0.2159 m)  y=3.470  — centre medium tag  ← robot y=3.47
+        tag_19 (0.1017 m)  y=3.670  — small flanking pair (upper)
+        tag_20 (0.1017 m)  y=3.670  — small flanking pair (lower)
+        tag_21 (0.3048 m)  y=3.914  — top landmark
+
+      Robot spawns at (1.00, 3.47, 0.5) yaw=0, facing +X (away from tags).
+    -->
 
     <!-- ── Required plugins ─────────────────────────────────────────────── -->
     <plugin filename="gz-sim-physics-system"
@@ -141,55 +156,58 @@
           faces −X = toward x=0 where the tags are.
           pose: x y z roll pitch yaw                                          -->
 
-    <!-- tag_0  — 36h11 #0,  0.3048 m square — camera eye-level -->
+    <!-- tag_0  — 36h11 #0,  0.3048 m — bottom landmark -->
     <include>
       <uri>model://Apriltag36_11_00000</uri>
-      <pose>0.001 3.526 0.43 0 1.5708 0</pose>
+      <pose>0.001 3.026 0.43 0 1.5708 0</pose>
     </include>
 
-    <!-- tag_1  — 36h11 #1,  0.1017 m square -->
+    <!-- tag_1  — 36h11 #1,  0.1017 m — small pair, upper z -->
     <include>
       <uri>model://Apriltag36_11_00001</uri>
-      <pose>0.001 3.770 0.5316 0 1.5708 0</pose>
+      <pose>0.001 3.270 0.5316 0 1.5708 0</pose>
     </include>
 
-    <!-- tag_2  — 36h11 #2,  0.1017 m square -->
+    <!-- tag_2  — 36h11 #2,  0.1017 m — small pair, lower z -->
     <include>
       <uri>model://Apriltag36_11_00002</uri>
-      <pose>0.001 3.770 0.3729 0 1.5708 0</pose>
+      <pose>0.001 3.270 0.3729 0 1.5708 0</pose>
     </include>
 
-    <!-- tag_18 — 36h11 #18, 0.2159 m square — camera eye-level, centre -->
+    <!-- tag_18 — 36h11 #18, 0.2159 m — centre tag, directly behind robot spawn -->
     <include>
       <uri>model://Apriltag36_11_00018</uri>
-      <pose>0.001 3.970 0.43 0 1.5708 0</pose>
+      <pose>0.001 3.470 0.43 0 1.5708 0</pose>
     </include>
 
-    <!-- tag_19 — 36h11 #19, 0.1017 m square -->
+    <!-- tag_19 — 36h11 #19, 0.1017 m — small pair, upper z -->
     <include>
       <uri>model://Apriltag36_11_00019</uri>
-      <pose>0.001 4.170 0.5316 0 1.5708 0</pose>
+      <pose>0.001 3.670 0.5316 0 1.5708 0</pose>
     </include>
 
-    <!-- tag_20 — 36h11 #20, 0.1017 m square -->
+    <!-- tag_20 — 36h11 #20, 0.1017 m — small pair, lower z -->
     <include>
       <uri>model://Apriltag36_11_00020</uri>
-      <pose>0.001 4.170 0.3729 0 1.5708 0</pose>
+      <pose>0.001 3.670 0.3729 0 1.5708 0</pose>
     </include>
 
-    <!-- tag_21 — 36h11 #21, 0.3048 m square — camera eye-level -->
+    <!-- tag_21 — 36h11 #21, 0.3048 m — top landmark -->
     <include>
       <uri>model://Apriltag36_11_00021</uri>
-      <pose>0.001 4.414 0.43 0 1.5708 0</pose>
+      <pose>0.001 3.914 0.43 0 1.5708 0</pose>
     </include>
 
     <!-- ══ ROCKS (30–40 cm diam spheres) ════════════════════════════════ -->
-    <!--  Placed in obstacle zone (x=4.10–8.10) at high y to leave the
-          navigation corridor (y=0–2) mostly open for routing.            -->
+    <!--  All in obstacle zone (x=4.10–8.10), spread across full y range.
+          Excluded zones: starting (x=0–2, y=2.47–4.47),
+          deposition/construction (x=6.10–8.10, y=0–1.90),
+          berm (x=5.75–7.25, y=0.85–1.75).                               -->
 
+    <!-- obstacle zone, far-left upper -->
     <model name="rock_1">
       <static>true</static>
-      <pose>5.10 3.99 0.17 0 0 0</pose>
+      <pose>4.30 4.20 0.17 0 0 0</pose>
       <link name="link">
         <collision name="col"><geometry><sphere><radius>0.17</radius></sphere></geometry></collision>
         <visual name="vis">
@@ -199,9 +217,10 @@
       </link>
     </model>
 
+    <!-- obstacle zone, center upper -->
     <model name="rock_2">
       <static>true</static>
-      <pose>4.50 4.10 0.18 0 0 0</pose>
+      <pose>5.60 3.50 0.18 0 0 0</pose>
       <link name="link">
         <collision name="col"><geometry><sphere><radius>0.18</radius></sphere></geometry></collision>
         <visual name="vis">
@@ -211,9 +230,10 @@
       </link>
     </model>
 
+    <!-- obstacle zone, far-right upper -->
     <model name="rock_3">
       <static>true</static>
-      <pose>5.80 3.89 0.16 0 0 0</pose>
+      <pose>7.20 4.00 0.16 0 0 0</pose>
       <link name="link">
         <collision name="col"><geometry><sphere><radius>0.16</radius></sphere></geometry></collision>
         <visual name="vis">
@@ -223,9 +243,10 @@
       </link>
     </model>
 
+    <!-- obstacle zone, left middle -->
     <model name="rock_4">
       <static>true</static>
-      <pose>4.30 3.69 0.17 0 0 0</pose>
+      <pose>4.90 2.20 0.17 0 0 0</pose>
       <link name="link">
         <collision name="col"><geometry><sphere><radius>0.17</radius></sphere></geometry></collision>
         <visual name="vis">
@@ -235,9 +256,10 @@
       </link>
     </model>
 
+    <!-- obstacle zone, right middle -->
     <model name="rock_5">
       <static>true</static>
-      <pose>6.90 3.69 0.15 0 0 0</pose>
+      <pose>6.50 2.80 0.15 0 0 0</pose>
       <link name="link">
         <collision name="col"><geometry><sphere><radius>0.15</radius></sphere></geometry></collision>
         <visual name="vis">
@@ -247,130 +269,15 @@
       </link>
     </model>
 
+    <!-- obstacle zone, left lower -->
     <model name="rock_6">
       <static>true</static>
-      <pose>5.60 3.85 0.16 0 0 0</pose>
+      <pose>5.10 0.40 0.16 0 0 0</pose>
       <link name="link">
         <collision name="col"><geometry><sphere><radius>0.16</radius></sphere></geometry></collision>
         <visual name="vis">
           <geometry><sphere><radius>0.16</radius></sphere></geometry>
           <material><ambient>0.45 0.42 0.38 1</ambient><diffuse>0.45 0.42 0.38 1</diffuse></material>
-        </visual>
-      </link>
-    </model>
-
-    <!-- ══ CRATERS (40–50 cm diam raised cylinder bumps) ════════════════ -->
-    <!--  All craters at y < 1.5 m to keep the north navigation corridor
-          (y > 1.5) clear.  Crater radius + inflation_radius = ~1.0 m
-          exclusion zone, so placing at y ≤ 1.3 m leaves ≥ 0.2 m margin.  -->
-
-    <model name="crater_1">
-      <static>true</static>
-      <pose>4.60 1.29 0.05 0 0 0</pose>
-      <link name="link">
-        <collision name="col"><geometry><cylinder><radius>0.45</radius><length>0.10</length></cylinder></geometry></collision>
-        <visual name="vis">
-          <geometry><cylinder><radius>0.45</radius><length>0.10</length></cylinder></geometry>
-          <material><ambient>0.55 0.50 0.45 1</ambient><diffuse>0.55 0.50 0.45 1</diffuse></material>
-        </visual>
-      </link>
-    </model>
-
-    <model name="crater_2">
-      <static>true</static>
-      <pose>3.10 1.19 0.05 0 0 0</pose>
-      <link name="link">
-        <collision name="col"><geometry><cylinder><radius>0.50</radius><length>0.10</length></cylinder></geometry></collision>
-        <visual name="vis">
-          <geometry><cylinder><radius>0.50</radius><length>0.10</length></cylinder></geometry>
-          <material><ambient>0.55 0.50 0.45 1</ambient><diffuse>0.55 0.50 0.45 1</diffuse></material>
-        </visual>
-      </link>
-    </model>
-
-    <model name="crater_3">
-      <static>true</static>
-      <pose>3.90 0.59 0.05 0 0 0</pose>
-      <link name="link">
-        <collision name="col"><geometry><cylinder><radius>0.48</radius><length>0.10</length></cylinder></geometry></collision>
-        <visual name="vis">
-          <geometry><cylinder><radius>0.48</radius><length>0.10</length></cylinder></geometry>
-          <material><ambient>0.55 0.50 0.45 1</ambient><diffuse>0.55 0.50 0.45 1</diffuse></material>
-        </visual>
-      </link>
-    </model>
-
-    <model name="crater_4">
-      <static>true</static>
-      <pose>1.90 0.89 0.05 0 0 0</pose>
-      <link name="link">
-        <collision name="col"><geometry><cylinder><radius>0.47</radius><length>0.10</length></cylinder></geometry></collision>
-        <visual name="vis">
-          <geometry><cylinder><radius>0.47</radius><length>0.10</length></cylinder></geometry>
-          <material><ambient>0.55 0.50 0.45 1</ambient><diffuse>0.55 0.50 0.45 1</diffuse></material>
-        </visual>
-      </link>
-    </model>
-
-    <!-- ══ ZONE FLOOR MARKERS (visual-only, no collision) ══════════════ -->
-    <!--  Thin boxes at z=0.002 m — visible in Gazebo, ignored by physics. -->
-
-    <!-- Excavation zone — amber, x=0–4.00, full height (now near AprilTag wall) -->
-    <model name="zone_excavation_marker">
-      <static>true</static>
-      <pose>2.00 2.19 0.002 0 0 0</pose>
-      <link name="link">
-        <visual name="vis">
-          <geometry><box><size>4.00 4.57 0.001</size></box></geometry>
-          <material><ambient>0.85 0.55 0.0 1</ambient><diffuse>0.85 0.55 0.0 0.18</diffuse></material>
-        </visual>
-      </link>
-    </model>
-
-    <!-- Obstacle zone — purple, x=4.10–8.10, full height (now near berm wall) -->
-    <model name="zone_obstacle_marker">
-      <static>true</static>
-      <pose>6.10 2.19 0.002 0 0 0</pose>
-      <link name="link">
-        <visual name="vis">
-          <geometry><box><size>4.00 4.57 0.001</size></box></geometry>
-          <material><ambient>0.55 0.2 0.75 1</ambient><diffuse>0.55 0.2 0.75 0.18</diffuse></material>
-        </visual>
-      </link>
-    </model>
-
-    <!-- Deposition zone — green, x=6.10–8.10, y=−0.10–1.90 (2.6×2 m) -->
-    <model name="zone_deposition_marker">
-      <static>true</static>
-      <pose>7.10 0.90 0.003 0 0 0</pose>
-      <link name="link">
-        <visual name="vis">
-          <geometry><box><size>2.00 2.00 0.001</size></box></geometry>
-          <material><ambient>0.1 0.75 0.2 1</ambient><diffuse>0.1 0.75 0.2 0.35</diffuse></material>
-        </visual>
-      </link>
-    </model>
-
-    <!-- Berm zone (BBZ) — red, x=5.75–7.25, y=0.85–1.75 (1.5×0.9 m) -->
-    <model name="zone_berm_marker">
-      <static>true</static>
-      <pose>6.50 1.30 0.004 0 0 0</pose>
-      <link name="link">
-        <visual name="vis">
-          <geometry><box><size>1.50 0.90 0.001</size></box></geometry>
-          <material><ambient>0.9 0.1 0.1 1</ambient><diffuse>0.9 0.1 0.1 0.55</diffuse></material>
-        </visual>
-      </link>
-    </model>
-
-    <!-- Starting zone — blue, x=0–2.00, y=2.47–4.47 (2×2 m, robot spawn) -->
-    <model name="zone_starting_marker">
-      <static>true</static>
-      <pose>1.00 3.47 0.003 0 0 0</pose>
-      <link name="link">
-        <visual name="vis">
-          <geometry><box><size>2.00 2.00 0.001</size></box></geometry>
-          <material><ambient>0.1 0.3 0.9 1</ambient><diffuse>0.1 0.3 0.9 0.35</diffuse></material>
         </visual>
       </link>
     </model>

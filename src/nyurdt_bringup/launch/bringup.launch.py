@@ -125,6 +125,8 @@ def generate_launch_description():
             ),
             launch_arguments={
                 "args": "--delete_db_on_start",
+                # match with spawn
+                "initial_pose": "1.00 3.47 0.0 0 0 0",
                 # ! IGNORE THESE
                 # "depth_topic": "/camera/camera/aligned_depth_to_color/image_raw",
                 # "rgb_topic": "/camera/camera/color/image_raw",

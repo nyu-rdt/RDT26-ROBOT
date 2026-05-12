@@ -35,7 +35,6 @@ class AprilTagLocalizationNode(Node):
         # Create instance of buffer and listener to subscribe to /tf topic and store transforms
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
-        self._last_correction_time = 0.0
 
         self.front_sub = self.create_subscription(
             AprilTagDetectionArray,
@@ -68,13 +67,6 @@ class AprilTagLocalizationNode(Node):
         self.pose_pub = self.create_publisher(
             PoseWithCovarianceStamped,
             '/apriltag/robot_pose',
-            10
-        )
-
-        # Publishes pose correction directly into RTAB-Map (rate-limited)
-        self.initialpose_pub = self.create_publisher(
-            PoseWithCovarianceStamped,
-            '/rtabmap/initialpose',
             10
         )
 
@@ -223,10 +215,6 @@ class AprilTagLocalizationNode(Node):
 
         self.pose_pub.publish(msg)
 
-        # Send pose correction to RTAB-Map, rate-limited to 0.5 s
-        if time.time() - self._last_correction_time >= 0.5:
-            self.initialpose_pub.publish(msg)
-            self._last_correction_time = time.time()
 
 
             

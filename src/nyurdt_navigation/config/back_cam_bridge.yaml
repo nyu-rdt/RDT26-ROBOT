@@ -1,0 +1,20 @@
+# Separate bridge for the simulated back camera (Logitech C615).
+# Kept isolated from sim_bridge.yaml so a missing Gazebo topic cannot
+# stall the main bridge (RealSense / odom / TF / cmd_vel).
+#
+# The back camera sensor uses <topic>back_cam</topic> in camera.xacro.
+# Gazebo Harmonic's rgbd_camera publishes:
+#   /{topic}/image        → color image
+#   /{topic}/camera_info  → camera info
+
+- ros_topic_name: "/back_cam/image_raw"
+  gz_topic_name: "/back_cam/image"
+  ros_type_name: "sensor_msgs/msg/Image"
+  gz_type_name: "gz.msgs.Image"
+  direction: GZ_TO_ROS
+
+- ros_topic_name: "/back_cam/camera_info"
+  gz_topic_name: "/back_cam/camera_info"
+  ros_type_name: "sensor_msgs/msg/CameraInfo"
+  gz_type_name: "gz.msgs.CameraInfo"
+  direction: GZ_TO_ROS
