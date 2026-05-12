@@ -46,6 +46,7 @@ class DepositionNode(Node):
 
     def create_machine(self):
         self.machine = StateMachine('deposition_machine')
+        self.machine.add_state('stage_0', self.stage_0)
         self.machine.add_state('stage_1', self.stage_1)
         self.machine.add_state('stage_2', self.stage_2)
         self.machine.add_state('stage_3', self.stage_3)
@@ -61,26 +62,38 @@ class DepositionNode(Node):
 
     def stage_1(self):
         if self.current_state != self.stage_1:
-            self.get_logger().info("Deposition stage 1: Turn 180")
+            self.get_logger().info("Deposition stage 1: Move backwards")
             self.current_state = self.stage_1
 
-        if not self.start_yaw:
-            self.start_yaw = self.get_clock().now()  # placeholder for actual yaw reading
+        if not self.depo_start_time:
+            self.depo_start_time = self.get_clock().now()
 
-        self.publish_msg(b"\x50") # turn right at 25%
-      
-        # for now this is a timer but this should replaced with 
-        # real IMU yaw check from  realsense camera
-        if self.get_clock().now() - self.start_yaw >= Duration(seconds=3):
-            return 'stage_6'
+        self.publish_msg(b"\x30") # move backwards at 25%
+
+        if self.get_clock().now() - self.depo_start_time >= Duration(seconds=4):
+            self.depo_start_time = None
+            return 'stage_2'
         
         return 'stage_1'
-
+    
     def stage_2(self):
-        # opening the hatch
         if self.current_state != self.stage_2:
-            self.get_logger().info("Deposition stage 2: Open hatch")
+            self.get_logger().info("Deposition stage 2: Stop moving backwards")
             self.current_state = self.stage_2
+
+        self.publish_msg(b"\x10") # stop moving backwards
+
+        if self.get_clock().now() - self.depo_start_time >= Duration(seconds=2):
+            self.depo_start_time = None
+            return 'stage_3'
+        
+        return 'stage_2'
+
+    def stage_3(self):
+        # opening the hatch
+        if self.current_state != self.stage_3:
+            self.get_logger().info("Deposition stage 3: Open hatch")
+            self.current_state = self.stage_3
 
         # may need to insert check here that depo bin is actually open
 
@@ -89,38 +102,36 @@ class DepositionNode(Node):
 
         if self.get_clock().now() - self.depo_start_time >= Duration(seconds=5): 
            self.depo_start_time = None
-           return 'stage_3'
+           return 'stage_4'
         
         self.publish_msg(b"\x71")
-
-        return 'stage_2'
-
-    def stage_3(self):
-        if self.current_state != self.stage_3:
-            self.get_logger().info("Deposition stage 3: Vibrating")
-            self.current_state = self.stage_3
-        
-        if not self.depo_start_time:
-            self.depo_start_time = self.get_clock().now()
-        
-        self.publish_msg(b"\x72")  # vibrate
-
-        tel = self.latest_telemetry
-        self.get_logger().info(f"TELEMETRY DATA:{tel}")
-        # if tel is not None and tel.total_mass <= self.goal_mass:
-        #     self.get_logger().info(f"Total mass: {tel.total_mass}")
-        #     self.depo_start_time = None
-        #     return 'stage_4'
-        if self.get_clock().now()- self.depo_start_time >= Duration(seconds=5):
-            self.depo_start_time = None
-            return 'stage_4'
 
         return 'stage_3'
 
     def stage_4(self):
         if self.current_state != self.stage_4:
-            self.get_logger().info("Deposition stage 4: Stop vibrating")
+            self.get_logger().info("Deposition stage 4: Vibrating")
             self.current_state = self.stage_4
+        
+        if not self.depo_start_time:
+            self.depo_start_time = self.get_clock().now()
+
+        phase = (self.get_clock().now() - self.depo_start_time) % 3.5
+        if phase < 3.0:
+            self.publish_msg(b"\x72")  # vibrate
+        else:
+            self.publish_msg(b"\x20")  # slight forward 
+        
+        if self.get_clock().now()- self.depo_start_time >= self.depo_time:
+            self.depo_start_time = None
+            return 'stage_5'
+
+        return 'stage_4'
+
+    def stage_5(self):
+        if self.current_state != self.stage_5:
+            self.get_logger().info("Deposition stage 5: Stop vibrating")
+            self.current_state = self.stage_5
 
         if not self.depo_start_time:
            self.depo_start_time = self.get_clock().now()
@@ -128,16 +139,16 @@ class DepositionNode(Node):
         
         if self.get_clock().now()- self.depo_start_time >= Duration(seconds=2):  # stop vibrate after 5 seconds of stage 3 ending
            self.depo_start_time = None
-           return 'stage_5'
+           return 'stage_6'
         
         self.publish_msg(b"\x73") # stop vibrate
-        return 'stage_4'
+        return 'stage_5'
 
-    def stage_5(self):
+    def stage_6(self):
         # closing the hatch
-        if self.current_state != self.stage_5:
-            self.get_logger().info("Deposition stage 5: Close hatch")
-            self.current_state = self.stage_5
+        if self.current_state != self.stage_6:
+            self.get_logger().info("Deposition stage 6: Close hatch")
+            self.current_state = self.stage_6
         
         if not self.depo_start_time:
            self.depo_start_time = self.get_clock().now()
@@ -147,23 +158,8 @@ class DepositionNode(Node):
 
         self.publish_msg(b"\x70")
         self._finished = True
-        return 'stage_5'
-    
-    def stage_6(self):
-        if self.current_state != self.stage_6:
-            self.get_logger().info("Deposition stage 6: Finished")
-            self.current_state = self.stage_6
-        
-        if not self.depo_start_time:
-            self.depo_start_time = self.get_clock().now()
-
-        if self.get_clock().now() - self.depo_start_time >= Duration(seconds=3):
-            self.depo_start_time = None
-            return 'stage_2'
-        
-        self.publish_msg(b"\x10")
         return 'stage_6'
-
+    
 def main(args=None):
     rclpy.init(args=args)
     node = DepositionNode()
