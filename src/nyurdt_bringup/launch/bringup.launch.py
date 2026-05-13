@@ -22,17 +22,10 @@ def generate_launch_description():
     
     nav2_params = os.path.join(navigation, 'config', 'nav2_params.yaml')
     launch_rviz = LaunchConfiguration('rviz', default='false')
-    map_yaml = LaunchConfiguration('map', default=os.path.join(
-    get_package_share_directory('nyurdt_navigation'), 'config', 'arena_map.yaml'))
 
     return LaunchDescription([
 
-        # Add to LaunchDescription
-        DeclareLaunchArgument('map', 
-            default_value=os.path.join(navigation, 'config', 'arena_map.yaml'),
-            description='Full path to map yaml'),
 
-        
         DeclareLaunchArgument(
             'use_sim_time',
             default_value='false',
@@ -254,12 +247,14 @@ def generate_launch_description():
         # ── Nav2 (from nyurdt_navigation) ─────────────────────────────────
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                os.path.join(navigation, 'launch', 'nav2_sim.launch.py')
+                os.path.join(navigation, 'launch', 'navigation_core.launch.py')
             ),
             launch_arguments={
                 'params_file': nav2_params,
                 'use_sim_time': use_sim_time,
-                 'map': map_yaml,  
+                'autostart': 'True',
+                'use_composition': 'False',
+                'namespace': '',
             }.items()
         ),
 
