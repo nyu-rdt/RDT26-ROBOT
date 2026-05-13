@@ -54,12 +54,8 @@ COV_SETTLE_SEC = 2.0
 
 ZONE_ENTRY_MARGIN = 0.12
 
-# queue for 3 cycles of autonomy
+# single cycle: excavate then deposit
 TASK_QUEUE = [
-    # {"zone": "excavation", "action": "excavate"},
-    {"zone": "deposition", "action": "deposit"},
-    {"zone": "excavation", "action": "excavate"},
-    {"zone": "deposition", "action": "deposit"},
     {"zone": "excavation", "action": "excavate"},
     {"zone": "deposition", "action": "deposit"},
 ]
