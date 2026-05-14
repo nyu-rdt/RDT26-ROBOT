@@ -49,5 +49,5 @@ def generate_launch_description():
         i2c_reader,
         # sensor_service,
         # autonomy_destroyer,
-        excavation
+        # excavation
     ])
