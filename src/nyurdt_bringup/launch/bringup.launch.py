@@ -22,17 +22,10 @@ def generate_launch_description():
     
     nav2_params = os.path.join(navigation, 'config', 'nav2_params.yaml')
     launch_rviz = LaunchConfiguration('rviz', default='false')
-    map_yaml = LaunchConfiguration('map', default=os.path.join(
-    get_package_share_directory('nyurdt_navigation'), 'config', 'arena_map.yaml'))
 
     return LaunchDescription([
 
-        # Add to LaunchDescription
-        DeclareLaunchArgument('map', 
-            default_value=os.path.join(navigation, 'config', 'arena_map.yaml'),
-            description='Full path to map yaml'),
 
-        
         DeclareLaunchArgument(
             'use_sim_time',
             default_value='false',
@@ -105,12 +98,19 @@ def generate_launch_description():
             }.items()
         ),
 
-        # # ── Apriltag ────────────────────────────────────────────────────
-        # IncludeLaunchDescription(
-        #     PythonLaunchDescriptionSource(
-        #         os.path.join(localization, 'launch', 'camera_apriltag.launch.py'),
-        #     ),
-        # ),
+        # ── Apriltag ────────────────────────────────────────────────────
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                os.path.join(localization, 'launch', 'camera_apriltag.launch.py'),
+            ),
+        ),
+
+        Node(
+            package='nyurdt_localization',
+            executable='apriltag_tf',
+            name='apriltag_localization',
+            output='screen',
+        ),
 
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
@@ -118,6 +118,8 @@ def generate_launch_description():
             ),
             launch_arguments={
                 "args": "--delete_db_on_start",
+                # match with spawn
+                "initial_pose": "1.00 3.47 0.0 0 0 0",
                 # ! IGNORE THESE
                 # "depth_topic": "/camera/camera/aligned_depth_to_color/image_raw",
                 # "rgb_topic": "/camera/camera/color/image_raw",
@@ -127,8 +129,6 @@ def generate_launch_description():
                 "frame_id": "base_link",
                 "sync_queue_size": "10",
                 "topic_queue_size": "10",
-                "subscribe_occupancy_grid": "true",
-                "map_topic": "/static_map",
                 # * BEST PARAM, DO NOT TOUCH, FAST AND ACCURATE!!!
                 "PyDetector/Cuda": "false",
                 # * BEST PARAM, DO NOT TOUCH, FAST AND ACCURATE!!!
@@ -247,12 +247,14 @@ def generate_launch_description():
         # ── Nav2 (from nyurdt_navigation) ─────────────────────────────────
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
-                os.path.join(navigation, 'launch', 'nav2_sim.launch.py')
+                os.path.join(navigation, 'launch', 'navigation_core.launch.py')
             ),
             launch_arguments={
                 'params_file': nav2_params,
                 'use_sim_time': use_sim_time,
-                 'map': map_yaml,  
+                'autostart': 'True',
+                'use_composition': 'False',
+                'namespace': '',
             }.items()
         ),
 
@@ -272,6 +274,7 @@ def generate_launch_description():
         # ── Autonomy Nodes ───────────────────────────────────────────────
         Node(package='nyurdt_control', executable='i2c_reader', name='i2c_reader'),
         Node(package='nyurdt_autonomy', executable='telemetry_processor', name='telemetry_processor'),
-        Node(package='nyurdt_autonomy', executable='autonomy_manager', name='autonomy_manager'),
+        Node(package='nyurdt_autonomy', executable='single_cycle', name='single_cycle_autonomy'),
+        # Node(package='nyurdt_autonomy', executable='autonomy_manager', name='autonomy_manager'),
         
     ])

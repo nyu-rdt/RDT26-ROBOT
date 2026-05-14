@@ -110,7 +110,7 @@ def generate_launch_description():
             name='rgbd_odometry',
             output='screen',
             parameters=[{
-                'frame_id': 'link',
+                'frame_id': 'base_link',
                 'approx_sync': True,
                 'use_sim_time': use_sim_time,
             }],

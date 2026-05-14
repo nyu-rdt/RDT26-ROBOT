@@ -2,51 +2,31 @@
 apriltag_tf.py
 '''
 import math
+import time
 import rclpy
 from rclpy.node import Node
 from rclpy.time import Time
-from geometry_msgs.msg import TransformStamped, PoseWithCovarianceStamped
-from tf2_ros import Buffer, TransformListener, TransformBroadcaster, LookupException, ConnectivityException, ExtrapolationException
+from geometry_msgs.msg import PoseWithCovarianceStamped
+from tf2_ros import Buffer, TransformListener, LookupException, ConnectivityException, ExtrapolationException
 import tf_transformations as ts
 from apriltag_msgs.msg import AprilTagDetectionArray
 
-# Known tag poses in MAP frame: (map origin is at center of starting zone)
+# Known tag poses in MAP frame.
+# Origin: x=0 at fiducial wall, y=0 at arena floor — matches autonomy_manager.py zone system.
+# Valid for both left and right arenas: a left-right mirror does not change tag y positions.
+# Fiducial rail centre: x=0.0, y=3.47 (midpoint of starting zone y:(2.47, 4.47)).
+# Tags span y=3.026 to y=3.914, symmetric around y=3.47.
+# tag_0 is at the bottom of the rail, tag_21 at the top.
 # (x, y, z, roll, pitch, yaw) in metres/radians
-#bottom left starting zone
 TAG_POSES_IN_MAP = {
-    'tag_0': (-1.0, -0.4441, .43, 0.0, 1.57, 1.57),
-    'tag_1': (-1.0, -0.1998, .5316, 0.0, 1.57, 1.57),
-    'tag_2': (-1.0, -0.1998, 0.3729, 0.0, 1.57, 1.57),
-    'tag_18': (-1.0, 0, .43,0, 1.57, 1.57),
-    'tag_19': (-1.0, 0.1998, .5316, 0.0, 1.57, 1.57),
-    'tag_20': (-1.0, 0.1998, .3729, 0.0, 1.57, 1.57),
-    'tag_21': (-1.0, 0.4441, .43, 0.0, 1.57, 1.57),
-    # 'tag_0': (0, 0,0, 0.0, 1.57, 0.0),
-    # 'tag_1': (0, 0, 0.0, 0.0, 1.57, 0.0),
-    # 'tag_2': (0, 0, 0.0, 0.0, 1.57, 0.0),
-    # 'tag_18': (0, 0.0, 0.0, 0.0, 1.57, 0.0),
-    # 'tag_19': (0, 0.0,0, 0.0, 1.57, 0.0),
-    # 'tag_20': (0, 0.0,0.0, 0.0, 1.57, 0.0),
-    # 'tag_21': (0, 0.0,0.0,0.0, 1.57, 0.0),
+    'tag_0':  (0.0, 3.0259, 0.4300, 0.0, 1.57, 1.57),
+    'tag_1':  (0.0, 3.2702, 0.5316, 0.0, 1.57, 1.57),
+    'tag_2':  (0.0, 3.2702, 0.3729, 0.0, 1.57, 1.57),
+    'tag_18': (0.0, 3.4700, 0.4300, 0.0, 1.57, 1.57),
+    'tag_19': (0.0, 3.6698, 0.5316, 0.0, 1.57, 1.57),
+    'tag_20': (0.0, 3.6698, 0.3729, 0.0, 1.57, 1.57),
+    'tag_21': (0.0, 3.9141, 0.4300, 0.0, 1.57, 1.57),
 }
-
-#bottom right starting zone
-# TAG_POSES_IN_MAP = {
-#     'tag_0': (-1.0, 0.4441, .43, 0.0, 1.57, 1.57),
-#     'tag_1': (-1.0, 0.1998, .5316, 0.0, 1.57, 1.57),
-#     'tag_2': (-1.0, 0.1998, 0.3729, 0.0, 1.57, 1.57),
-#     'tag_18': (-1.0, 0, .43,0, 1.57, 1.57),
-#     'tag_19': (-1.0, -0.1998, .5316, 0.0, 1.57, 1.57),
-#     'tag_20': (-1.0, -0.1998, .3729, 0.0, 1.57, 1.57),
-#     'tag_21': (-1.0, -0.4441, .43, 0.0, 1.57, 1.57),
-#     # 'tag_0': (0, 0,0, 0.0, 1.57, 0.0),
-#     # 'tag_1': (0, 0, 0.0, 0.0, 1.57, 0.0),
-#     # 'tag_2': (0, 0, 0.0, 0.0, 1.57, 0.0),
-#     # 'tag_18': (0, 0.0, 0.0, 0.0, 1.57, 0.0),
-#     # 'tag_19': (0, 0.0,0, 0.0, 1.57, 0.0),
-#     # 'tag_20': (0, 0.0,0.0, 0.0, 1.57, 0.0),
-#     # 'tag_21': (0, 0.0,0.0,0.0, 1.57, 0.0),
-# }
 
 class AprilTagLocalizationNode(Node):
     def __init__(self):
@@ -55,7 +35,6 @@ class AprilTagLocalizationNode(Node):
         # Create instance of buffer and listener to subscribe to /tf topic and store transforms
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
-        self.broadcaster = TransformBroadcaster(self)
 
         self.front_sub = self.create_subscription(
             AprilTagDetectionArray,
@@ -199,38 +178,13 @@ class AprilTagLocalizationNode(Node):
             ts.euler_matrix(0, 0, avg_yaw)
         )
         
-        # ── broadcast TF: map → base_link ───────────────────────────
-        self._broadcast_tf(
-            Tavg_map_to_base,
-            'map',
-            'base_link'
-        )
-
-        # ── publish as PoseWithCovarianceStamped for RTAB-Map ────────
+        # ── publish as PoseWithCovarianceStamped for relocalization tag check ────────
         self._publish_pose(Tavg_map_to_base)
         avg_t = ts.translation_from_matrix(Tavg_map_to_base)
         self.get_logger().info(f'averaged map->base dist = {self.distance(avg_t[0], avg_t[1], avg_t[2])}m', throttle_duration_sec=0.5)
 
     def distance(self, x, y, z):
         return math.sqrt(x**2 + y**2 + z**2)
-
-    def _broadcast_tf(self, T, parent, child):
-        t = ts.translation_from_matrix(T)
-        q = ts.quaternion_from_matrix(T)
-
-        msg = TransformStamped()
-        msg.header.stamp = self.get_clock().now().to_msg()
-        msg.header.frame_id = parent
-        msg.child_frame_id = child
-        msg.transform.translation.x = float(t[0])
-        msg.transform.translation.y = float(t[1])
-        msg.transform.translation.z = float(t[2])
-        msg.transform.rotation.x = float(q[0])
-        msg.transform.rotation.y = float(q[1])
-        msg.transform.rotation.z = float(q[2])
-        msg.transform.rotation.w = float(q[3])
-
-        self.broadcaster.sendTransform(msg)
 
     def _publish_pose(self, T):
         t = ts.translation_from_matrix(T)
@@ -260,6 +214,7 @@ class AprilTagLocalizationNode(Node):
         msg.pose.covariance = cov
 
         self.pose_pub.publish(msg)
+
 
 
             
