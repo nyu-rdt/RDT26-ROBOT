@@ -25,14 +25,16 @@ class ExcavationNode(Node):
         self.create_subscription(RobotStatus, 'robot/telemetry', self._telemetry_cb, 10)
 
         self.dig_start_time = 0
-        self.dig_time = 15
+        self.lower_timer = 12
+        self.dig_time = 20
         self.dig_length = 0.5
         self.goal_mass = 0.4        # kg — set real value
         self.dist_traveled = 0.0   # update this from encoder odometry
         self.current_state = None
         self._finished = False
         self.dig_start = None
-
+        self.lower_timer_tracker = None
+        self.send_up = False
     def _set_conveyor_target(self, pos: float):
         """Call this whenever you command a new conveyor position."""
         msg = Float32()
@@ -86,7 +88,7 @@ class ExcavationNode(Node):
         
         if not self.dig_start:
             self.dig_start = self.get_clock().now()
-        if self.get_clock().now() - self.dig_start >= Duration(seconds=5):
+        if self.get_clock().now() - self.dig_start >= Duration(seconds=1):
             return 'stage_2'
 
         self.get_logger().info("Publishing excavation start command")
@@ -99,25 +101,30 @@ class ExcavationNode(Node):
         if self.current_state != self.stage_2:
             self.get_logger().info("Excavation stage 2: Move to excavation position")
             self.current_state = self.stage_2
-            self._set_conveyor_target(1.0)   # adjust real target
+            self._set_conveyor_target(.25)   # adjust real target
 
         self.get_logger().info("Publishing excavation position command")
         self.publish_msg(b"\x62")
 
-        tel = self.latest_telemetry
+        #tel = self.latest_telemetry
 
-        if tel is None:
-            return 'stage_3'
-
-        if tel.exc_pos_error == True:
-            self.get_logger().warn("Excavation position error detected, attempting to correct")
-            self.publish_msg(b"\x61")
-            self.get_clock().sleep_for(Duration(seconds=3))
-            self.publish_msg(b"\x62")
-        
-        if tel.exc_pos_error == False:
+        #if tel is None:
+        #    return 'stage_3'
+        if not self.lower_timer_tracker:
+            self.lower_timer_tracker = self.get_clock().now()
+        if self.get_clock().now() - self.lower_timer_tracker >= Duration(seconds=self.lower_timer):
             self.get_logger().info("Excavation position reached successfully")
+            self.publish_msg(b"\x60")
             return 'stage_3'
+        #if tel.exc_pos_error == True:
+        #    self.get_logger().warn("Excavation position error detected, attempting to correct")
+        #    self.publish_msg(b"\x61")
+        #    self.get_clock().sleep_for(Duration(seconds=3))
+        #    self.publish_msg(b"\x62")
+        
+        #if tel.exc_pos_error == False:
+        #    self.get_logger().info("Excavation position reached successfully")
+        #    return 'stage_3'
         
         return 'stage_2'
 
@@ -126,19 +133,20 @@ class ExcavationNode(Node):
             self.get_logger().info("Excavation stage 3: Digging")
             self.current_state = self.stage_3
             self.dig_start_time = self.get_clock().now()
-
+        self.publish_msg(b"\x73") # vibration start
+        self.publish_msg(b"\x65")
         self.check_ladder_health()
 
         tel = self.latest_telemetry
-        if tel is not None and tel.total_mass >= self.goal_mass:
-            self.get_logger().info("Excavation goal mass reached")
-            return 'stage_4'
+        #if tel is not None and tel.total_mass >= self.goal_mass:
+        #    self.get_logger().info("Excavation goal mass reached")
+        #    return 'stage_4'
         if self.get_clock().now() - self.dig_start_time >= Duration(seconds=self.dig_time):
             self.get_logger().info("Excavation time limit exceeded")
             self.dig_start_time = None
             return 'stage_4'
-        if self.dist_traveled >= self.dig_length:
-            return 'stage_4'
+       # if self.dist_traveled >= self.dig_length:
+        #    return 'stage_4'
 
         self.publish_msg(b"\x20")  # drive forward
         return 'stage_3'
@@ -147,7 +155,7 @@ class ExcavationNode(Node):
         if self.current_state != self.stage_4:
             self.get_logger().info("Excavation stage 4: Stop conveyor")
             self.current_state = self.stage_4
-        self.publish_msg(b"\x63")  # stop belt
+        #self.publish_msg(b"\x63")  # stop belt
         return 'stage_5'
     
     def stage_5(self):
@@ -157,15 +165,28 @@ class ExcavationNode(Node):
             self.current_state = self.stage_5
             self._set_conveyor_target(0.0)
             self.dig_start_time = self.get_clock().now()
+   #     if not send_up:
         self.publish_msg(b"\x61")
+        self.publish_msg(b"\x30")   
+            #send_up = True
 
         # for testing
         if self.get_clock().now()- self.dig_start_time >= Duration(seconds=10):
-            return None
-        
-        if self.latest_telemetry is not None and self.latest_telemetry.conveyor_pos < 0.05:
+            self.publish_msg(b"\x10")
+            self.publish_msg(b"\x63")
+            self.publish_msg(b"\x63")
+            self.publish_msg(b"\x63")
+            self.publish_msg(b"\x63")
+            self.publish_msg(b"\x72") # vibration stop
             self._finished = True
             return None
+        
+#        if not send_up:
+ #           self.publish_msg(b"\x61")
+  #          send_up = True
+        #if self.latest_telemetry is not None and self.latest_telemetry.conveyor_pos < 0.05:
+        #    self._finished = True
+        #    return None
         return 'stage_5'
 
     

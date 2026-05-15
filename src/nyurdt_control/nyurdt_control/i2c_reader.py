@@ -45,6 +45,7 @@ class I2CReader(Node):
 
     def _read_and_publish(self):
         if self.i2c is None:
+            #self.get_logger().info("I2C read failed...")
             return
         
         self.get_logger().info("Attempting I2C read...")
@@ -107,7 +108,9 @@ class I2CReader(Node):
             self.get_logger().warn("No heartbeat — dropping packet")
             return
         
-        self.get_logger().info(f"Publishing telemetry: {msg}")
+        self.get_logger().info(f"Publishing Left Encoder: {msg.left_encoder}")
+        self.get_logger().info(f"Publishing Right Encoder: {msg.right_encoder}")
+        self.get_logger().info(f"Publishing Conveyor Position: {msg.conveyor_pos}")
         
         self.pub.publish(msg)
         

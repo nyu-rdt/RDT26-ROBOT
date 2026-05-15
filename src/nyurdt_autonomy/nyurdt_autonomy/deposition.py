@@ -23,6 +23,7 @@ class DepositionNode(Node):
         self.create_subscription(RobotStatus, 'robot/telemetry', self._telemetry_cb, 10)
 
         self.depo_start_time = None
+        self.depo_segment = 5
         self.depo_time = 30
         self.goal_mass = 500      # kg remaining in bin = "empty enough"
         self.current_state = None
@@ -67,9 +68,9 @@ class DepositionNode(Node):
         if not self.depo_start_time:
             self.depo_start_time = self.get_clock().now()
 
-        self.publish_msg(b"\x30") # move backwards at 25%
+        self.publish_msg(b"\x31") # move backwards at 50%
 
-        if self.get_clock().now() - self.depo_start_time >= Duration(seconds=4):
+        if self.get_clock().now() - self.depo_start_time >= Duration(seconds=2.5):
             self.depo_start_time = None
             return 'stage_2'
         
@@ -80,16 +81,16 @@ class DepositionNode(Node):
             self.get_logger().info("Deposition stage 2: Stop moving backwards")
             self.current_state = self.stage_2
         
-        if not self.depo_start_time:
-            self.depo_start_time = self.get_clock().now()
+        #if not self.depo_start_time:
+        #    self.depo_start_time = self.get_clock().now()
 
         self.publish_msg(b"\x10") # stop moving backwards
 
-        if self.get_clock().now() - self.depo_start_time >= Duration(seconds=2):
-            self.depo_start_time = None
-            return 'stage_3'
+       # if self.get_clock().now() - self.depo_start_time >= Duration(seconds=2):
+       #     self.depo_start_time = None
+        return 'stage_3'
         
-        return 'stage_2'
+       # return 'stage_2'
 
     def stage_3(self):
         # opening the hatch
@@ -103,10 +104,10 @@ class DepositionNode(Node):
             self.depo_start_time=self.get_clock().now()
 
         if self.get_clock().now() - self.depo_start_time >= Duration(seconds=5): 
-           self.depo_start_time = None
-           return 'stage_4'
+            self.depo_start_time = None
+            return 'stage_4'
         
-        self.publish_msg(b"\x71")
+        self.publish_msg(b"\x70")
 
         return 'stage_3'
 
@@ -117,13 +118,14 @@ class DepositionNode(Node):
         
         if not self.depo_start_time:
             self.depo_start_time = self.get_clock().now()
-
+        
+        self.publish_msg(b"\x73") # vibrate
         elapsed_seconds = (self.get_clock().now() - self.depo_start_time).nanoseconds / 1e9
-        phase = elapsed_seconds % 3.0
-        if phase < 2.5:
-            self.publish_msg(b"\x72")  # vibrate
+        phase = elapsed_seconds % 5.5
+        if phase <= 5:
+            self.publish_msg(b"\x10")
         else:
-            self.publish_msg(b"\x20")  # slight forward 
+            self.publish_msg(b"\x21")  # slight forward 
         
         if self.get_clock().now()- self.depo_start_time >= Duration(seconds=self.depo_time):
             self.depo_start_time = None
@@ -137,14 +139,14 @@ class DepositionNode(Node):
             self.current_state = self.stage_5
 
         if not self.depo_start_time:
-           self.depo_start_time = self.get_clock().now()
+            self.depo_start_time = self.get_clock().now()
         
         
         if self.get_clock().now()- self.depo_start_time >= Duration(seconds=2):  # stop vibrate after 5 seconds of stage 3 ending
-           self.depo_start_time = None
-           return 'stage_6'
+            self.depo_start_time = None
+            return 'stage_6'
         
-        self.publish_msg(b"\x73") # stop vibrate
+        self.publish_msg(b"\x72") # stop vibrate
         return 'stage_5'
 
     def stage_6(self):
@@ -154,13 +156,13 @@ class DepositionNode(Node):
             self.current_state = self.stage_6
         
         if not self.depo_start_time:
-           self.depo_start_time = self.get_clock().now()
+            self.depo_start_time = self.get_clock().now()
 
         if self.get_clock().now() - self.depo_start_time >= Duration(seconds=5): 
-           return None
+            self._finished = True
+            return None
 
-        self.publish_msg(b"\x70")
-        self._finished = True
+        self.publish_msg(b"\x71")
         return 'stage_6'
     
 def main(args=None):
