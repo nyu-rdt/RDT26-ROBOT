@@ -12,9 +12,6 @@
   <test_depend>ament_pep257</test_depend>
   <test_depend>python3-pytest</test_depend>
 
-  <exec_depend>nyurdt_interfaces</exec_depend>
-  <exec_depend>board</exec_depend>
-  <exec_depend>i2c</exec_depend>
   <exec_depend>twist_mux</exec_depend>
 
   <export>
