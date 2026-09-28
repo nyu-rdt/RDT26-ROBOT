@@ -5,7 +5,7 @@ gazebo.launch.py
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument
+from launch.actions import IncludeLaunchDescription, DeclareLaunchArgument, AppendEnvironmentVariable
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
@@ -16,6 +16,15 @@ def generate_launch_description():
 
     # Path to your custom world file
     world_file = os.path.join(get_package_share_directory(pkg_navigation), 'worlds', 'my_world.sdf')
+
+    # 0. Let Gazebo resolve model://nyurdt_description/... (our meshes) and model://realsense2_description/...
+    #    gz looks these up under GZ_SIM_RESOURCE_PATH; ros_gz_sim's launch does not add overlay workspaces.
+    resource_paths = AppendEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH',
+        os.pathsep.join([
+            os.path.dirname(get_package_share_directory(pkg_description)),
+            os.path.dirname(get_package_share_directory('realsense2_description')),
+        ]))
 
     # 1. Include existing Robot State Publisher
     rsp = IncludeLaunchDescription(
@@ -38,24 +47,20 @@ def generate_launch_description():
                                    '-z', '0.5'],
                         output='screen')
 
-    # 4. The Bridge (connects /odom, /tf, and NOW /scan)
+    # 4. The bridge. Topic list lives in nyurdt_description/config/bridge_parameters.yaml so it
+    #    stays next to robot.gazebo, whose DiffDrive plugin publishes plain "odom" and "tf"
+    #    (not the /model/<name>/... defaults). Bridges clock, joint_states, odom, tf, cmd_vel
+    #    and the RealSense image/depth/points topics.
+    bridge_params = os.path.join(get_package_share_directory(pkg_description), 'config', 'bridge_parameters.yaml')
     bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
-        arguments=[
-        '/model/rdt26_robot/odometry@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-        '/model/rdt26_robot/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
-        '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
-        '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock', 
-        ],
-        remappings=[
-            ('/model/rdt26_robot/tf', '/tf'),
-            ('/model/rdt26_robot/odometry', '/odom'),
-        ],
+        arguments=['--ros-args', '-p', f'config_file:={bridge_params}'],
         output='screen'
     )
 
     return LaunchDescription([
+        resource_paths,
         rsp,
         gazebo,
         spawn_entity,

@@ -1,230 +1,291 @@
 <?xml version="1.0"?>
-<robot name="rdt26_robot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="rdt26_robot"
+    xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<xacro:property name="pi_const" value="3.14159265"/>
+    <!--ripped final geometry from onshape CAD model -gad -->
 
-<!-- Real robot dimensions (metres) -->
-<xacro:property name="a" value="0.745" />   <!-- length -->
-<xacro:property name="b" value="0.608" />   <!-- width  -->
-<xacro:property name="c" value="0.660" />   <!-- height -->
-
-<!-- Wheel dimensions — measure and confirm these -->
-<xacro:property name="r" value="0.17" />    <!-- wheel radius -->
-<xacro:property name="d" value="0.1"  />    <!-- wheel width  -->
-
-<xacro:property name="s1" value="${c/2}"         />   <!-- body centre height -->
-<xacro:property name="s2" value="${a/2}"         />   <!-- wheel x offset (front/back) -->
-<xacro:property name="s3" value="${b/2 + d/2}"   />   <!-- wheel y offset (left/right) -->
-
-<!-- Material density -->
-<xacro:property name="d1" value="2710.0" />
-<xacro:property name="d2" value="2710.0" />
-
-<!-- Mass -->
-<xacro:property name="m1" value="${d1*a*b*c}" />
-<xacro:property name="m2" value="${d2*pi_const*r*r*d}" />
-
-<!-- Inertia body -->
-<xacro:property name="Ix_body" value="${(1/12)*m1*(b*b+c*c)}" />
-<xacro:property name="Iy_body" value="${(1/12)*m1*(a*a+b*b)}" />
-<xacro:property name="Iz_body" value="${(1/12)*m1*(a*a+c*c)}" />
-
-<!-- Inertia wheel -->
-<xacro:property name="Iz_wheel" value="${0.5*m2*r*r}" />
-<xacro:property name="I_wheel"  value="${(1.0/12.0)*m2*(3.0*r*r+d*d)}" />
-
-<xacro:macro name="inertia_body">
-    <inertial>
-        <origin rpy="0 0 0" xyz="0 0 ${s1}"/>
-        <mass value="${m1}"/>
-        <inertia ixx="${Ix_body}" ixy="0" ixz="0"
-                                  iyy="${Iy_body}" iyz="0"
-                                                    izz="${Iz_body}"/>
-    </inertial>
-</xacro:macro>
-
-<xacro:macro name="inertia_wheel">
-    <inertial>
-        <origin rpy="1.570795 0 0" xyz="0 0 0"/>
-        <mass value="${m2}"/>
-        <inertia ixx="${I_wheel}" ixy="0" ixz="0"
-                                  iyy="${I_wheel}" iyz="0"
-                                                    izz="${Iz_wheel}"/>
-    </inertial>
-</xacro:macro>
-
-<xacro:include filename="$(find nyurdt_description)/urdf/robot.gazebo"/>
-<xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro"/>
-
-<!-- ── Frames ─────────────────────────────────────────────────────────── -->
-
-<!-- base_link: Nav2 + RTAB-Map reference frame, at ground centre -->
-<link name="base_link"/>
-
-<joint name="body_link_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link="body_link"/>
-    <origin xyz="0 0 0" rpy="0 0 0"/>
-</joint>
-
-<link name="body_link">
-    <visual>
-        <geometry>
-            <box size="${a} ${b} ${c}"/>
-        </geometry>
-        <origin rpy="0 0 0" xyz="0 0 ${s1}"/>
-    </visual>
-    <collision>
-        <geometry>
-            <box size="${a} ${b} ${c}"/>
-        </geometry>
-        <origin rpy="0 0 0" xyz="0 0 ${s1}"/>
-    </collision>
-    <xacro:inertia_body/>
-</link>
-
-<!-- ── Wheels ─────────────────────────────────────────────────────────── -->
-
-<!-- Back right -->
-<joint name="wheel1_joint" type="continuous">
-    <parent link="base_link"/>
-    <child link="wheel1_link"/>
-    <origin xyz="${-s2} ${-s3} ${r}" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="50000" velocity="10"/>
-    <dynamics damping="1.0" friction="1.0"/>
-</joint>
-<link name="wheel1_link">
-    <visual>
-        <origin xyz="0 0 0" rpy="1.570795 0 0"/>
-        <geometry><cylinder radius="${r}" length="${d}"/></geometry>
-    </visual>
-    <collision>
-        <origin xyz="0 0 0" rpy="1.570795 0 0"/>
-        <geometry><cylinder radius="${r}" length="${d}"/></geometry>
-    </collision>
-    <xacro:inertia_wheel/>
-</link>
-
-<!-- Back left -->
-<joint name="wheel2_joint" type="continuous">
-    <parent link="base_link"/>
-    <child link="wheel2_link"/>
-    <origin xyz="${-s2} ${s3} ${r}" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="50000" velocity="10"/>
-    <dynamics damping="1.0" friction="1.0"/>
-</joint>
-<link name="wheel2_link">
-    <visual>
-        <origin xyz="0 0 0" rpy="1.570795 0 0"/>
-        <geometry><cylinder radius="${r}" length="${d}"/></geometry>
-    </visual>
-    <collision>
-        <origin xyz="0 0 0" rpy="1.570795 0 0"/>
-        <geometry><cylinder radius="${r}" length="${d}"/></geometry>
-    </collision>
-    <xacro:inertia_wheel/>
-</link>
-
-<!-- Front left -->
-<joint name="wheel3_joint" type="continuous">
-    <parent link="base_link"/>
-    <child link="wheel3_link"/>
-    <origin xyz="${s2} ${s3} ${r}" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="50000" velocity="10"/>
-    <dynamics damping="1.0" friction="1.0"/>
-</joint>
-<link name="wheel3_link">
-    <visual>
-        <origin xyz="0 0 0" rpy="1.570795 0 0"/>
-        <geometry><cylinder radius="${r}" length="${d}"/></geometry>
-    </visual>
-    <collision>
-        <origin xyz="0 0 0" rpy="1.570795 0 0"/>
-        <geometry><cylinder radius="${r}" length="${d}"/></geometry>
-    </collision>
-    <xacro:inertia_wheel/>
-</link>
-
-<!-- Front right -->
-<joint name="wheel4_joint" type="continuous">
-    <parent link="base_link"/>
-    <child link="wheel4_link"/>
-    <origin xyz="${s2} ${-s3} ${r}" rpy="0 0 0"/>
-    <axis xyz="0 1 0"/>
-    <limit effort="50000" velocity="10"/>
-    <dynamics damping="1.0" friction="1.0"/>
-</joint>
-<link name="wheel4_link">
-    <visual>
-        <origin xyz="0 0 0" rpy="1.570795 0 0"/>
-        <geometry><cylinder radius="${r}" length="${d}"/></geometry>
-    </visual>
-    <collision>
-        <origin xyz="0 0 0" rpy="1.570795 0 0"/>
-        <geometry><cylinder radius="${r}" length="${d}"/></geometry>
-    </collision>
-    <xacro:inertia_wheel/>
-</link>
-
-<!-- ── RealSense D435 ──────────────────────────────────────────────────── -->
-<!-- mounted at front face centre, ~33cm off ground -->
-<xacro:sensor_d435 parent="base_link" name="camera" use_nominal_extrinsics="true">
-    <origin xyz="0.37 0.0 0.69" rpy="0 0.767945 0"/>
-</xacro:sensor_d435>
-
-<gazebo reference="camera_link">
-    <sensor name="realsense_d435" type="rgbd_camera">
-        <topic>realsense</topic>
-        <camera>
-            <horizontal_fov>1.047</horizontal_fov>
-            <image>
-                <width>640</width>
-                <height>480</height>
-                <format>R8G8B8</format>
-            </image>
-            <clip><near>0.1</near><far>100</far></clip>
-            <noise>
-                <type>gaussian</type>
-                <mean>0.0</mean>
-                <stddev>0.007</stddev>
-            </noise>
-        </camera>
-        <always_on>1</always_on>
-        <update_rate>30</update_rate>
-        <visualize>true</visualize>
-    </sensor>
-</gazebo>
+    <!-- ── Prpoperties & Constants ─────────────────────────────────────────────────────────── -->
 
 
-<!-- ── Logitech C615 ──────────────────────────────────────────────────── -->
-<xacro:include filename="camera.xacro" />
-<xacro:property name="x" value=".017"/>
-<xacro:property name="y" value=".07"/>
-<xacro:property name="z" value=".04"/>
+    <xacro:property name="pi_const" value="3.14159265"/>
 
-<xacro:camera parent="base_link" pos="front" size_x="${x}" size_y="${y}" size_z="${z}">
-    <origin xyz=".32792 -.195 .45" rpy="0 0 ${pi_const}"/>
-</xacro:camera>
+    <!-- Body envelope (metres) from the CAD mesh, used for collision + inertia. Wheels excluded. -->
+    
+    <!-- length -->
+    <xacro:property name="a" value="0.74" />
+    <!-- width  -->
+    <xacro:property name="b" value="0.53" />
+    <!-- height -->
+    <xacro:property name="c" value="0.61" />
+    <!-- chassis underside above ground; keeps the collision box off the floor -->
+    <xacro:property name="body_zmin" value="0.09" />
 
-<xacro:camera parent="base_link" pos="back" size_x="${x}" size_y="${y}" size_z="${z}">
-    <origin xyz="-.2799208 -.195 .45" rpy="0 0 -${pi_const}"/>
-</xacro:camera>
+    <!-- Wheels, measured from CAD -->
+    <xacro:property name="r" value="0.1705" />
+    <!-- wheel radius (grouser tips) -->
+    <xacro:property name="d" value="0.1095" />
+    <!-- wheel width -->
+    <xacro:property name="wheel_x" value="0.1905" />
+    <!-- hub x offset (front/back) -->
+    <xacro:property name="front_y" value="0.2531" />
+    <!-- front hub y offset (left/right) -->
+    <xacro:property name="rear_y" value="0.2366" />
+    <!-- rear hub y offset; rear track is 33 mm narrower -->
+
+    <xacro:property name="s1" value="${body_zmin + c/2}" />
+    <!-- body center height -->
+    <xacro:property name="s2" value="${wheel_x}" />
+    <!-- kept for robot.gazebo -->
+    <xacro:property name="s3" value="${(front_y + rear_y)/2}"/>
+    <!-- mean half-track, used by DiffDrive wheel_separation -->
+
+    <!-- Chains are replaced by simple loops (two runs + two sprockets); numbers from frames.txt -->
+    <xacro:property name="chain_thick" value="0.012" />
+
+    <!-- RealSense D435: center of the camera body, from CAD; pitch from the physical mount -->
+    <xacro:property name="cam_x" value="0.2687" />
+    <xacro:property name="cam_y" value="-0.1658" />
+    <xacro:property name="cam_z" value="0.6411" />
+    <xacro:property name="cam_pitch" value="0.767945" />
+    <!-- 44 deg down -->
+    <!-- sensor_d435 takes the bottom-screw frame; the body center is (0.0106, 0, 0.0125) from it in the camera frame -->
+    <xacro:property name="d435_mx" value="0.0106" />
+    <xacro:property name="d435_mz" value="0.0125" />
+
+    <!-- Mass (kg). Estimates for the built robot; the old density formula gave ~810 kg. -->
+    <xacro:property name="m1" value="60.0" />
+    <!-- body incl. excavator, electronics, hopper -->
+    <xacro:property name="m2" value="3.0" />
+    <!-- one printed wheel -->
+
+    <!-- Inertia body -->
+    <xacro:property name="Ix_body" value="${(1/12)*m1*(b*b+c*c)}" />
+    <xacro:property name="Iy_body" value="${(1/12)*m1*(a*a+b*b)}" />
+    <xacro:property name="Iz_body" value="${(1/12)*m1*(a*a+c*c)}" />
+
+    <!-- Inertia wheel -->
+    <xacro:property name="Iz_wheel" value="${0.5*m2*r*r}" />
+    <xacro:property name="I_wheel" value="${(1.0/12.0)*m2*(3.0*r*r+d*d)}" />
+
+    <!-- tried to match actual robot color way -->
+    <material name="rdt_purple">
+        <color rgba="0.60 0.42 0.86 1"/>
+    </material>
+    <material name="rdt_white">
+        <color rgba="0.88 0.88 0.88 1"/>
+    </material>
+    <material name="rdt_silver">
+        <color rgba="0.70 0.70 0.72 1"/>
+    </material>
+    <material name="rdt_dark">
+        <color rgba="0.16 0.16 0.17 1"/>
+    </material>
+
+    <xacro:macro name="inertia_body">
+        <inertial>
+            <origin rpy="0 0 0" xyz="0 0 ${s1}"/>
+            <mass value="${m1}"/>
+            <inertia ixx="${Ix_body}" ixy="0" ixz="0" iyy="${Iy_body}" iyz="0" izz="${Iz_body}"/>
+        </inertial>
+    </xacro:macro>
+
+    <xacro:macro name="inertia_wheel">
+        <inertial>
+            <origin rpy="1.570795 0 0" xyz="0 0 0"/>
+            <mass value="${m2}"/>
+            <inertia ixx="${I_wheel}" ixy="0" ixz="0" iyy="${I_wheel}" iyz="0" izz="${Iz_wheel}"/>
+        </inertial>
+    </xacro:macro>
+
+    <xacro:include filename="$(find nyurdt_description)/urdf/robot.gazebo"/>
+    <xacro:include filename="$(find realsense2_description)/urdf/_d435.urdf.xacro"/>
+
+    <!-- ── Frames ─────────────────────────────────────────────────────────── -->
+
+    <!-- base_link: Nav2 + RTAB-Map reference frame, at ground center -->
+    <link name="base_link"/>
+
+    <joint name="body_link_joint" type="fixed">
+        <parent link="base_link"/>
+        <child link="body_link"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+    </joint>
+
+    <!-- tried making chain on excav -->
+    <xacro:macro name="chain_loop" params="x y z pitch length height">
+        <xacro:property name="h" value="${height/2 - chain_thick/2}"/>
+        <xacro:property name="l" value="${length - height}"/>
+        <xacro:property name="rs" value="${height/2}"/>
+        <!-- run direction d = (cos p, 0, -sin p); normal n = (sin p, 0, cos p) -->
+        <visual>
+            <origin xyz="${x + h*sin(pitch)} ${y} ${z + h*cos(pitch)}" rpy="0 ${pitch} 0"/>
+            <geometry>
+                <box size="${l} ${chain_thick} ${chain_thick}"/>
+            </geometry>
+            <material name="rdt_silver">
+                <color rgba="0.70 0.70 0.72 1"/>
+            </material>
+        </visual>
+        <visual>
+            <origin xyz="${x - h*sin(pitch)} ${y} ${z - h*cos(pitch)}" rpy="0 ${pitch} 0"/>
+            <geometry>
+                <box size="${l} ${chain_thick} ${chain_thick}"/>
+            </geometry>
+            <material name="rdt_silver">
+                <color rgba="0.70 0.70 0.72 1"/>
+            </material>
+        </visual>
+        <visual>
+            <origin xyz="${x + (l/2)*cos(pitch)} ${y} ${z - (l/2)*sin(pitch)}" rpy="1.570795 0 0"/>
+            <geometry>
+                <cylinder radius="${rs}" length="${chain_thick}"/>
+            </geometry>
+            <material name="rdt_silver">
+                <color rgba="0.70 0.70 0.72 1"/>
+            </material>
+        </visual>
+        <visual>
+            <origin xyz="${x - (l/2)*cos(pitch)} ${y} ${z + (l/2)*sin(pitch)}" rpy="1.570795 0 0"/>
+            <geometry>
+                <cylinder radius="${rs}" length="${chain_thick}"/>
+            </geometry>
+            <material name="rdt_silver">
+                <color rgba="0.70 0.70 0.72 1"/>
+            </material>
+        </visual>
+    </xacro:macro>
+
+    <link name="body_link">
+        <!-- drive chains, one per side between the hubs -->
+        <xacro:chain_loop x="0" y="0.162" z="${r}" pitch="0" length="0.44" height="0.056"/>
+        <xacro:chain_loop x="0" y="-0.162" z="${r}" pitch="0" length="0.44" height="0.056"/>
+        <!-- bucket-ladder chains, 60 deg up the excavator -->
+        <xacro:chain_loop x="0.197" y="0.078" z="0.409" pitch="1.047" length="0.59" height="0.082"/>
+        <xacro:chain_loop x="0.197" y="-0.070" z="0.409" pitch="1.047" length="0.59" height="0.082"/>
+        <!-- chassis, excavator, motors and camera mount: one decimated mesh, already in base_link frame -->
+        <visual>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+            <geometry>
+                <mesh filename="package://nyurdt_description/meshes/body.obj"/>
+            </geometry>
+        </visual>
+        <!-- collision stays a box: a 150k-triangle mesh would stall the physics engine -->
+        <collision>
+            <geometry>
+                <box size="${a} ${b} ${c}"/>
+            </geometry>
+            <origin rpy="0 0 0" xyz="0 0 ${s1}"/>
+        </collision>
+        <xacro:inertia_body/>
+    </link>
+
+    <!-- each wheel spins about its own axle (+Y of the wheel link), joint at the hub center -->
+
+    <xacro:macro name="wheel" params="n x y yaw">
+        <joint name="wheel${n}_joint" type="continuous">
+            <parent link="base_link"/>
+            <child link="wheel${n}_link"/>
+            <origin xyz="${x} ${y} ${r}" rpy="0 0 0"/>
+            <axis xyz="0 1 0"/>
+            <limit effort="50000" velocity="10"/>
+            <dynamics damping="1.0" friction="1.0"/>
+        </joint>
+        <link name="wheel${n}_link">
+            <!-- wheel.obj is a LEFT wheel (hub outward = +y). right wheels get fliped about y axis-->
+            <visual>
+                <origin xyz="0 0 0" rpy="0 0 ${yaw}"/>
+                <geometry>
+                    <mesh filename="package://nyurdt_description/meshes/wheel.obj"/>
+                </geometry>
+            </visual>
+            <collision>
+                <origin xyz="0 0 0" rpy="1.570795 0 0"/>
+                <geometry>
+                    <cylinder radius="${r}" length="${d}"/>
+                </geometry>
+            </collision>
+            <xacro:inertia_wheel/>
+        </link>
+    </xacro:macro>
+
+    <!-- numbering kept from the original model; robot.gazebo maps 2,3 = left and 1,4 = right -->
+    
+    <!-- back right  -->
+    <xacro:wheel n="1" x="${-wheel_x}" y="${-rear_y}" yaw="${pi_const}"/>
+    
+    <!-- back left   -->
+    <xacro:wheel n="2" x="${-wheel_x}" y="${rear_y}" yaw="0"/>
+    
+    <!-- front left  -->
+    <xacro:wheel n="3" x="${wheel_x}" y="${front_y}" yaw="0"/>
+    
+    <!-- front right -->
+    <xacro:wheel n="4" x="${wheel_x}" y="${-front_y}" yaw="${pi_const}"/>
+
+    <!-- ── RealSense D435 ──────────────────────────────────────────────────── -->
+    <!-- Mounted on the right-hand front mast. The macro origin is the bottom screw; we place it so the
+     camera body center lands on the CAD position after the pitch is applied. -->
+    <xacro:sensor_d435 parent="base_link" name="camera" use_nominal_extrinsics="true">
+        <origin xyz="${cam_x - (d435_mx*cos(cam_pitch) + d435_mz*sin(cam_pitch))}
+                 ${cam_y}
+                 ${cam_z - (-d435_mx*sin(cam_pitch) + d435_mz*cos(cam_pitch))}" rpy="0 ${cam_pitch} 0"/>
+    </xacro:sensor_d435>
+
+    <gazebo reference="camera_link">
+        <sensor name="realsense_d435" type="rgbd_camera">
+            <topic>realsense</topic>
+            <gz_frame_id>camera_depth_optical_frame</gz_frame_id>
+            <camera>
+                <horizontal_fov>1.047</horizontal_fov>
+                <image>
+                    <width>640</width>
+                    <height>480</height>
+                    <format>R8G8B8</format>
+                </image>
+                <clip>
+                    <near>0.1</near>
+                    <far>100</far>
+                </clip>
+                <noise>
+                    <type>gaussian</type>
+                    <mean>0.0</mean>
+                    <stddev>0.007</stddev>
+                </noise>
+            </camera>
+            <always_on>1</always_on>
+            <update_rate>30</update_rate>
+            <visualize>true</visualize>
+        </sensor>
+    </gazebo>
 
 
-<!-- ── Innomaker ──────────────────────────────────────────────────── -->
-<xacro:include filename="camera.xacro" />
-<xacro:property name="x" value=".037"/>
-<xacro:property name="y" value=".037"/>
-<xacro:property name="z" value=".04"/>
+    <!-- ── Logitech C615 ──────────────────────────────────────────────────── -->
+    <xacro:include filename="camera.xacro" />
+    <xacro:property name="x" value=".017"/>
+    <xacro:property name="y" value=".07"/>
+    <xacro:property name="z" value=".04"/>
 
-<xacro:camera parent="base_link" pos="right" size_x="${x}" size_y="${y}" size_z="${z}">
-    <origin xyz="0.00792 -0.195 0.45" rpy="0 0 -1.57"/>
-</xacro:camera>
+    <xacro:camera parent="base_link" pos="front" size_x="${x}" size_y="${y}" size_z="${z}">
+        <origin xyz=".32792 -.195 .45" rpy="0 0 ${pi_const}"/>
+    </xacro:camera>
 
-<xacro:camera parent="base_link" pos="left" size_x="${x}" size_y="${y}" size_z="${z}">
-    <origin xyz="0.00792 0.195 0.45" rpy="0 0 1.57"/>
-</xacro:camera>
+    <xacro:camera parent="base_link" pos="back" size_x="${x}" size_y="${y}" size_z="${z}">
+        <origin xyz="-.2799208 -.195 .45" rpy="0 0 -${pi_const}"/>
+    </xacro:camera>
+
+
+    <!-- ── Innomaker ──────────────────────────────────────────────────── -->
+    <xacro:include filename="camera.xacro" />
+    <xacro:property name="x" value=".037"/>
+    <xacro:property name="y" value=".037"/>
+    <xacro:property name="z" value=".04"/>
+
+    <xacro:camera parent="base_link" pos="right" size_x="${x}" size_y="${y}" size_z="${z}">
+        <origin xyz="0.00792 -0.195 0.45" rpy="0 0 -1.57"/>
+    </xacro:camera>
+
+    <xacro:camera parent="base_link" pos="left" size_x="${x}" size_y="${y}" size_z="${z}">
+        <origin xyz="0.00792 0.195 0.45" rpy="0 0 1.57"/>
+    </xacro:camera>
+
 </robot>

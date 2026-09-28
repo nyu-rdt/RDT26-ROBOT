@@ -1,0 +1,29 @@
+# written by fix_mtl.py: four-colour team palette
+newmtl rdt_purple
+Ka 0.6000 0.4200 0.8600
+Kd 0.6000 0.4200 0.8600
+Ks 0.1000 0.1000 0.1000
+d 1.0
+illum 2
+
+newmtl rdt_white
+Ka 0.8800 0.8800 0.8800
+Kd 0.8800 0.8800 0.8800
+Ks 0.1000 0.1000 0.1000
+d 1.0
+illum 2
+
+newmtl rdt_silver
+Ka 0.7000 0.7000 0.7200
+Kd 0.7000 0.7000 0.7200
+Ks 0.1000 0.1000 0.1000
+d 1.0
+illum 2
+
+newmtl rdt_dark
+Ka 0.1600 0.1600 0.1700
+Kd 0.1600 0.1600 0.1700
+Ks 0.1000 0.1000 0.1000
+d 1.0
+illum 2
+

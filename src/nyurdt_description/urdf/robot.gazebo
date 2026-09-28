@@ -1,34 +1,30 @@
 <?xml version="1.0"?>
 <robot>
 
+<!-- Friction only. Colours come from meshes/*.mtl; Gazebo Classic <material> scripts are ignored by gz-sim. -->
 <gazebo reference="body_link">
     <mu1>0.8</mu1>
     <mu2>0.8</mu2>
-    <material>Gazebo/Red</material>
 </gazebo>
 
 <gazebo reference="wheel1_link">
     <mu1>1.0</mu1>
     <mu2>1.0</mu2>
-    <material>Gazebo/White</material>
 </gazebo>
 
 <gazebo reference="wheel2_link">
     <mu1>1.0</mu1>
     <mu2>1.0</mu2>
-    <material>Gazebo/White</material>
 </gazebo>
 
 <gazebo reference="wheel3_link">
     <mu1>1.0</mu1>
     <mu2>1.0</mu2>
-    <material>Gazebo/White</material>
 </gazebo>
 
 <gazebo reference="wheel4_link">
     <mu1>1.0</mu1>
     <mu2>1.0</mu2>
-    <material>Gazebo/White</material>
 </gazebo>
 
 <gazebo>
@@ -40,7 +36,7 @@
         <right_joint>wheel1_joint</right_joint> <!-- back right -->
         <right_joint>wheel4_joint</right_joint> <!-- front right-->
 
-        <!-- kinematics — s3 = b/2 + d/2, so separation = 2*s3 -->
+        <!-- kinematics — s3 is the mean half-track from the CAD (front and rear differ by 33 mm) -->
         <wheel_separation>${2*s3}</wheel_separation>
         <wheel_diameter>${2*r}</wheel_diameter>
 
