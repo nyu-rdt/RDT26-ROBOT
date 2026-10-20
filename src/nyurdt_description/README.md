@@ -47,7 +47,62 @@ rviz2 -d $(ros2 pkg prefix --share nyurdt_description)/rviz/robot.rviz   # optio
 ```
 
 Do not run `joint_state_publisher` here. Gazebo's JointStatePublisher plugin
-already publishes the real wheel angles.
+already publishes the real wheel angles, and `rsp.launch.py` is started by the
+launch file for you.
+
+## Viewing the robot in Gazebo
+
+`gazebo.launch.py` opens the Gazebo window with `my_world.sdf`, spawns the
+robot as `rdt26_robot`, and bridges its topics to ROS. The mesh paths are set
+by the launch file, so the full model (wheels, excavator, hopper) should load.
+
+### Moving the Gazebo camera
+
+| Action | Mouse |
+|---|---|
+| Pan | left-click drag |
+| Orbit | middle-click drag, or Shift + left-click drag |
+| Zoom | scroll, or right-click drag |
+| Follow the robot | right-click the robot, then Follow |
+| Jump to the robot | right-click the robot, then Move to |
+
+The robot is also listed in the Entity Tree panel on the right.
+
+### Driving it
+
+With `teleop_twist_keyboard` running, click its terminal so it has focus:
+`i` forward, `,` back, `j` / `l` turn, `k` stop, `q` / `z` change speed.
+Make sure the play button at the bottom left of Gazebo is not paused.
+
+### Seeing what the RealSense sees
+
+```bash
+ros2 run rqt_image_view rqt_image_view   # pick /camera/image_raw from the dropdown
+```
+
+In Gazebo itself: the top-right menu (three dots), then Image Display, then
+pick `realsense/image`.
+
+### Checking it from a terminal
+
+```bash
+ros2 topic hz /odom               # about 50 Hz: wheels are being simulated
+ros2 topic hz /camera/image_raw   # about 28 Hz: camera is rendering
+ros2 topic echo /joint_states --once
+```
+
+| ROS topic | What it is |
+|---|---|
+| `/cmd_vel` | velocity commands in (teleop, Nav2) |
+| `/odom` | wheel odometry out |
+| `/joint_states` | wheel angles out |
+| `/camera/image_raw`, `/camera/depth/image_rect_raw`, `/camera/points` | RealSense color, depth, point cloud |
+| `/clock` | sim time |
+
+### Stopping it
+
+Ctrl+C in the launch terminal. If Gazebo stays open:
+`pkill -f "gz sim"`
 
 ## RViz config
 
