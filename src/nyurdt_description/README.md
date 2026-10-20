@@ -25,7 +25,7 @@ up at the origin. Run exactly one of the options below, never two at once.
 ```bash
 ros2 launch nyurdt_description rsp.launch.py
 ros2 run joint_state_publisher joint_state_publisher   # second terminal
-rviz2                                                  # third terminal
+rviz2 -d $(ros2 pkg prefix --share nyurdt_description)/rviz/robot.rviz   # third terminal
 ```
 
 ### 2. Interactive model (sliders spin the wheels)
@@ -33,7 +33,7 @@ rviz2                                                  # third terminal
 ```bash
 ros2 launch nyurdt_description rsp.launch.py
 ros2 run joint_state_publisher_gui joint_state_publisher_gui   # second terminal
-rviz2                                                          # third terminal
+rviz2 -d $(ros2 pkg prefix --share nyurdt_description)/rviz/robot.rviz   # third terminal
 ```
 
 If the GUI is missing: `apt install ros-jazzy-joint-state-publisher-gui`
@@ -43,17 +43,21 @@ If the GUI is missing: `apt install ros-jazzy-joint-state-publisher-gui`
 ```bash
 ros2 launch nyurdt_navigation gazebo.launch.py
 ros2 run teleop_twist_keyboard teleop_twist_keyboard   # second terminal, drive with i j k l
-rviz2                                                  # optional, third terminal
+rviz2 -d $(ros2 pkg prefix --share nyurdt_description)/rviz/robot.rviz   # optional, third terminal
 ```
 
 Do not run `joint_state_publisher` here. Gazebo's JointStatePublisher plugin
 already publishes the real wheel angles.
 
-## RViz setup
+## RViz config
 
-1. Add > RobotModel, set Description Topic to `/robot_description`
-2. Add > TF
-3. Global Options > Fixed Frame: `base_link` (options 1 and 2) or `odom` (option 3)
+Always start RViz with `-d .../rviz/robot.rviz` as above. It shows the robot
+model and its TF frames with Fixed Frame `base_link`. Plain `rviz2` opens
+with Fixed Frame `map`, which nothing publishes here, so the robot never
+appears.
+
+In Gazebo, change Fixed Frame to `odom` in Global Options to watch the robot
+drive instead of staying centred.
 
 ## Updating the meshes from CAD
 
