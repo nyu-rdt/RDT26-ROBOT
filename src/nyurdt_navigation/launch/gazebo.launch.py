@@ -43,7 +43,7 @@ def generate_launch_description():
     # 3. Spawn the robot in Gazebo
     spawn_entity = Node(package='ros_gz_sim', executable='create',
                         arguments=['-topic', 'robot_description',
-                                   '-name', 'rdt26_robot',
+                                   '-name', 'rdt27_robot',
                                    '-z', '0.5'],
                         output='screen')
 

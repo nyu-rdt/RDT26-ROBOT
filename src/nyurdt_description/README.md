@@ -54,7 +54,7 @@ launch file for you.
 ## Viewing the robot in Gazebo
 
 `gazebo.launch.py` opens the Gazebo window with `my_world.sdf`, spawns the
-robot as `rdt26_robot`, and bridges its topics to ROS. The mesh paths are set
+robot as `rdt27_robot`, and bridges its topics to ROS. The mesh paths are set
 by the launch file, so the full model (wheels, excavator, hopper) should load.
 
 ### Moving the Gazebo camera

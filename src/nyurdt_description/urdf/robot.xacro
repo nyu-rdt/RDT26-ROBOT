@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot name="rdt26_robot"
+<robot name="rdt27_robot"
     xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <!--ripped final geometry from onshape CAD model -gad -->

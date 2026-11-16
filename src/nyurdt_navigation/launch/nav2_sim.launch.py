@@ -58,7 +58,7 @@ def generate_launch_description():
 
     declare_robot_name = DeclareLaunchArgument(
         "robot_name",
-        default_value="rdt26_robot",
+        default_value="rdt27_robot",
         description="Entity name to spawn in Gazebo (must match bridge model name).",
     )
 
