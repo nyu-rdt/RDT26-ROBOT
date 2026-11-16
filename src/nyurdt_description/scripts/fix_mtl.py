@@ -14,11 +14,14 @@ predictably:
 
 Usage: python3 fix_mtl.py <mesh.obj>   (rewrites mesh.obj and mesh.mtl in place)
 """
+import colorsys
 import os
 import re
 import sys
 
 OPAQUE_RX = re.compile(r"Opaque[(_](\d+)[,_](\d+)[,_](\d+)")
+# Onshape names every appearance after its sRGB colour: "0.368627_0.250980_0.643137_0.000000_0.000000"
+ONSHAPE_RX = re.compile(r"^(\d\.\d+)_(\d\.\d+)_(\d\.\d+)_")
 
 # Team palette (sRGB). Keep in sync with the <material> blocks in urdf/robot.xacro.
 PALETTE = {
@@ -40,8 +43,14 @@ def classify(name, kd):
     if "white" in low:             # "ABS (White)" / "ABS_(White)": the wheel rims
         return "rdt_white"
     m = OPAQUE_RX.search(name)
+    o = ONSHAPE_RX.match(name)
     if m:
         rgb = tuple(int(v) / 255.0 for v in m.groups())
+    elif o:
+        rgb = tuple(float(v) for v in o.groups())
+        h, s, _ = colorsys.rgb_to_hsv(*rgb)
+        if 0.68 <= h <= 0.85 and s >= 0.35:   # the purple given to printed parts in Onshape
+            return "rdt_purple"
     else:
         rgb = tuple(lin_to_srgb(c) for c in kd)
     luma = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]

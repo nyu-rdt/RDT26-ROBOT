@@ -12,25 +12,25 @@
     <!-- Body envelope (metres) from the CAD mesh, used for collision + inertia. Wheels excluded. -->
     
     <!-- length -->
-    <xacro:property name="a" value="0.74" />
-    <!-- width  -->
-    <xacro:property name="b" value="0.53" />
+    <xacro:property name="a" value="0.94" />
+    <!-- width of the frame; the wheel axles reach further out, into the wheels -->
+    <xacro:property name="b" value="0.55" />
     <!-- height -->
-    <xacro:property name="c" value="0.61" />
-    <!-- chassis underside above ground; keeps the collision box off the floor -->
-    <xacro:property name="body_zmin" value="0.09" />
+    <xacro:property name="c" value="0.69" />
+    <!-- lowest point of the body above ground; keeps the collision box off the floor -->
+    <xacro:property name="body_zmin" value="0.07" />
 
     <!-- Wheels, measured from CAD -->
-    <xacro:property name="r" value="0.1705" />
+    <xacro:property name="r" value="0.1777" />
     <!-- wheel radius (grouser tips) -->
-    <xacro:property name="d" value="0.1095" />
+    <xacro:property name="d" value="0.1019" />
     <!-- wheel width -->
-    <xacro:property name="wheel_x" value="0.1905" />
+    <xacro:property name="wheel_x" value="0.3016" />
     <!-- hub x offset (front/back) -->
-    <xacro:property name="front_y" value="0.2531" />
+    <xacro:property name="front_y" value="0.3275" />
     <!-- front hub y offset (left/right) -->
-    <xacro:property name="rear_y" value="0.2366" />
-    <!-- rear hub y offset; rear track is 33 mm narrower -->
+    <xacro:property name="rear_y" value="0.3275" />
+    <!-- rear hub y offset; same track front and rear on this chassis -->
 
     <xacro:property name="s1" value="${body_zmin + c/2}" />
     <!-- body center height -->
@@ -39,12 +39,13 @@
     <xacro:property name="s3" value="${(front_y + rear_y)/2}"/>
     <!-- mean half-track, used by DiffDrive wheel_separation -->
 
-    <!-- Chains are replaced by simple loops (two runs + two sprockets); numbers from frames.txt -->
+    <!-- Drive chains are replaced by simple loops (two runs + two sprockets); numbers from frames.txt -->
     <xacro:property name="chain_thick" value="0.012" />
 
-    <!-- RealSense D435: center of the camera body, from CAD; pitch from the physical mount -->
+    <!-- RealSense D435: center of the camera body. PLACEHOLDER: the chassis CAD has no camera mount yet.
+         x, z and pitch are still the 2026 mount; y is moved outboard so the camera clears the bucket ladder. -->
     <xacro:property name="cam_x" value="0.2687" />
-    <xacro:property name="cam_y" value="-0.1658" />
+    <xacro:property name="cam_y" value="-0.27" />
     <xacro:property name="cam_z" value="0.6411" />
     <xacro:property name="cam_pitch" value="0.767945" />
     <!-- 44 deg down -->
@@ -156,20 +157,18 @@
     </xacro:macro>
 
     <link name="body_link">
-        <!-- drive chains, one per side between the hubs -->
-        <xacro:chain_loop x="0" y="0.162" z="${r}" pitch="0" length="0.44" height="0.056"/>
-        <xacro:chain_loop x="0" y="-0.162" z="${r}" pitch="0" length="0.44" height="0.056"/>
-        <!-- bucket-ladder chains, 60 deg up the excavator -->
-        <xacro:chain_loop x="0.197" y="0.078" z="0.409" pitch="1.047" length="0.59" height="0.082"/>
-        <xacro:chain_loop x="0.197" y="-0.070" z="0.409" pitch="1.047" length="0.59" height="0.082"/>
-        <!-- chassis, excavator, motors and camera mount: one decimated mesh, already in base_link frame -->
+        <!-- drive chains, one per side between the hubs; they run inside the side tubes -->
+        <xacro:chain_loop x="0" y="0.248" z="${r}" pitch="0" length="0.632" height="0.0285"/>
+        <xacro:chain_loop x="0" y="-0.248" z="${r}" pitch="0" length="0.632" height="0.0285"/>
+        <!-- chassis, excavator, deposition belt and gearboxes: one decimated mesh, already in base_link frame.
+             The bucket-ladder chains are plain solids in the CAD, so they are part of this mesh. -->
         <visual>
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <geometry>
                 <mesh filename="package://nyurdt_description/meshes/body.obj"/>
             </geometry>
         </visual>
-        <!-- collision stays a box: a 150k-triangle mesh would stall the physics engine -->
+        <!-- collision stays a box: a 100k-triangle mesh would stall the physics engine -->
         <collision>
             <geometry>
                 <box size="${a} ${b} ${c}"/>
@@ -223,8 +222,8 @@
     <xacro:wheel n="4" x="${wheel_x}" y="${-front_y}" yaw="${pi_const}"/>
 
     <!-- ── RealSense D435 ──────────────────────────────────────────────────── -->
-    <!-- Mounted on the right-hand front mast. The macro origin is the bottom screw; we place it so the
-     camera body center lands on the CAD position after the pitch is applied. -->
+    <!-- Placeholder pose on the right-hand side, beside the bucket ladder (see cam_y above). The macro origin
+     is the bottom screw; we place it so the camera body center lands on cam_x/y/z after the pitch is applied. -->
     <xacro:sensor_d435 parent="base_link" name="camera" use_nominal_extrinsics="true">
         <origin xyz="${cam_x - (d435_mx*cos(cam_pitch) + d435_mz*sin(cam_pitch))}
                  ${cam_y}
@@ -260,6 +259,7 @@
 
 
     <!-- ── Logitech C615 ──────────────────────────────────────────────────── -->
+    <!-- The four tag cameras below still sit at their 2026 positions; the chassis CAD has no mounts for them yet. -->
     <xacro:include filename="camera.xacro" />
     <xacro:property name="x" value=".017"/>
     <xacro:property name="y" value=".07"/>

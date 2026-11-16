@@ -1,4 +1,5 @@
-contains the URDF for NYU RDT's 2026 robot so that all can refer to one urdf and all changes can be made at once for all pkgs.
+contains the URDF for NYU RDT's robot so that all can refer to one urdf and all changes can be made at once for all pkgs.
+This branch carries the 2027 chassis from the Onshape `Chassis PDR` assembly.
 
 ![The robot in RViz with joint_state_publisher running](docs/rviz.png)
 
@@ -116,11 +117,28 @@ drive instead of staying centred.
 
 ## Updating the meshes from CAD
 
-The meshes in `meshes/` come from the Fusion export. Run on a machine with
-Blender, then copy `body.*`, `wheel.*` and `frames.txt` into `meshes/` and
-paste the numbers from `frames.txt` into the properties at the top of
-`urdf/robot.xacro`.
+The meshes in `meshes/` come from the Onshape `Chassis PDR` assembly. Export
+it as ONE file: right-click the assembly tab, Export, format glTF, and leave
+"Export unique parts as individual files" unchecked. With that box checked
+every part is saved in its own local frame and the robot can't be put back
+together.
+
+Run on a machine with Blender, then copy `body.*`, `wheel.*` and `frames.txt`
+into `meshes/` and paste the numbers from `frames.txt` into the properties at
+the top of `urdf/robot.xacro`.
 
 ```bash
-blender -b --python scripts/glb_to_meshes.py -- rover26.glb out_dir 100000 10000
+blender -b --python scripts/glb_to_meshes.py -- "Chassis PDR.glb" out_dir 100000 10000
 ```
+
+The script finds the wheels, the front of the robot and the drive-chain links
+by their Onshape names (`Wheel Hitbox Assembly <n>`, `Front Connector`, ...).
+The patterns are at the top of the script; if a part is renamed in CAD, update
+them there.
+
+## Sensor poses are placeholders
+
+The chassis CAD has no camera mounts yet. In `urdf/robot.xacro` the RealSense
+keeps its 2026 height and pitch but is moved outboard (`cam_y`) so it clears
+the bucket ladder, and the four tag cameras are still at their 2026 positions.
+Update them once the mounts are in CAD.
